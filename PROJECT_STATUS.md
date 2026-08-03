@@ -1,152 +1,165 @@
 # Life Command OS Project Status
 
 ## Project identity
-- Repository: life-command-os
+- Repository: life-command-os (https://github.com/Bill6006/life-command-os)
 - Plan version: 2.6 Lean Execution
-- Current phase: Phase 0 — Lean constitution and architecture lock
-- Current prompt: PROMPT 1 (complete)
+- Current phase: Phase 1 — Repository and local-first application foundation
+- Current prompt: PROMPT 2 (complete)
 
 ## Gate status
 - Status: **GREEN**
 - Gate evidence:
-  - *Controlling product and architecture decisions are documented* — `docs/PRODUCT_CONSTITUTION.md` (product law, interaction rules, lean rules, stop conditions) and `docs/architecture/ARCHITECTURE_OVERVIEW.md` (stack, boundaries, record envelope, lifecycle, storage progression), plus ADR-0001 through ADR-0007 covering all seven required foundational decisions.
-  - *Core concepts and active requirements are unambiguous* — `docs/GLOSSARY.md` defines every canonical concept with explicit "not to be confused with" contrasts; `docs/REQUIREMENTS.md` carries all 48 approved requirement IDs, and the 7 requirements active in Phase 0 carry full §68 traceability fields.
-  - *Deferred systems are listed but not prematurely created* — `docs/architecture/ARCHITECTURE_OVERVIEW.md` §13 and the Deferred work section below. Verified: no research templates, no registries, no ledgers, no traceability generator, no domain schemas exist.
-  - *No application code or speculative framework exists* — the repository contains 14 Markdown files and nothing else. No `src/`, no `package.json`, no dependencies, no configuration, no scaffolding.
-  - *No real personal information exists in tracked content* — scan performed and recorded under Privacy status.
-  - *PROJECT_STATUS.md identifies Phase 0 and its evidence* — this file.
+  - *A fresh clone installs and builds deterministically* — CI runs `npm ci` against the committed `package-lock.json`, which fails if the lockfile and `package.json` disagree, then `build`. Green on run [30797686308](https://github.com/Bill6006/life-command-os/actions/runs/30797686308) and its successor.
+  - *The PWA shell opens and works offline* — Playwright test `starts from the cached build with the network offline` sets the browser context offline, reloads, and asserts the heading, navigation, and precached stylesheet all render. Passes on desktop and mobile viewports.
+  - *The stable public GitHub Pages URL loads over HTTPS on phone and desktop* — https://bill6006.github.io/life-command-os/ verified live at 375×812 and desktop. Secure context confirmed (`window.isSecureContext === true`).
+  - *The deployed commit and quiet build metadata match the gate-approved commit* — the About surface on the live site reads commit `b60bb5d`, matching `origin/main`.
+  - *Repository-base routing, assets, manifest, and service-worker behaviour work from the Pages URL* — live checks returned HTTP 200 for `/life-command-os/`, `manifest.webmanifest`, `sw.js`, and `icons/icon-512.png`; the service worker is `activated` and controlling with scope `https://bill6006.github.io/life-command-os/`; the manifest link resolves to `/life-command-os/manifest.webmanifest`.
+  - *The deployment workflow can update the same URL after later phase gates* — proven, not asserted: two successive pushes deployed to the identical URL, the second replacing the first.
+  - *The application boundaries are clear* — ESLint boundary rules are enforced and were **verified to fire** against a deliberate violation probe (see Tests and evidence).
+  - *The repository and hosted build use synthetic content only* — personal-information scan clean; the hosted build contains no data at all.
+  - *No domain feature or intelligence algorithm exists* — asserted by test, not just by inspection: no decision affordance, no meter or progressbar, no Life Score, no streak, no operational-status panel.
+  - *Every dependency has a current purpose* — recorded in `docs/architecture/DEPENDENCIES.md`, including seven dependencies deliberately **not** added.
 
 ## GitHub Pages owner preview
-- URL: NOT AVAILABLE until Phase 1
-- Deployment status: NOT CONFIGURED
-- Deployed commit: None
-- Last phone-and-desktop verification: Not applicable
-- Hosted build contains synthetic content only: Not applicable — nothing is hosted
+- URL: **https://bill6006.github.io/life-command-os/**
+- Deployment status: **LIVE**
+- Deployed commit: `b60bb5d` (`Phase 1: make the storage precondition test prove what it claims`)
+- Last phone-and-desktop verification: 2026-08-03, at 375×812 and desktop. Shell renders, navigation works, About shows plan version 2.6 Lean Execution / Phase 1 / commit `b60bb5d`, service worker active and controlling.
+- Hosted build contains synthetic content only: **YES** — it contains no data of any kind.
+
+> This preview authorises inspecting synthetic UI progress. It does **not** authorise
+> meaningful private use, which requires the Phase 6 gate.
 
 ## Work completed
-- Initialized the `life-command-os` Git repository on branch `main` in the previously empty working directory. No remote configured (deferred to Phase 1 by owner decision).
-- Created the repository documentation foundation (`README.md`) with the document index, privacy rule, non-negotiables, phase map, and honest current layout.
-- Authored the controlling **Product Constitution**: product identity, ten-second opening contract, greenfield mandate, privacy boundary, canonical concepts, intelligence honesty, local-first reliability, decision quality, deterministic core, safety boundaries, user control, owner-approved interaction rules, initial alpha scope, domain expansion and guardrails, evidence and model discipline, storage and real-data readiness, Lean Execution rules with the pre-creation justification gate, definition of success, and universal stop conditions.
-- Authored the concise **Architecture Overview**: implementation baseline, modular-monolith boundaries and data-flow rules, canonical record envelope, the 20 Phase 2 core record families, projection layer, 13-step intelligence lifecycle, confidence model, decision model, storage progression, single-device/sync-metadata scope, deployment rules, testing progression, and the deferred-systems table.
-- Created `PROJECT_STATUS.md` from the approved Part XII template (this file).
-- Created the **Glossary** covering every canonical concept, the evidence-status vocabulary, the four confidence labels, and the canonical/projection distinction — each with explicit contrasts that prevent concept collapse.
-- Created the **Core Requirements Registry** preserving all 48 approved IDs with owning phase and status, plus full §68 traceability records for the 7 requirements active in Phase 0, plus an "open requirement gaps" section for proposals not yet approved.
-- Created the 7 required ADRs: greenfield boundary; responsive PWA platform; local deterministic intelligence authority; IndexedDB canonical authority; append-oriented records and rebuildable projections; single-device-first with sync-readiness metadata; neutral synthetic repository data.
-- Recorded the approved **Luminous Dark Command Surface** family, starting tokens, avoid-list, accessibility baseline, presentation contracts, and the efficient Phase 3 three-variant owner-selection process and gate.
-- Recorded the owner-approved interaction rules, including the measurable interaction budget table, notification policy, score gate, mobile navigation limit, and primary-surface prohibitions.
-- Recorded the initial alpha scope and the rule that its three areas receive no schemas of their own.
-- Recorded all deferred systems rather than creating them.
-- Performed the Phase 0 personal-information check.
-- Resolved the `WeeklyDirectionRecord` discrepancy between the controlling documents (see Architecture decisions).
+- Bootstrapped the approved TypeScript + React + Vite PWA. Versions verified against the registry at implementation time and locked in `package-lock.json`.
+- Established the modular-monolith structure with enforced boundaries. **Only layers with real code exist as directories** (`app`, `ui`, `infrastructure`); `domain`, `application`, `intelligence`, and `importers` remain documented architectural rules until they have content, per the Phase 0 resolution.
+- Added strict TypeScript, type-aware ESLint, Prettier, a lockfile, build scripts, unit-test configuration, browser-test configuration, and a production build.
+- Built the minimum accessible responsive shell: skip link, semantic landmarks, 44×44 touch targets, visible focus, reduced-motion support, no horizontal scrolling, current-nav state signalled by weight and border rather than colour alone.
+- Added the IndexedDB connection and transaction foundation via Dexie, declaring **no canonical life-data stores** — those arrive in Phase 2.
+- Added neutral synthetic fixture conventions (`tests/fixtures/synthetic.ts`) with the four rules Phase 2's builders will follow.
+- Added lightweight privacy protections: `.gitignore` covering exports, backups, local databases, environment files, private screenshots, and owner-only files; a starting Content Security Policy; ESLint rules banning `console` and `localStorage` in `src/`; no analytics, no payload logging, no external AI.
+- Configured lean CI: install, format check, lint, typecheck, unit tests, build, browser tests. One workflow; `deploy` depends on `verify`.
+- Configured one lean GitHub Pages deployment on the repository's stable URL, with the Vite base path, manifest paths, and service-worker scope correct for a project site.
+- Added quiet build metadata (plan version, phase, deployed commit, build time) under About.
+- Generated the PWA icons from a committed script rather than committing opaque binaries.
+- Recorded every dependency and the active requirement it supports, plus deliberate non-additions.
+- Amended the Phase 0 commit to the GitHub noreply identity and purged the superseded object, removing the real email address from history before the first push.
 
 ## Files created or modified
-Created (14 files, all Markdown, no code):
+Created — configuration:
+`package.json`, `package-lock.json`, `tsconfig.json`, `vite.config.ts`, `eslint.config.js`, `.prettierrc.json`, `.prettierignore`, `.gitignore`, `playwright.config.ts`, `index.html`, `.github/workflows/ci-and-pages.yml`
 
-| File | Purpose |
-|---|---|
-| `README.md` | Repository documentation foundation and document index |
-| `PROJECT_STATUS.md` | This status file, from the approved template |
-| `docs/PRODUCT_CONSTITUTION.md` | Controlling product law |
-| `docs/GLOSSARY.md` | Canonical concept definitions |
-| `docs/REQUIREMENTS.md` | Approved requirement registry and Phase 0 traceability records |
-| `docs/architecture/ARCHITECTURE_OVERVIEW.md` | Approved technical shape |
-| `docs/design/VISUAL_DIRECTION.md` | Luminous Dark family and Phase 3 selection process |
-| `docs/decisions/ADR-0001-greenfield-boundary.md` | ADR |
-| `docs/decisions/ADR-0002-responsive-pwa-platform.md` | ADR |
-| `docs/decisions/ADR-0003-local-deterministic-intelligence-authority.md` | ADR |
-| `docs/decisions/ADR-0004-indexeddb-canonical-authority.md` | ADR |
-| `docs/decisions/ADR-0005-append-oriented-records-and-projections.md` | ADR |
-| `docs/decisions/ADR-0006-single-device-first-with-sync-metadata.md` | ADR |
-| `docs/decisions/ADR-0007-neutral-synthetic-repository-data.md` | ADR |
+Created — application:
+`src/main.tsx`, `src/vite-env.d.ts`, `src/app/buildInfo.ts`, `src/ui/features/shell/AppShell.tsx`, `src/ui/styles/base.css`, `src/infrastructure/database/connection.ts`
 
-Modified: none. Deleted: none.
+Created — tests and tooling:
+`tests/setup.ts`, `tests/fixtures/synthetic.ts`, `tests/unit/buildInfo.test.ts`, `tests/unit/database.test.ts`, `tests/e2e/shell.spec.ts`, `scripts/generate-icons.mjs`, `public/icons/icon-192.png`, `public/icons/icon-512.png`, `public/icons/icon-maskable-512.png`
+
+Created — documentation:
+`docs/architecture/DEPENDENCIES.md`
+
+Modified: `PROJECT_STATUS.md` (this file). No Phase 0 controlling document was changed.
 
 ## Tests and evidence
-- **No executable tests exist, and none should.** Phase 0 produces documentation only; there is no behavior to test. Test configuration is a Phase 1 deliverable (`TEST-001` is honestly reported as having no executable evidence yet).
-- **Personal-information scan:** all 14 files scanned for email addresses, owner identity strings, phone-number patterns, government-ID patterns, long digit runs, street-address patterns, and credential assignment patterns. **Zero matches.**
-- **No-application-code evidence:** repository contains 14 `.md` files and no other tracked file. No `src/`, `package.json`, lockfile, configuration, or build artifact.
-- **No-speculative-abstraction evidence:** zero abstractions, zero registries, zero dependencies, zero services, zero infrastructure created (`LEAN-001`, `LEAN-005`).
-- **Requirement coverage evidence:** all 48 approved requirement IDs from master plan §67 are present in `docs/REQUIREMENTS.md`; the 7 active in Phase 0 carry full traceability fields.
+- **Unit tests: 9 passed** (`vitest run`). Storage: database opens at the declared version, returns a stable singleton, **declares only `_meta` and no life-data stores**, commits a transaction, and — the one that matters — **writes nothing when the transaction throws**, which is what makes "never report saved before commit" enforceable. Build metadata: four fields present, commit shortening, and an unknown commit passed through rather than replaced with a plausible-looking value.
+- **Browser tests: 18 passed** (`playwright test`, desktop-chromium and mobile-chromium). Shell renders under the base path; navigation marks current; build metadata is absent from the opening surface and present under About; zero console errors, failed requests, or HTTP ≥ 400; no life-domain feature, decision affordance, meter, progressbar, Life Score, streak, or operational-status panel; manifest valid and scoped correctly with **every declared icon fetched and confirmed to exist**; offline cold start from precache including styles; offline status appears only when offline and the status region is otherwise empty; secure context with a real IndexedDB read/write round trip.
+- **Boundary enforcement verified to fire, not merely configured.** A probe file importing both `dexie` and `../infrastructure/database/connection` from `src/ui/` produced exactly two `no-restricted-imports` errors with the ADR-0004 messages. Probe removed; lint clean.
+- **Deterministic install:** `npm ci` in CI.
+- **Personal-information scan:** tracked content scanned for owner identity strings, email addresses, government-ID patterns, and long digit runs. **Zero matches.**
+- **Live deployment evidence:** HTTP 200 on index, manifest, service worker, and icon; service worker `activated` and controlling at the correct scope; About reports the deployed commit.
 
 ## Privacy status
-- Synthetic-only repository: **YES** — the repository contains no data of any kind, synthetic or otherwise.
+- Synthetic-only repository: **YES**
 - Real personal data detected in tracked content: **NO**
-- Runtime private-data readiness: **NOT YET** — requires the Phase 6 gate (encrypted backup and fresh-profile recovery proven).
+- Runtime private-data readiness: **NOT YET** — requires the Phase 6 gate.
+- Git history: the Phase 0 commit was amended to `193191643+Bill6006@users.noreply.github.com` and the superseded object purged (`reflog expire` + `gc --prune=now`) **before the first push**. No real email address exists in any object in this repository. Repo-local `user.email` is set to the noreply address, so future commits inherit it.
+- GitHub native secret scanning with push protection applies (public repository), satisfying "standard secret scanning where supported" without a second tool.
 
 ## Architecture decisions
+No new ADRs. Phase 1 executes decisions already recorded in ADR-0002 and ADR-0004.
 
-| ADR | Decision |
+Version selections locked under ADR-0002, verified against the registry today:
+
+| Concern | Locked |
 |---|---|
-| ADR-0001 | Greenfield boundary — no legacy code, storage shapes, or architecture. Legacy *data* only, via an optional quarantined Phase 9 importer. |
-| ADR-0002 | Responsive installable PWA as the production platform — TypeScript strict, React, Vite, IndexedDB via typed wrapper, runtime validator, Vitest, Playwright, GitHub Pages. Versions locked at Phase 1 bootstrap. |
-| ADR-0003 | Local deterministic logic is the intelligence authority. External AI disabled and out of scope. Simplest transparent baseline first. |
-| ADR-0004 | IndexedDB is the sole canonical authority. `localStorage` holds only disposable boot preferences. UI never writes to storage; intelligence never writes to storage. |
-| ADR-0005 | Append-oriented canonical records with supersession; rebuildable non-authoritative projections; occurred-at/recorded-at split; seven concept-substitution invariants must fail. |
-| ADR-0006 | Single-device-first. Sync readiness carried as record *metadata only* — no sync interfaces, adapters, transports, or merge engines. |
-| ADR-0007 | Neutral synthetic data only in repository and hosted content, permanently — including after Phase 6. Synthetic means invented, not anonymized. |
+| TypeScript | ^6.0.3 |
+| React / React DOM | ^19.2.8 |
+| Vite | ^8.2.0 |
+| Dexie | ^4.4.4 |
+| Vitest | ^4.1.10 |
+| Playwright | ^1.62.1 |
+| ESLint / typescript-eslint | ^10.8.0 / ^8.65.0 |
 
-**ADR-0008 is reserved** for the Phase 3 design selection, per `docs/design/VISUAL_DIRECTION.md`.
+**TypeScript is pinned below 7.x deliberately.** TypeScript 7.0.2 is current, but `typescript-eslint@8` declares `typescript >=4.8.4 <6.1.0`. Installing 7.x would have silently disabled type-aware linting — losing the boundary enforcement that `ARCH-001` depends on — while appearing to work. Revisit when typescript-eslint supports 7.x.
 
-### Resolved document discrepancy: `WeeklyDirectionRecord`
-The controlling documents disagreed. The prompt pack's Phase 2 task list includes `WeeklyDirectionRecord`; master plan §24 omits it.
-
-**Owner-confirmed 2026-08-03: `WeeklyDirectionRecord` is a Phase 2 core record.** The Phase 2 core set is therefore **20 families**, not 19. Rationale and full record list: `docs/architecture/ARCHITECTURE_OVERVIEW.md` §4 and §4.1.
+**Two Phase 0 resolutions were applied and hold:** the importer boundary is an architectural rule and lint constraint, not a directory (`src/importers/` does not exist); and layers without code do not get empty directories.
 
 ## New dependencies
-**None.** No package manager was initialized, no `package.json` exists, and no dependency was added. First dependencies arrive in Phase 1, each recorded with its active requirement, why platform capabilities are insufficient, its maintenance and privacy impact, and its removal strategy.
+Full records in `docs/architecture/DEPENDENCIES.md`. Summary:
+
+- **Runtime (3, all reaching the browser):** `react`, `react-dom`, `dexie`.
+- **Development (13):** `vite`, `@vitejs/plugin-react`, `vite-plugin-pwa`, `typescript`, `@types/node`, `@types/react`, `@types/react-dom`, `eslint`, `@eslint/js`, `typescript-eslint`, `eslint-plugin-react-hooks`, `globals`, `prettier`, `vitest`, `fake-indexeddb`, `@playwright/test`.
+- **Deliberately not added, with reasons recorded:** a router, `@testing-library/react` and a DOM environment, a runtime validator (`zod` — Phase 2 owns it), coverage tooling, a third-party secret scanner, a hosting abstraction, and Web Workers tooling.
 
 ## New abstractions or infrastructure
-- Artifact: **None created.**
-- Active requirement: Not applicable.
-- Why a smaller direct implementation was insufficient: Not applicable.
 
-Phase 0 created zero abstractions, registries, dependencies, services, generic component families, adapters, infrastructure systems, and background processes (`LEAN-005`).
+**1. IndexedDB connection module** — `src/infrastructure/database/connection.ts`
+- Active requirement: `STORE-001`, ADR-0004, Phase 1 task 5.
+- Why a smaller direct implementation was insufficient: the gate requires transaction infrastructure "sufficient for later canonical repositories". Raw IndexedDB's callback API reliably produces inconsistent transaction handling, which is precisely the failure mode that would make "never report saved before commit" unenforceable. The module declares no domain tables.
+
+**2. ESLint module-boundary rules** — `eslint.config.js`
+- Active requirement: `ARCH-001`, ADR-0004, `MIG-001`, Phase 1 task 11.
+- Why a smaller direct implementation was insufficient: the alternative is review discipline alone. The UI-must-not-touch-storage rule is exactly the kind that erodes under deadline pressure, and it is cheap to make mechanical. Verified to fire.
+
+**3. Build-metadata injection** — `vite.config.ts` `define` + `src/app/buildInfo.ts`
+- Active requirement: `OPS-002`, Phase 1 task 10.
+- Why a smaller direct implementation was insufficient: a hard-coded string would go stale immediately, defeating the entire purpose — confirming which commit the owner is looking at.
+
+**4. One CI and Pages workflow** — `.github/workflows/ci-and-pages.yml`
+- Active requirement: `OPS-002`, Phase 1 tasks 8 and 9.
+- Why a smaller direct implementation was insufficient: the gate requires deployment only after checks pass. A single workflow with `deploy` depending on `verify` is the smallest construction that expresses that. No staging, no PR previews, no hosting abstraction.
+
+**5. Icon generation script** — `scripts/generate-icons.mjs`
+- Active requirement: installability gate; manifest icons must exist.
+- Why a smaller direct implementation was insufficient: the alternative is committing opaque binaries with no way to regenerate or audit them. The script uses only Node's built-in `zlib` — an image-processing dependency would have been the larger answer.
 
 ## Known limitations
-- Phase 0 produces no verifiable running artifact. Its gate is demonstrated by document review and repository inspection, not by tests.
-- The **representative test device** for the 3-second cached-startup budget and the phone-viewport budgets is still undefined. It must be named in the Phase 3 design ADR (ADR-0008) before `UX-005` becomes testable.
-- Exact dependency versions are deliberately not locked here. They are selected during Phase 1 bootstrap after compatibility review, per ADR-0002.
-- No remote repository or GitHub Pages URL exists yet. `OPS-002` cannot begin until Phase 1.
-- Deletion semantics distinct from correction are an **open design question that must be resolved in Phase 2** (ADR-0005). Append-oriented storage preserves corrected values, so "correct" and "delete" cannot be the same operation.
+- **`frame-ancestors` cannot be enforced.** It is ignored when delivered via `<meta>`, and GitHub Pages does not permit custom response headers, so the owner preview has no clickjacking protection. Recorded honestly rather than papered over with a directive that does nothing. Revisit in Phase 6.
+- **The connection module is not wired into the shell.** Nothing in Phase 1 has data to store, so opening the database on load would be work without purpose. It is unit-tested; browser-backed canonical persistence is Phase 2 evidence.
+- **Browser matrix is Chromium-only.** Sufficient for Phase 1; the full matrix is a Phase 10 release requirement.
+- **`glob@11.1.0` deprecation warning** reaches the tree transitively through `vite-plugin-pwa` → `workbox-build`. Build-time only, never shipped to the browser, cannot see life data. Revisit when Workbox updates.
+- **No router.** Navigation is a two-view state switch. The SPA fallback and base-path routing questions belong with the six real destinations in Phase 3.
+- **The representative test device is still unnamed**, so the 3-second startup budget and phone-viewport budgets in `UX-005` remain untestable. Must be named in the Phase 3 design ADR.
+- **Local environment note:** Avast Web/Mail Shield performs TLS interception on this machine, presenting its own root certificate. Git's OpenSSL backend rejected it. Resolved repo-locally with `http.sslBackend=schannel`, which uses the Windows trust store where the Avast root is already trusted. Certificate verification remains **enabled**; `sslVerify` was not disabled. A fresh clone on another machine will not need this.
 
 ## Deferred work
-
-Recorded, not created:
+Unchanged from Phase 0 except where noted:
 
 | Deferred system | Activates |
 |---|---|
-| Evidence-source registry | When a consequential rule needs it (Phase 4+) |
-| Research-card library | Phase 4, just in time, per implemented rule only |
-| Model-candidate registry | Phase 8, only for active problems with real candidates |
-| Retired-rule ledger | Phase 8, only when a rule is actually retired |
-| Full domain schemas | Phase 7, one domain per run |
-| Full traceability generator | Phase 10 |
-| Production security and release artifacts | Phase 10 |
+| Runtime validator (`zod`) and the 20 core record families | Phase 2 |
+| Router, component-test library and DOM environment, semantic design tokens | Phase 3 |
+| Research-card library, evidence-source registry | Phase 4 |
 | `LearnedBeliefRecord` and learning governor | Phase 5 |
 | Encryption, application lock, `src/infrastructure/crypto/` | Phase 6 |
-| Notification infrastructure | Phase 6 at the earliest, only with an active approved requirement |
-| Legacy importer, `src/importers/legacy/` | Phase 9A, only if explicitly authorized |
+| Notification infrastructure | Phase 6 at the earliest, only with an active requirement |
+| Full domain schemas | Phase 7, one domain per run |
+| Model-candidate registry, retired-rule ledger | Phase 8 |
+| Legacy importer, `src/importers/legacy/` | Phase 9A, only if explicitly authorised |
+| Full traceability generator, production security and release artifacts, full browser matrix | Phase 10 |
 | Sync, native packaging, analytics, external AI, Web Workers | Not planned; post-release change control only |
 
-Deferred to Phase 1 specifically (owned by Prompt 2, deliberately not created early):
-
-- `.gitignore`, secret scanning, and CI configuration;
-- application scaffolding, `package.json`, lockfile, and all dependencies;
-- synthetic fixture conventions;
-- GitHub remote, Pages workflow, and the stable preview URL;
-- `src/` directories — created when their first justified artifact exists, not in advance.
-
 ## Blockers
-**None blocking Prompt 2.**
+**None blocking Prompt 3.**
 
-Open decisions to resolve during Phase 1:
+Open decisions to resolve in Phase 2:
 
-1. **GitHub remote and Pages target** — account, repository visibility, and Pages configuration. Note: the `gh` CLI is not installed on this machine; the GitHub web UI is an acceptable alternative.
-2. **Commit-author email in Git history** — commits currently use the machine's global Git identity, which includes a real personal email address. That will be permanent, public history once the repository is pushed. GitHub's `noreply` address is the standard mitigation. **Resolve before the first push**, while history is still trivial to rewrite. Nothing has been pushed. See ADR-0007, "Privacy and security impact".
+1. **Deletion semantics distinct from correction** (ADR-0005). Append-oriented storage preserves corrected values, so "correct" and "delete" cannot be the same operation, and the plan does not define deletion. Needs a decision before the canonical model is fixed.
+2. **Approval of proposed `STORE-004`** covering the synthetic development export/restore format (`docs/REQUIREMENTS.md` §5). No approved requirement currently carries that traceability.
 
-Open decision to resolve during Phase 2:
+Open decision to resolve in Phase 3:
 
-3. **Deletion semantics distinct from correction** (ADR-0005), and approval of the proposed `STORE-004` requirement covering the synthetic development export/restore format (`docs/REQUIREMENTS.md` §5).
+3. **Name the representative test device** for the startup and viewport budgets, in the design ADR.
 
 ## Next permitted prompt
-**PROMPT 2 — Phase 1: Repository and local-first application foundation.**
+**PROMPT 3 — Phase 2: Core canonical model and working storage.**
