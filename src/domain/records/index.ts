@@ -48,6 +48,7 @@ import {
   type ForecastEvaluationRecord,
   type RecommendationEffectEvaluationRecord,
 } from './evaluation';
+import { learnedBeliefRecord, type LearnedBeliefRecord } from './learning';
 import {
   questionAnswerRecord,
   questionRecord,
@@ -65,13 +66,17 @@ export * from './decision';
 export * from './execution';
 export * from './evaluation';
 export * from './questions';
+export * from './learning';
 
 /**
- * The twenty core record families of the first vertical slice.
+ * Twenty-one canonical record families.
  *
- * `LearnedBeliefRecord` is deliberately absent — it activates in Phase 5, when
- * there is learning behaviour for it to describe. Domain-specific families arrive
- * one at a time in Phase 7. Adding either early is a stop condition (`LEAN-001`).
+ * The twenty of the first vertical slice, plus `learned-belief`, **activated in
+ * Phase 5** now that there is learning behaviour for it to describe. It was
+ * deliberately absent until there was.
+ *
+ * Domain-specific families arrive one at a time in Phase 7. Adding one early is a
+ * stop condition (`LEAN-001`).
  */
 export const RECORD_TYPES = [
   'observation',
@@ -94,6 +99,7 @@ export const RECORD_TYPES = [
   'life-context-change',
   'question',
   'question-answer',
+  'learned-belief',
 ] as const;
 
 export type RecordType = (typeof RECORD_TYPES)[number];
@@ -118,7 +124,8 @@ export type CanonicalRecord =
   | RecommendationEffectEvaluationRecord
   | LifeContextChangeRecord
   | QuestionRecord
-  | QuestionAnswerRecord;
+  | QuestionAnswerRecord
+  | LearnedBeliefRecord;
 
 /**
  * Schema per family.
@@ -148,6 +155,7 @@ export const RECORD_SCHEMAS: Record<RecordType, z.ZodType> = {
   'life-context-change': lifeContextChangeRecord,
   question: questionRecord,
   'question-answer': questionAnswerRecord,
+  'learned-belief': learnedBeliefRecord,
 };
 
 /** Families that record first-hand fact rather than system interpretation. */

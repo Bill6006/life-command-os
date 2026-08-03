@@ -3,25 +3,19 @@
 ## Project identity
 - Repository: life-command-os (https://github.com/Bill6006/life-command-os)
 - Plan version: 2.6 Lean Execution
-- Current phase: Phase 4 — Transparent baseline intelligence and first complete vertical slice
-- Current prompt: PROMPT 5 (complete)
+- Current phase: Phase 5 — Outcome learning, trajectories, and useful graphs
+- Current prompt: PROMPT 6 (complete)
 
 ## Gate status
 - Status: **GREEN**
 - Gate evidence:
-  - *A synthetic user moves from observations and commitments through state, forecast, internal candidate evaluation, one best recommendation or silence, weekly direction, and execution intent* — sixteen scenarios drive the full lifecycle. `runEpisode` performs it in order and every stage is asserted.
-  - *The UI exposes no competing recommendation menu* — `DecisionOutput` is a four-branch union, so a ranked list has no representable form. At most one primary action in every scenario, asserted at both viewports.
-  - *"What changed?" accurately reflects structured evidence changes* — it is a **diff of two real engine runs**, not a changelog. It cannot claim a change the engine did not make.
-  - *Cold start and weekly review do not force a blank-slate priority* — cold start emits insufficient evidence and asks nothing; the weekly direction is always system-proposed with its basis shown.
-  - *Facts, inferences, stale data, contradictions, and unknowns remain distinguishable* — evidence tags render the word and differ by border style; stale is marked; contradictions are surfaced and left unresolved; unknowns are listed.
-  - *Forecasts are bounded and unsupported forecasts abstain* — explicit target, horizon, assumptions, uncertainty, reason trace; `unknown` with a reason below three comparable weeks.
-  - *Predicted action effects remain separate from untreated forecasts* — different modules, and a predicted effect **requires** a candidate id the forecast does not have.
-  - *Cross-domain costs and North Star relevance are visible* — in the effects table and the decision panel.
-  - *Every enabled alpha category has a condition-and-trajectory overview* with confidence, freshness, drivers, and real domain metrics.
-  - *No overall Life Score; no numerical category score anywhere* — asserted across every scenario.
-  - *Every active consequential rule is labelled an unproven transparent baseline* — eight machine-readable contracts, completeness asserted by test.
-  - *Deliberate silence passes* — emitted when nothing survives the constraints and when the best score does not clear the interruption threshold.
-  - *The interface never invents content the engine did not produce* — the Phase 3 view models are **deleted**. Every conclusion on screen comes from `EpisodeResult`.
+  - *Forecast accuracy and recommendation effectiveness remain separate* — separate functions, separate result types, separate fields, separate panels. No code path averages them, asserted against the engine data and at the interface.
+  - *Missing outcomes remain unresolved* — a closed window with no outcome, and an expired window, both produce `unresolved` with a reason saying it is not counted against the recommendation.
+  - *Strong personal claims require prospective evidence* — the top confidence label needs four clean episodes, each predicted before it was observed, none contradicted and none confounded. The record schema refuses it independently of the governor.
+  - *Graphs answer real questions* — eight graphs, each carrying its question, metric, window, evidence basis, missing-data treatment, uncertainty, and a visible text summary as **data**, so one cannot be rendered without them.
+  - *Beliefs update conservatively and retain reason traces* — form, strengthen, narrow, suspend, retire; every history entry carries why, and narrowing precedes weakening.
+  - *Return after absence is non-punitive* — no backlog, no missed-day count, no guilt vocabulary. Predictions expire rather than fail.
+  - *The first complete synthetic learning loop passes* — `learning-loop` runs observation → recommendation → execution → outcome → evaluation → belief, and reaches the top label legitimately.
 
 ## GitHub Pages owner preview
 - URL: **https://bill6006.github.io/life-command-os/**
@@ -32,117 +26,108 @@
 
 > **Service-worker note.** A returning visitor may see the previous build once; reload again.
 
-## The prototype state switcher is gone
-Replaced by a **scenario picker**, which is a materially different thing. It selects a set of
-synthetic *records*; the engine computes the state, trajectory, forecast, effects,
-recommendation, confidence, and weekly direction from them.
+## The confidence ceiling lifted — and only here
+Through Phase 4, `strong-personal-evidence` was unreachable by construction, because nothing
+had been validated against a later outcome.
 
-The same scenarios feed the test harness and the preview, deliberately — what the owner sees
-on their phone is exactly what the tests assert.
-
-Four presentation modes the engine cannot produce (loading, error, locked, recovery) remain
-selectable, grouped separately and labelled as not being engine output. Lock and recovery
-become real in Phase 6.
+Phase 5 makes it reachable **for beliefs only**, and only on four clean prospective episodes
+with zero contradictions and zero confounding. State, trajectory, forecast, decision, and
+weekly-direction confidence still cannot reach it — a test asserts that across every scenario.
+None of them is checked against a later outcome, so none has earned it.
 
 ## Work completed
-- **Eight intelligence contracts** (`src/intelligence/contracts.ts`), each declaring decision target, target, horizon, baseline, evidence class, uncertainty, abstention conditions, failure conditions, safety and privacy boundary, validation path, and retirement condition. Completeness is asserted by test, so a rule cannot ship without one.
-- **State assessment** reading the latest context snapshot per field, detecting contradictions across same-day observations, and reporting unknowns and staleness explicitly.
-- **Trajectory** summing focus blocks per ISO week with a stated 15 percent direction band, abstaining below three weeks, and carrying weeks without evidence as **gaps rather than zeros**.
-- **Untreated forecast** by persistence, with assumptions and uncertainty, abstaining as `unknown` when unsupported.
-- **Candidate generation** producing full candidates — dose, minimum useful version, fallback, stopping point, friction, risk, reversibility, blocking contexts. Safe by construction: the generator has no vocabulary for medication, health risk, driving, dependents, legal, financial, or security-sensitive actions.
-- **Predicted effects** separate from the forecast and requiring a candidate id, decomposed into positive, negative, delayed, uncertain, and cross-domain, **never netted**, with coarse word magnitudes and `unknown` when the input is missing.
-- **Constraint-first selection**: safety, protected contexts, non-negotiable commitments, time-plus-margin, capacity ceilings — then comparison on an inspectable integer score whose working appears in the reason trace.
-- **One high-value question**, asked only when the answer changes candidate eligibility.
-- **Material-change detection** by diffing two real engine runs.
-- **Weekly direction**, always proposed, with a quiet week offered on its merits.
-- **Category summaries** for all three enabled categories, with real domain metrics and no scores.
-- **Sixteen deterministic scenarios** covering every case the phase requires.
-- **Four research cards** for the rules that contain a judgement expressed as a number.
-- Replaced every Phase 3 view model with engine output and deleted `prototype.ts`.
+- **Activated `LearnedBeliefRecord`** — twenty-one canonical families now. Its schema enforces three things independently of the governor that writes it: a belief must cite its evaluations, its applicability is explicit, and the top label requires prospective validation.
+- **Outcome windows** — an execution opens one, it closes after seven days, and expires unresolved after twenty-one. Nothing is evaluated before its window closes.
+- **Two evaluations, permanently apart** — forecast accuracy and recommendation effectiveness, with the five verdicts preserved: supported, partially supported, contradicted, context-invalidated, unresolved.
+- **Confounding detection** — overlapping executions, context changes inside the window, and partial execution each add a factor. A high-risk episode **cannot** reach `supported`.
+- **Conservative learning governor** — two supporting episodes to state a belief, three to hold it, four clean prospective ones for the top label. Contradiction narrows before it weakens; a context change suspends rather than deletes.
+- **Eight graphs** — category trajectory, workload versus capacity, forecast accuracy, follow-through, actions and outcomes, expected versus actual, North Star progress, and confidence.
+- **Weekly-direction continuity** — carry forward, adjust, abandon, or go quiet, with why preserved and no moral scoring.
+- **Graceful return after absence** — a calm banner, expired predictions, summarised open loops, and honestly lower confidence.
+- **Nine new scenarios** covering executed, declined, partially executed, missing-outcome, confounded, context-change, forecast-accuracy, weekly-continuity, and return-after-absence.
 
 ### Decisions worth naming
-- **Confidence cannot reach `strong-personal-evidence` in this phase, and a test asserts it never appears.** The top label requires prospective validation, which does not exist until Phase 5. A baseline able to award itself the highest confidence on day one would be exactly the false precision the Constitution forbids.
-- **Capacity is a constraint, not a penalty.** Depleted capacity removes anything over 15 minutes *before* ranking. Quietly ranking a demanding action lower would still leave it recommendable, which is the productivity-at-all-costs behaviour the Constitution forbids.
-- **The minimum useful version needs the window plus five minutes of margin.** An action that exactly fills the gap sets the user up to fail, which is worse than saying nothing.
-- **Learning is honestly empty**, with the counts that prove it. Plausible accuracy figures would be the easiest thing in the product to fake convincingly.
+- **The failure mode the governor exists to prevent** is stated in its research card: a user protects one focus block, has a good week, and the system tells them it *works*. Every threshold, the confounding detection, and the vocabulary split between "is associated with" and "reliably" are aimed at that specific inference.
+- **Unresolved is always shown, never dropped.** A follow-through chart that quietly omitted pending outcomes would flatter the system.
+- **Suspension preserves evidence.** A context change pauses a belief and names the change; the evidence was real and may matter again.
+- **Beliefs are recomputed from evaluations every time**, never mutated in place, so a belief cannot drift away from what supports it.
 
 ## Files created or modified
-Created (24): `src/intelligence/` (14 files: types, contracts, support, index, and the state, forecast, intervention, decision, change-detection, and questioning modules); `src/app/scenarios.ts`; `src/application/queries/storageInfo.ts`; `src/ui/view-models/present.ts`; `tests/unit/engine.test.ts`; `docs/research/` (5 files)
+Created (11): `src/domain/records/learning.ts`; `src/intelligence/evaluation/{outcomeWindows,evaluate}.ts`; `src/intelligence/learning/{beliefs,insights}.ts`; `src/intelligence/decision/weeklyContinuity.ts`; `src/intelligence/state/absence.ts`; `src/ui/components/GraphFigure.tsx`; `tests/unit/learning.test.ts`; `docs/research/learning-governor.md`
 
-Deleted (1): `src/ui/view-models/prototype.ts`
+Deleted (1): `src/ui/components/TrendChart.tsx`, superseded by `GraphFigure`
 
-Modified: all six surfaces, `AppShell`, `TrendChart` (every gap now marked, not just the first), `primitives`, `vite.config.ts`, `tests/e2e/console-shell.spec.ts`, `tests/e2e/shell.spec.ts`, `docs/REQUIREMENTS.md`, `PROJECT_STATUS.md`
+Modified: `domain/records/index.ts` (21 families), `intelligence/{index,types}.ts`, `app/scenarios.ts`, the Learning and Direction surfaces, `AppShell`, `console.css`, `vite.config.ts`, `tests/unit/{records,engine}.test.ts`, `tests/e2e/{console-shell,shell}.spec.ts`, `docs/REQUIREMENTS.md`
 
 ## Tests and evidence
-- **Unit: 115 passed**, up from 84. 31 new engine tests: scenario records all parse; determinism; exactly one output in every scenario; cold start; abstention; constraint-first filtering; the question rule; effect separation; material change; weekly direction; category summaries; the confidence ceiling; and contract completeness.
-- **Browser: 186 passed**, up from 122, across desktop and mobile viewports. Every Phase 3 assertion still holds, now against engine output rather than a prototype.
-- **Four real defects found by these tests and fixed rather than tested around:**
-  1. A 10-minute action was recommended in a 12-minute window with no margin — fixed by requiring the minimum plus slack.
-  2. Depleted capacity still produced a career action — fixed by treating capacity as a filter, per master plan §28 step 3.
-  3. The chart drew only the **first** gap when five weeks were missing, implying the rest carried evidence. Every gap is now marked.
-  4. A test regex flagged the word "ranked" inside honest prose explaining that a question changes eligibility rather than ranking — the regex was wrong, not the copy.
+- **Unit: 143 passed**, up from 115. 28 new learning tests.
+- **Browser: 252 passed**, up from 186, across desktop and mobile viewports.
+- **Three real defects found by these tests and fixed rather than tested around:**
+  1. The `weekly-continuity` scenario dated its outcomes in the future, so they were correctly `unresolved` and the engine said `adjust`. **The engine was right and the scenario was wrong** — the data was fixed, not the rule.
+  2. **Markdown asterisks were rendering literally** in the interface — `**Association, not causation.**` appeared with the asterisks visible.
+  3. A component was being defined during render in the Learning surface, which throws away its subtree on every update.
+- Two of my own test assertions were wrong and were corrected rather than worked around: a regex flagged the honest prose "not read as a success rate", and the chart assertions counted across all three Direction charts instead of the trajectory one.
 
 ## Privacy status
 - Synthetic-only repository: **YES**
 - Real personal data detected in tracked content: **NO**
 - Runtime private-data readiness: **NOT YET** — requires the Phase 6 gate.
-- No network access exists in the intelligence layer. Every conclusion is computed on-device.
 
 ## Architecture decisions
-No new ADRs. Phase 4 implements ADR-0003 (local deterministic intelligence authority) and
-satisfies the output contract ADR-0008 set.
+No new ADRs. Phase 5 implements ADR-0005 (append-oriented records — beliefs supersede rather
+than mutate) and completes the lifecycle ADR-0003 describes.
 
-`src/intelligence/` now exists with the documented subdirectories, each holding real code.
-It reads validated records and **never writes to storage** (ARCH-001).
+`src/intelligence/` now has `evaluation/` and `learning/`, both documented in the architecture
+tree and both created only now that there is behaviour for them.
 
 ## New dependencies
 **None.**
 
 ## New abstractions or infrastructure
 
-**1. The intelligence layer** — `src/intelligence/` (14 files)
-- Active requirement: `INTEL-001` through `INTEL-008`, `SAFE-001`, `PROD-002`, Prompt 5 tasks 4–15.
-- Why smaller was insufficient: this *is* the phase deliverable. The module split follows the documented boundaries so each rule can be tested and retired independently.
+**1. `LearnedBeliefRecord`** — `src/domain/records/learning.ts`
+- Active requirement: `LEARN-003`, Prompt 6 task 6.
+- Why smaller was insufficient: the belief invariants — cited evidence, explicit applicability, prospective validation for the top label — need to hold regardless of which code writes the record.
 
-**2. Intelligence contracts** — `src/intelligence/contracts.ts`
-- Active requirement: Prompt 5 task 3.
-- Why smaller was insufficient: prose in a document cannot be asserted. As data, a test proves no rule ships without a complete contract.
+**2. Evaluation modules** — `evaluation/{outcomeWindows,evaluate}.ts`
+- Active requirement: `LEARN-001`, `LEARN-002`, Prompt 6 tasks 1–5.
+- Why smaller was insufficient: keeping the two evaluations in separate functions with separate types is what makes "never combined" structural rather than a convention.
 
-**3. Synthetic scenarios** — `src/app/scenarios.ts`
-- Active requirement: Prompt 5 task 18.
-- Why smaller was insufficient: the harness needs record sets, and the preview needs the same ones — sharing them is what makes "what the owner sees is what the tests assert" true.
+**3. Learning governor and insights** — `learning/{beliefs,insights}.ts`
+- Active requirement: Prompt 6 tasks 6–11.
+- Why smaller was insufficient: the graphs' obligations are enforced by the `GraphMeta` type, so a chart that cannot state its question cannot be constructed.
 
-**Removed:** the Phase 3 prototype state switcher and `prototype.ts`.
+**4. `GraphFigure`** — replaces `TrendChart`
+- Active requirement: `UX-003`.
+- Why smaller was insufficient: two chart kinds now exist and both must satisfy the same policy; one component enforcing it is smaller than two that each might drift.
 
-**Carried forward:** the diagnostics bridge, removal trigger Phase 6 (corrected in Phase 3).
+**Carried forward:** the scenario picker and the diagnostics bridge, both removed in Phase 6.
 
 ## Known limitations
-- **Every rule is an unproven baseline.** None has been validated against this owner's outcomes, because none has been observed. Phase 5 is what changes that.
-- **The numeric conventions are judgements** — the 15 percent band, the dose thresholds, the weights, the interruption threshold of 3. Each is defended in a research card and shown in the reason trace, but none is measured.
-- **The scenario picker still ships.** It now selects records rather than faking states, but it is scaffolding; it goes when the owner enters real records in Phase 6.
-- **No execution or outcome is recorded yet.** Start, Adjust, and Not now are rendered but not wired to writes — Phase 5 owns execution and outcome capture. Nothing currently converts a decline into evidence, and nothing can.
-- **The 3-second cached startup target is still not measured** — it needs the physical Samsung phone. Bundle is now ~127 kB gzipped.
+- **The governor's thresholds are conventions**, not measurements — two, three, four episodes. Defended in `docs/research/learning-governor.md`, and it cannot validate itself. Phase 8 can compare it against an alternative.
+- **Beliefs are derived, not yet persisted.** `LearnedBeliefRecord` is registered, validated, and schema-enforced, but the engine recomputes beliefs from evaluations each run rather than writing them. Persisting belief history is Phase 6 work, alongside real storage writes.
+- **Execution and outcome capture is modelled but not user-driven.** Start, Adjust, and Not now still do not write records; the loop is exercised through scenarios. Wiring the controls is Phase 6.
+- **Only one belief pattern is derived.** The governor is general but the single derivation rule is focus-block timing; more patterns arrive with more domains in Phase 7.
+- **Cached startup is still unmeasured.** Bundle is now ~137 kB gzipped.
 - Carried forward: `frame-ancestors` unenforceable on Pages; Chromium-only matrix; no router; service-worker staleness; deletion semantics undecided.
 
 ## Deferred work
 | Deferred | Activates |
 |---|---|
-| Execution and outcome capture, forecast evaluation, recommendation-effectiveness evaluation, `LearnedBeliefRecord`, real Learning content, more graphs | Phase 5 |
-| Full selected-design states, encrypted backup, app lock, notifications, real Data & Privacy, scenario-picker and diagnostics-bridge removal | Phase 6 |
-| Domain schemas | Phase 7 |
-| Model-candidate registry and tournament | Phase 8 — only when a real problem has two real candidates |
+| Persisting beliefs and evaluations as canonical records; wiring Start/Adjust/Not now to writes; full selected-design states; encrypted backup; app lock; notifications; real Data & Privacy; scenario-picker and diagnostics-bridge removal | Phase 6 |
+| Domain schemas and further belief patterns | Phase 7 |
+| Model-candidate registry and tournament | Phase 8 |
 | Legacy importer | Phase 9A |
 | Full traceability generator, browser matrix, release artifacts | Phase 10 |
 
 ## Blockers
-**None blocking Prompt 6.**
+**None blocking Prompt 7.**
 
 One non-blocking owner action: **measure cached startup on the Samsung phone** and say if it
 exceeds three seconds.
 
 ## Next permitted prompt
-**PROMPT 6 — Phase 5: Outcome learning, trajectories, and useful graphs.**
+**PROMPT 7 — Phase 6: Integrated private alpha and real-data hardening.**
 
-Phase 5 closes the loop. It is also what lifts the confidence ceiling: once recommendations
-have been executed and observed through outcome windows, `strong-personal-evidence` becomes
-reachable — and only then.
+Phase 6 is the gate that matters most: encrypted backup and fresh-profile recovery. Until it
+passes, entering meaningful private data is not safe, and the interface says so.

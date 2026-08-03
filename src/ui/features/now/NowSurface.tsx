@@ -310,6 +310,24 @@ export function NowSurface({
     </p>
   ) : null;
 
+  /*
+   * Returning after a gap. A banner, not a panel, and deliberately not a backlog:
+   * nothing here counts missed days or asks the user to catch up. What absence
+   * actually costs is fresh evidence, so that is what it reports.
+   */
+  const { absence } = episode.learning;
+  const returnBanner = absence.returning ? (
+    <p className="banner banner-quiet" role="status">
+      <span className="banner-label">Welcome back</span>
+      <span>
+        {absence.summary} {absence.rebuildingNote}
+        {absence.expiredPredictions.length > 0
+          ? ` ${String(absence.expiredPredictions.length)} earlier prediction${absence.expiredPredictions.length === 1 ? '' : 's'} expired unobserved rather than counting against anything.`
+          : ''}
+      </span>
+    </p>
+  ) : null;
+
   const situation = (
     <SituationPanels
       episode={episode}
@@ -322,6 +340,7 @@ export function NowSurface({
     return (
       <div className="grid">
         {banner}
+        {returnBanner}
         <Panel label="Best move" tone="decision" wide>
           <p className="decision-statement">
             {output.candidate.statement}{' '}
@@ -375,6 +394,7 @@ export function NowSurface({
     return (
       <div className="grid">
         {banner}
+        {returnBanner}
         <Panel label="One question" tone="decision" wide>
           <p className="decision-statement">{output.prompt}</p>
           <p className="body">{output.whyItMatters}</p>
@@ -393,6 +413,7 @@ export function NowSurface({
     return (
       <div className="grid">
         {banner}
+        {returnBanner}
         <Panel label="Call" tone="quiet" wide>
           <p className="decision-statement">{output.statement}</p>
           <p className="fine">
@@ -420,6 +441,7 @@ export function NowSurface({
   return (
     <div className="grid">
       {banner}
+      {returnBanner}
       <Panel label="Call" tone="quiet" wide>
         <p className="decision-statement">{output.statement}</p>
         <p className="body">{output.rationale}</p>

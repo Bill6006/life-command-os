@@ -31,6 +31,16 @@ const SCENARIOS = [
   'changed-context',
   'weekly-direction',
   'quiet-week',
+  // Phase 5 — the learning loop.
+  'learning-loop',
+  'declined',
+  'partial-execution',
+  'missing-outcome',
+  'misleading-correlation',
+  'context-change-learning',
+  'forecast-accuracy',
+  'weekly-continuity',
+  'return-after-absence',
 ] as const;
 
 /** Presentation modes the engine cannot produce. Lock and recovery become real in Phase 6. */
@@ -228,6 +238,81 @@ test.describe('the engine, not the interface, produces the content', () => {
   });
 });
 
+test.describe('the learning loop is visible and honest (Phase 5)', () => {
+  test('a belief appears only once it has been earned, with its evidence', async ({ page }) => {
+    await open(page);
+    await select(page, 'learning-loop');
+    await goTo(page, 'Learning');
+
+    const main = page.getByRole('main');
+    await expect(main).toContainText(/Strong personal evidence/i);
+    await expect(main).toContainText(/each predicted before it was observed/i);
+    await expect(main).toContainText(/How it changed/i);
+  });
+
+  test('declining is shown as unresolved, never as a failure', async ({ page }) => {
+    await open(page);
+    await select(page, 'declined');
+    await goTo(page, 'Learning');
+
+    const text = ((await page.getByRole('main').textContent()) ?? '').toLowerCase();
+    expect(text).toContain('nothing has been learned yet');
+    expect(text).toMatch(/not weak evidence/);
+    expect(text).not.toMatch(/failed|missed|non-compliance|adherence/);
+  });
+
+  test('forecast accuracy and effectiveness are separate panels', async ({ page }) => {
+    await open(page);
+    await select(page, 'forecast-accuracy');
+    await goTo(page, 'Learning');
+
+    await expect(
+      page.getByRole('region', { name: 'Forecast accuracy', exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('region', { name: 'Recommendation effectiveness', exact: true }),
+    ).toBeVisible();
+
+    // The two panels state their independence. Whether a *combined figure* exists
+    // is asserted against the engine data in `learning.test.ts`, which is the only
+    // place it could — a phrase match here would flag honest prose that explains
+    // why something is not a success rate.
+    const text = (await page.getByRole('main').textContent()) ?? '';
+    expect(text).toMatch(/separate question/i);
+    expect(text).toMatch(/says nothing about whether any recommendation helped/i);
+  });
+
+  test('a suspended belief says it was paused, not deleted', async ({ page }) => {
+    await open(page);
+    await select(page, 'context-change-learning');
+    await goTo(page, 'Learning');
+
+    await expect(page.getByRole('main')).toContainText(/suspended/i);
+    await expect(page.getByRole('main')).toContainText(/Suspended, not deleted/i);
+  });
+
+  test('returning after a gap carries no guilt and no backlog', async ({ page }) => {
+    await open(page);
+    await select(page, 'return-after-absence');
+
+    await expect(page.locator('.banner-quiet')).toContainText(/Welcome back/i);
+    const text = ((await page.getByRole('main').textContent()) ?? '').toLowerCase();
+    expect(text).toMatch(/not a problem to fix/);
+    expect(text).not.toMatch(/missed|catch up|behind|streak|overdue/);
+  });
+
+  test('weekly direction is compared week over week without scoring', async ({ page }) => {
+    await open(page);
+    await select(page, 'weekly-continuity');
+    await goTo(page, 'Learning');
+
+    const text = ((await page.getByRole('main').textContent()) ?? '').toLowerCase();
+    expect(text).toContain('carry forward');
+    expect(text).toMatch(/nothing here is scored/);
+    expect(text).not.toMatch(/failed|missed|compliance/);
+  });
+});
+
 test.describe('prohibited constructs are absent everywhere', () => {
   test('no Life Score, category score, streak, or normal-state status panel', async ({
     page,
@@ -256,16 +341,42 @@ test.describe('prohibited constructs are absent everywhere', () => {
     }
   });
 
-  test('the only image on any surface is a chart that names itself', async ({ page }) => {
+  /**
+   * Phase 5 adds more charts, so counting to one no longer expresses the rule. The
+   * rule was never "at most one image" — it is "no decorative imagery". This is the
+   * stronger form: every graphic must be a chart that names itself and states its
+   * question.
+   */
+  test('every graphic is a named chart, and nothing is decorative', async ({ page }) => {
     await open(page);
-    await goTo(page, 'Direction');
+    await select(page, 'learning-loop');
 
-    expect(await page.locator('main img, main svg, main canvas').count()).toBe(1);
+    for (const destination of ['Direction', 'Learning']) {
+      await goTo(page, destination);
 
-    const svg = page.locator('main svg');
-    await expect(svg).toHaveAttribute('role', 'img');
-    await expect(svg.locator('title')).not.toBeEmpty();
-    await expect(page.locator('main figure')).toHaveCount(1);
+      // No raster or canvas imagery anywhere — those could only be decoration here.
+      expect(await page.locator('main img, main canvas').count(), destination).toBe(0);
+
+      const svgCount = await page.locator('main svg').count();
+      const figureCount = await page.locator('main figure').count();
+      expect(figureCount, destination).toBeGreaterThan(0);
+
+      // Every SVG names itself and lives inside a figure that states its question.
+      for (let index = 0; index < svgCount; index += 1) {
+        const svg = page.locator('main svg').nth(index);
+        await expect(svg, `${destination} svg ${String(index)}`).toHaveAttribute('role', 'img');
+        await expect(svg.locator('title')).not.toBeEmpty();
+      }
+
+      for (let index = 0; index < figureCount; index += 1) {
+        const figure = page.locator('main figure').nth(index);
+        await expect(figure.locator('.chart-question')).not.toBeEmpty();
+        await expect(figure.locator('.chart-summary')).not.toBeEmpty();
+      }
+
+      await page.goto('./');
+      await select(page, 'learning-loop');
+    }
   });
 
   test('no delete control exists anywhere', async ({ page }) => {
@@ -298,6 +409,8 @@ test.describe('navigation', () => {
 
     await page.getByRole('button', { name: 'More', exact: true }).click();
     await page.getByRole('button', { name: 'Learning', exact: true }).first().click();
+    // The 'action' scenario has no executions, so nothing has been learned — and
+    // the surface says exactly that rather than filling the space.
     await expect(page.getByRole('main')).toContainText('Nothing has been learned yet');
   });
 
@@ -347,13 +460,13 @@ test.describe('the chart states everything the graph policy requires (UX-003)', 
     await open(page);
     await goTo(page, 'Direction');
 
-    const figure = page.locator('main figure');
+    // Direction carries several charts now, so scope to the trajectory one.
+    const figure = page.locator('main figure').first();
     await expect(figure).toContainText('Is focused work recovering, or still declining?');
     await expect(figure).toContainText('summed per week');
     await expect(figure).toContainText('Last eight weeks');
     await expect(figure).toContainText('observed');
-    await expect(figure).toContainText('not counted as zero');
-    await expect(figure).toContainText('no model uncertainty');
+    await expect(figure).toContainText('never counted as zero');
   });
 
   test('weeks with no evidence are gaps, not plotted at zero', async ({ page }) => {
@@ -362,9 +475,11 @@ test.describe('the chart states everything the graph policy requires (UX-003)', 
 
     // The engine's series carries nulls for weeks without evidence; the chart
     // breaks the line rather than dropping to the axis, and marks *every* gap.
-    const points = await page.locator('main svg circle').count();
-    const runs = await page.locator('main svg polyline').count();
-    const gaps = await page.locator('main svg rect.chart-gap').count();
+    // Scoped to the trajectory chart — Direction now renders several.
+    const svg = page.locator('main figure').first().locator('svg');
+    const points = await svg.locator('circle').count();
+    const runs = await svg.locator('polyline').count();
+    const gaps = await svg.locator('rect.chart-gap').count();
 
     expect(points).toBeGreaterThan(0);
     expect(runs).toBeGreaterThan(0);

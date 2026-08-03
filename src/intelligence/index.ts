@@ -6,29 +6,63 @@ import {
 } from './change-detection/materialChange';
 import { selectOutput } from './decision/selectOutput';
 import { proposeWeeklyDirection } from './decision/weeklyDirection';
+import { assessWeeklyContinuity, type WeeklyContinuity } from './decision/weeklyContinuity';
+import {
+  evaluateEffectiveness,
+  evaluateForecasts,
+  type EffectivenessEvaluation,
+  type ForecastEvaluation,
+} from './evaluation/evaluate';
 import { untreatedForecast } from './forecast/untreatedForecast';
 import { generateCandidates } from './intervention/candidateActions';
 import { predictEffects } from './intervention/predictedEffects';
+import { deriveBeliefs, type BeliefState } from './learning/beliefs';
+import { buildGraphs, type Graph } from './learning/insights';
+import { assessReturn, type ReturnAfterAbsence } from './state/absence';
 import { assessState } from './state/assessState';
 import { summariseCategories } from './state/categorySummaries';
 import { focusedHoursTrajectory } from './state/trajectories';
-import type { EpisodeResult } from './types';
+import type { EpisodeCore } from './types';
 
 export * from './types';
 export * from './contracts';
+export type { ForecastEvaluation, EffectivenessEvaluation } from './evaluation/evaluate';
+export type { BeliefState } from './learning/beliefs';
+export type { Graph, TrendGraph, ComparisonGraph } from './learning/insights';
+export type { WeeklyContinuity } from './decision/weeklyContinuity';
+export type { ReturnAfterAbsence } from './state/absence';
 
 /**
- * One decision episode.
+ * Everything Phase 5 learns.
  *
- * The lifecycle from the architecture, in order: gather, assess, forecast, generate
- * candidates, predict their effects, filter, compare, emit exactly one output.
+ * `forecastEvaluations` and `effectiveness` are **separate fields and are never
+ * combined**. A well-calibrated forecast says nothing about whether the advice
+ * helped, and vice versa (`LEARN-001`). Nothing in this codebase averages them.
+ */
+export interface LearningResult {
+  readonly forecastEvaluations: readonly ForecastEvaluation[];
+  readonly effectiveness: readonly EffectivenessEvaluation[];
+  readonly beliefs: readonly BeliefState[];
+  readonly graphs: readonly Graph[];
+  readonly continuity: WeeklyContinuity;
+  readonly absence: ReturnAfterAbsence;
+}
+
+export interface EpisodeResult extends EpisodeCore {
+  readonly learning: LearningResult;
+}
+
+/**
+ * One decision episode, now closing the loop.
  *
- * Deterministic throughout — `now` is passed in and no module reads the clock or a
- * random source. The same records at the same instant always produce the same
- * episode, which is what makes the scenario harness evidence rather than decoration.
+ * The lifecycle in order: gather, assess, forecast, generate candidates, predict
+ * their effects, filter, compare, emit exactly one output — then evaluate what
+ * earlier episodes predicted and recommended, and update beliefs conservatively.
+ *
+ * Deterministic throughout: `now` is passed in and no module reads the clock or a
+ * random source.
  *
  * Intelligence emits structured results and **never writes to storage** (ARCH-001).
- * Persisting any of this is the application layer's decision.
  */
 export function runEpisode(records: readonly CanonicalRecord[], now: Date): EpisodeResult {
   const state = assessState(records, now);
@@ -41,6 +75,21 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
 
   const { output, rejected } = selectOutput(records, state, candidates, effects, forecast);
   const weeklyDirection = proposeWeeklyDirection(records, state, categories, now);
+
+  /* --- Phase 5: evaluate, then learn -------------------------------------- */
+  const forecastEvaluations = evaluateForecasts(records, now);
+  const effectiveness = evaluateEffectiveness(records, now);
+  const beliefs = deriveBeliefs(records, effectiveness, now);
+  const continuity = assessWeeklyContinuity(records, effectiveness);
+  const absence = assessReturn(records, now);
+  const graphs = buildGraphs(
+    records,
+    trajectory,
+    forecastEvaluations,
+    effectiveness,
+    beliefs,
+    now,
+  );
 
   /*
    * Material change is a diff of two real runs. Re-running the engine over the
@@ -91,6 +140,7 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
     whatChanged,
     output,
     weeklyDirection,
+    learning: { forecastEvaluations, effectiveness, beliefs, graphs, continuity, absence },
     internal: { candidates, effects, rejected },
   };
 }

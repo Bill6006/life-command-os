@@ -250,7 +250,7 @@ export interface WeeklyDirection {
 /* The episode                                                                 */
 /* -------------------------------------------------------------------------- */
 
-export interface EpisodeResult {
+export interface EpisodeCore {
   readonly episodeId: string;
   readonly at: string;
   readonly clock: string;

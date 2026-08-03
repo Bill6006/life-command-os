@@ -60,7 +60,7 @@ test.describe('application shell', () => {
     const main = page.getByRole('main');
     await expect(main).toContainText('Plan version');
     await expect(main).toContainText('2.6 Lean Execution');
-    await expect(main).toContainText('Phase 4');
+    await expect(main).toContainText('Phase 5');
     await expect(main).toContainText('Built');
   });
 });

@@ -24,13 +24,22 @@ beforeEach(() => {
  * Gate requirement: every active core record validates independently.
  */
 describe('core record families', () => {
-  it('registers exactly the twenty families of the first vertical slice', () => {
-    expect(RECORD_TYPES).toHaveLength(20);
+  it('registers twenty-one families: the first slice plus learned-belief', () => {
+    expect(RECORD_TYPES).toHaveLength(21);
     expect(Object.keys(RECORD_SCHEMAS).sort()).toEqual([...RECORD_TYPES].sort());
   });
 
-  it('does not register LearnedBeliefRecord, which activates in Phase 5', () => {
-    expect(RECORD_TYPES).not.toContain('learned-belief');
+  it('registers LearnedBeliefRecord, activated in Phase 5', () => {
+    // Absent through Phases 2–4 by design; activated now that there is learning
+    // behaviour for it to describe.
+    expect(RECORD_TYPES).toContain('learned-belief');
+  });
+
+  it('still registers no domain-specific family', () => {
+    // Phase 7 activates those, one domain at a time.
+    for (const domainish of ['sleep', 'mood', 'expense', 'workout', 'medication']) {
+      expect(RECORD_TYPES.some((type) => type.includes(domainish))).toBe(false);
+    }
   });
 
   it('validates a well-formed record of every family', () => {

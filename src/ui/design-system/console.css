@@ -529,6 +529,101 @@
   font-size: var(--text-label);
 }
 
+/*
+ * Returning after a gap is not a warning. It uses the calm accent, never the
+ * attention colour — the user is not in trouble, and the interface should not
+ * imply otherwise.
+ */
+.banner-quiet {
+  border-color: var(--border-default);
+  border-left-color: var(--accent-secondary);
+}
+
+.banner-quiet .banner-label {
+  color: var(--accent-secondary);
+}
+
+/* ========================================================================== */
+/* Comparison bars (UX-003)                                                    */
+/* ========================================================================== */
+
+.bars {
+  margin: var(--space-2) 0 0;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-1);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.bar-row:last-child {
+  border-bottom: 0;
+}
+
+.bars dt {
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.bars dd {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.bar-value {
+  min-width: 2ch;
+}
+
+.bar-track {
+  flex: 1;
+  min-width: 0;
+  height: 0.55rem;
+  background: var(--surface-inset);
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+}
+
+/* Tone is a secondary cue; the number and label always carry the meaning. */
+.bar-benefit {
+  background: var(--signal-benefit);
+}
+
+.bar-cost {
+  background: var(--signal-cost);
+}
+
+.bar-neutral {
+  background: var(--text-secondary);
+}
+
+/* Unresolved is deliberately drawn as absence, not as a low value. */
+.bar-unresolved {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--border-default),
+    var(--border-default) 3px,
+    transparent 3px,
+    transparent 6px
+  );
+}
+
+/* Missing evidence reads as missing, never as a value. */
+.absent {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
 /* ========================================================================== */
 /* Standalone states (loading, empty, locked, error, recovery)                 */
 /* ========================================================================== */

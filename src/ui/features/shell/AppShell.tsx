@@ -239,7 +239,7 @@ export function AppShell(): React.JSX.Element {
           {destination === 'commitments' ? (
             <CommitmentsSurface records={scenario.records} />
           ) : null}
-          {destination === 'learning' ? <LearningSurface records={scenario.records} /> : null}
+          {destination === 'learning' ? <LearningSurface episode={episode} /> : null}
           {destination === 'data-privacy' ? (
             <DataPrivacySurface records={scenario.records} />
           ) : null}

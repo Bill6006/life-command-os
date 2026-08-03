@@ -305,14 +305,32 @@ describe('categories', () => {
 });
 
 describe('confidence honesty', () => {
-  it('never reaches strong personal evidence in this phase', () => {
-    // The top label requires prospective validation, and nothing has been validated
-    // against an outcome yet. A baseline that could award itself the highest label
-    // on day one would be exactly the false precision the Constitution forbids.
+  it('never reaches strong personal evidence outside a prospectively validated belief', () => {
+    /*
+     * Phase 5 lifts the ceiling — but only for beliefs, and only when every
+     * supporting episode was predicted before it was observed. State, trajectory,
+     * forecast, and decision confidence can still never reach it, because none of
+     * them is validated against a later outcome.
+     */
     for (const scenario of SCENARIOS) {
       const episode = runEpisode(scenario.records, new Date(scenario.nowIso));
-      const serialised = JSON.stringify(episode);
-      expect(serialised, scenario.id).not.toContain('strong-personal-evidence');
+
+      for (const assessment of [
+        episode.state.confidence,
+        episode.trajectory.confidence,
+        episode.forecast.confidence,
+        episode.output.confidence,
+        episode.weeklyDirection.confidence,
+      ]) {
+        expect(assessment.label, scenario.id).not.toBe('strong-personal-evidence');
+      }
+
+      for (const belief of episode.learning.beliefs) {
+        if (belief.confidence.label === 'strong-personal-evidence') {
+          expect(belief.prospectivelyValidated, scenario.id).toBe(true);
+          expect(belief.contradicting, scenario.id).toEqual([]);
+        }
+      }
     }
   });
 

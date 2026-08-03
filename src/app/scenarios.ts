@@ -145,6 +145,144 @@ function steadyWeeks(): CanonicalRecord[] {
   ];
 }
 
+/* -------------------------------------------------------------------------- */
+/* Phase 5 builders — the loop from recommendation through outcome             */
+/* -------------------------------------------------------------------------- */
+
+const DERIVED = {
+  source: 'system-derived',
+  provenance: { method: 'derived', derivedFromRecordIds: [id(1)] },
+} as const;
+
+const CONFIDENCE = {
+  label: 'early-signal',
+  dimensions: [{ dimension: 'comparable-evidence-volume', assessment: 'supports' }],
+  basisRecordIds: [id(1)],
+} as const;
+
+function recommendation(occurredMs: number): CanonicalRecord {
+  return {
+    ...envelope('recommendation', occurredMs),
+    ...DERIVED,
+    output: { kind: 'action', candidateActionRecordId: id(9001) },
+    confidence: CONFIDENCE,
+    reasonTrace: ['A window was open and the goal had not moved'],
+    consideredCandidateActionIds: [id(9001), id(9002)],
+    whatChanged: ['A window opened'],
+  } as unknown as CanonicalRecord;
+}
+
+function execution(
+  recommendationRecordId: string,
+  state: 'executed' | 'partially-executed' | 'not-executed' | 'unknown-execution',
+  occurredMs: number,
+): CanonicalRecord {
+  const window = { start: at(occurredMs), end: at(occurredMs + 25 * MINUTE) };
+  return {
+    ...envelope('execution', occurredMs),
+    ...OBSERVED,
+    recommendationRecordId,
+    state,
+    ...(state === 'executed' || state === 'partially-executed'
+      ? { executedWindow: window }
+      : {}),
+    ...(state === 'not-executed' ? { declineReason: 'Could not now' } : {}),
+  } as unknown as CanonicalRecord;
+}
+
+function outcome(
+  executionRecordId: string,
+  direction: 'improved' | 'unchanged' | 'worsened' | 'mixed',
+  occurredMs: number,
+  resolved = true,
+): CanonicalRecord {
+  const observationId = id(9100);
+  return {
+    ...envelope('outcome', occurredMs),
+    ...OBSERVED,
+    category: 'career-work-learning',
+    target: 'Focused hours by the end of this week',
+    outcomeWindow: { start: at(occurredMs - 7 * DAY), end: at(occurredMs) },
+    result: resolved
+      ? {
+          status: 'known',
+          value: { summary: `Focused hours ${direction}`, direction },
+        }
+      : { status: 'unresolved', awaiting: 'The week to finish' },
+    observationRecordIds: resolved ? [observationId] : [],
+    executionRecordId,
+  } as unknown as CanonicalRecord;
+}
+
+function forecastRecord(
+  direction: 'improving' | 'stable' | 'declining' | 'mixed',
+  occurredMs: number,
+  horizonEndMs: number,
+): CanonicalRecord {
+  return {
+    ...envelope('untreated-forecast', occurredMs),
+    ...DERIVED,
+    category: 'career-work-learning',
+    target: 'Focused hours by the end of this week',
+    horizon: { start: at(occurredMs), end: at(horizonEndMs) },
+    projection: {
+      status: 'known',
+      value: { summary: `Focused hours ${direction}`, direction },
+    },
+    assumptions: ['Current commitments hold'],
+    uncertainty: 'Three weeks of comparable evidence only.',
+    confidence: CONFIDENCE,
+    reasonTrace: ['Persistence from the observed trajectory'],
+  } as unknown as CanonicalRecord;
+}
+
+function weeklyDirection(
+  statement: string,
+  response: 'confirmed' | 'rejected' | undefined,
+  occurredMs: number,
+): CanonicalRecord {
+  return {
+    ...envelope('weekly-direction', occurredMs),
+    ...DERIVED,
+    weekWindow: { start: at(occurredMs), end: at(occurredMs + 7 * DAY) },
+    proposal: { kind: 'focus', statement, categories: ['career-work-learning'] },
+    userResponse:
+      response === undefined
+        ? { status: 'unresolved', awaiting: 'user confirmation' }
+        : { status: 'known', value: response === 'rejected' ? { response } : { response } },
+    confidence: CONFIDENCE,
+    reasonTrace: ['Focused hours declined for three weeks'],
+  } as unknown as CanonicalRecord;
+}
+
+/** One complete episode: recommended, carried out, observed. */
+function closedLoop(
+  dayOffset: number,
+  state: 'executed' | 'partially-executed' | 'not-executed' | 'unknown-execution',
+  direction: 'improved' | 'unchanged' | 'worsened' | 'mixed',
+  options: { readonly withOutcome?: boolean } = {},
+): CanonicalRecord[] {
+  const recommendedAt = -dayOffset * DAY;
+  const rec = recommendation(recommendedAt);
+  const exec = execution(
+    (rec as unknown as { recordId: string }).recordId,
+    state,
+    recommendedAt + HOUR,
+  );
+  const records: CanonicalRecord[] = [rec, exec];
+
+  if (options.withOutcome !== false) {
+    records.push(
+      outcome(
+        (exec as unknown as { recordId: string }).recordId,
+        direction,
+        recommendedAt + 8 * DAY,
+      ),
+    );
+  }
+  return records;
+}
+
 export interface Scenario {
   readonly id: string;
   readonly name: string;
@@ -352,6 +490,153 @@ export const SCENARIOS: readonly Scenario[] = [
       goal('Goal One', 'career-work-learning', 11),
       ...decliningWeeks(),
       context({ minutes: 40, capacity: 'high' }),
+    ],
+  ),
+
+  /* --- Phase 5: the learning loop ---------------------------------------- */
+
+  build(
+    'learning-loop',
+    'A belief forms',
+    'Four recommendations carried out and observed, none confounded. Expect the confidence ceiling to lift — this is the only way it can.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 2),
+      ...decliningWeeks(),
+      ...closedLoop(40, 'executed', 'improved'),
+      ...closedLoop(32, 'executed', 'improved'),
+      ...closedLoop(24, 'executed', 'improved'),
+      ...closedLoop(16, 'executed', 'improved'),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'declined',
+    'A recommendation declined',
+    'The user said "cannot now". Expect unresolved — declining is never evidence that the advice was poor.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 11),
+      ...decliningWeeks(),
+      ...closedLoop(10, 'not-executed', 'unchanged'),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'partial-execution',
+    'Partly carried out',
+    'Done in reduced form. Expect the dose uncertainty to count as confounding rather than being ignored.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 11),
+      ...decliningWeeks(),
+      ...closedLoop(12, 'partially-executed', 'improved'),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'missing-outcome',
+    'Outcome never arrived',
+    'Carried out, window long closed, nothing observed. Expect unresolved — absence is never counted against the recommendation.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 11),
+      ...decliningWeeks(),
+      ...closedLoop(30, 'executed', 'improved', { withOutcome: false }),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'misleading-correlation',
+    'A tempting coincidence',
+    'The outcome improved — but two actions ran in the same window and circumstances changed. Expect the engine to refuse to call it supported.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 11),
+      ...decliningWeeks(),
+      ...closedLoop(14, 'executed', 'improved'),
+      ...closedLoop(14, 'executed', 'improved'),
+      {
+        ...envelope('life-context-change', -13 * DAY),
+        ...OBSERVED,
+        summary: 'Started a quieter project',
+        affectedCategories: ['career-work-learning'],
+        effectiveFrom: at(-13 * DAY),
+      } as unknown as CanonicalRecord,
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'context-change-learning',
+    'Circumstances changed',
+    'A belief had formed, then the working pattern changed. Expect it suspended rather than deleted — the evidence was real, it is just no longer comparable.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 2),
+      ...decliningWeeks(),
+      ...closedLoop(40, 'executed', 'improved'),
+      ...closedLoop(32, 'executed', 'improved'),
+      ...closedLoop(24, 'executed', 'improved'),
+      {
+        ...envelope('life-context-change', -5 * DAY),
+        ...OBSERVED,
+        summary: 'Working pattern changed to four longer days',
+        affectedCategories: ['time-attention-capacity', 'career-work-learning'],
+        effectiveFrom: at(-5 * DAY),
+      } as unknown as CanonicalRecord,
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'forecast-accuracy',
+    'Forecast checked',
+    'One forecast said declining and the week worsened; another has not closed. Expect accuracy reported separately from whether any advice helped.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 11),
+      ...decliningWeeks(),
+      forecastRecord('declining', -14 * DAY, -7 * DAY),
+      forecastRecord('improving', -2 * DAY, 5 * DAY),
+      ...closedLoop(13, 'executed', 'worsened'),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'weekly-continuity',
+    'Week compared with last',
+    'Last week proposed a direction and it was confirmed and acted on. Expect it carried forward, with no moral scoring either way.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 2),
+      ...decliningWeeks(),
+      // Proposed a fortnight ago, acted on since, and both outcome windows have
+      // closed. Loops dated inside the window would still be unresolved — correctly.
+      weeklyDirection('Protect two deep-work blocks', 'confirmed', -14 * DAY),
+      ...closedLoop(12, 'executed', 'improved'),
+      ...closedLoop(10, 'executed', 'improved'),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'return-after-absence',
+    'Returning after a gap',
+    'Nothing recorded for three weeks. Expect no backlog and no guilt — just expired predictions and honestly lower confidence.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 30),
+      focusBlock(90, -40 * DAY),
+      focusBlock(60, -39 * DAY),
+      commitment('Commitment Two', 'career-work-learning', 'blocked', false),
+      forecastRecord('declining', -35 * DAY, -28 * DAY),
+      context({ minutes: 40, capacity: 'moderate', occurredMs: -30 * DAY }),
     ],
   ),
 

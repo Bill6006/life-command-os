@@ -1,5 +1,5 @@
 import { KeyValues, Panel } from '../../components/primitives';
-import { TrendChart } from '../../components/TrendChart';
+import { GraphFigure } from '../../components/GraphFigure';
 import type { EpisodeResult } from '../../../intelligence';
 import type { CanonicalRecord } from '../../../domain/records';
 import {
@@ -29,20 +29,6 @@ export function DirectionSurface({
 }): React.JSX.Element {
   const star = records.find((record) => record.recordType === 'north-star');
   const goals = records.filter((record) => record.recordType === 'goal');
-
-  const series = {
-    question: episode.trajectory.question,
-    metric: 'Hours in blocks of 25 minutes or more, summed per week',
-    window: 'Last eight weeks',
-    evidence: 'observed' as const,
-    missingDataTreatment:
-      'Weeks with no recorded evidence are drawn as gaps. They are not counted as zero.',
-    uncertainty:
-      'Counts are observed, not estimated, so the series carries no model uncertainty. The direction band is a stated convention.',
-    textSummary: episode.trajectory.detail,
-    unit: 'h',
-    points: episode.trajectory.periods,
-  };
 
   return (
     <div className="grid">
@@ -145,9 +131,13 @@ export function DirectionSurface({
         )}
       </Panel>
 
-      <Panel label="Trend" wide>
-        <TrendChart series={series} />
-      </Panel>
+      {episode.learning.graphs
+        .filter((graph) => ['focused-hours', 'capacity', 'north-star'].includes(graph.id))
+        .map((graph) => (
+          <Panel label="Trend" wide key={graph.id}>
+            <GraphFigure graph={graph} />
+          </Panel>
+        ))}
     </div>
   );
 }

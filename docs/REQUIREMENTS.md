@@ -2,7 +2,7 @@
 
 **Status:** Controlling
 **Plan version:** 2.6 Lean Execution
-**Current phase:** Phase 4
+**Current phase:** Phase 5
 
 This registry preserves the approved requirement IDs. It is the lean traceability spine:
 every implemented behavior carries an approved requirement ID in its implementation and its
@@ -70,9 +70,9 @@ documentation).
 | INTEL-006 | Candidate actions are compared internally, but only one selected recommendation is presented to the user. | 4–10 | ACTIVE |
 | INTEL-007 | The system proposes one weekly direction or a deliberately quiet week from all enabled evidence without requiring the user to identify the priority from a blank slate. | 4–10 | ACTIVE |
 | INTEL-008 | The system explains material changes that altered state, recommendation, or confidence. | 4–10 | ACTIVE |
-| LEARN-001 | Forecast accuracy and recommendation effectiveness are evaluated separately. | 5–10 | PENDING |
-| LEARN-002 | Missing outcomes remain unresolved and non-execution is not judged ineffective. | 5–10 | PENDING |
-| LEARN-003 | Strong personal claims require prospective evidence. | 5–10 | PENDING |
+| LEARN-001 | Forecast accuracy and recommendation effectiveness are evaluated separately. | 5–10 | ACTIVE |
+| LEARN-002 | Missing outcomes remain unresolved and non-execution is not judged ineffective. | 5–10 | ACTIVE |
+| LEARN-003 | Strong personal claims require prospective evidence. | 5–10 | ACTIVE |
 | UX-001 | The approved Luminous Dark Command Surface remains controlling. | 3–10 | ACTIVE |
 | UX-002 | Facts and inferences are distinguishable without color alone. | 3–10 | ACTIVE |
 | UX-003 | Graphs answer named questions and include accessible summaries. | 5–10 | ACTIVE |
@@ -324,7 +324,32 @@ are machine-readable in `src/intelligence/contracts.ts` and asserted complete by
 | `UX-009` | No score is computed anywhere | `emits no numerical category score anywhere` | Asserted across every scenario |
 | `UX-003` | `components/TrendChart.tsx`, series typed to carry its obligations | `console-shell.spec.ts` → `the chart states everything the graph policy requires` (2) | Every gap marked; points + gaps = window length |
 
-### Confidence ceiling — recorded deliberately
+## 3c. Active requirement records — Phase 5
+
+| ID | Implementation | Test IDs | Notes |
+|---|---|---|---|
+| `LEARN-001` | `evaluation/evaluate.ts` — `evaluateForecasts` and `evaluateEffectiveness` are separate functions with separate result types; `LearningResult` holds them as separate fields | `learning.test.ts` → `forecast accuracy and effectiveness stay separate` (3); `console-shell.spec.ts` → `forecast accuracy and effectiveness are separate panels` | No code path averages or combines them |
+| `LEARN-002` | Execution-state guard in `evaluateEffectiveness`; expired windows in `outcomeWindows.ts` | `non-execution is never judged` (3); `missing outcomes remain unresolved` (2) | Declining and missing outcomes both produce `unresolved`, and contribute nothing to any belief |
+| `LEARN-003` | `learning/beliefs.ts` — the top label requires four clean prospective episodes; `learnedBeliefRecord` refuses it without `prospectivelyValidated` | `the confidence ceiling lifts, but only on prospective evidence` (3) | The schema enforces it independently of the governor |
+| Confounding | `assessConfounding` — overlapping executions, context changes, partial execution | `a positive outcome does not prove causation` (4) | A high-risk episode cannot reach `supported` |
+| Belief governor | `deriveBeliefs` — form, strengthen, narrow, suspend, retire | `beliefs update conservatively and keep their reasons` (2) | Narrowing precedes weakening; suspension preserves evidence |
+| Weekly continuity | `decision/weeklyContinuity.ts` | `weekly-direction continuity` (2) | No moral vocabulary anywhere, asserted |
+| Graceful return | `state/absence.ts` | `graceful return after absence` (4) | No backlog, no guilt language, predictions expire rather than fail |
+| `UX-003` | `learning/insights.ts` (8 graphs) + `components/GraphFigure.tsx` | `every graph answers a named question` (3); `console-shell.spec.ts` → `every graphic is a named chart` | Every graph carries its obligations as data |
+
+---
+
+### Confidence ceiling — lifted in Phase 5, for beliefs only
+
+Through Phase 4 `strong-personal-evidence` was unreachable by construction. Phase 5 lifts that
+ceiling **only for beliefs, and only under prospective validation**: four clean episodes, each
+predicted before it was observed, none contradicted and none confounded.
+
+State, trajectory, forecast, decision, and weekly-direction confidence still cannot reach it,
+and a test asserts that across every scenario. None of them is validated against a later
+outcome, so none of them has earned it.
+
+### Superseded Phase 4 note
 
 `assessConfidence` cannot return `strong-personal-evidence` in this phase, and a test asserts
 it never appears anywhere in any scenario. The top label requires prospective validation
