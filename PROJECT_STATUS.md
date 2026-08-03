@@ -23,8 +23,8 @@
 ## GitHub Pages owner preview
 - URL: **https://bill6006.github.io/life-command-os/**
 - Deployment status: **LIVE**
-- Deployed commit: `b60bb5d` (`Phase 1: make the storage precondition test prove what it claims`)
-- Last phone-and-desktop verification: 2026-08-03, at 375×812 and desktop. Shell renders, navigation works, About shows plan version 2.6 Lean Execution / Phase 1 / commit `b60bb5d`, service worker active and controlling.
+- Deployed commit: the current head of `main`. The **gate-approved application build is `b60bb5d`**; every commit after it in Phase 1 is documentation-only and produces byte-identical application output. The About surface always reports the exact commit it was built from, so the live build is self-identifying and this field cannot go stale.
+- Last phone-and-desktop verification: 2026-08-03, at 375×812 and desktop, against `b60bb5d`. Shell renders, navigation works, About shows plan version 2.6 Lean Execution / Phase 1 / commit `b60bb5d`, service worker active and controlling.
 - Hosted build contains synthetic content only: **YES** — it contains no data of any kind.
 
 > This preview authorises inspecting synthetic UI progress. It does **not** authorise
