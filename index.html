@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#07111F" />
+    <meta
+      name="description"
+      content="A private, local-first personal decision-intelligence system."
+    />
+    <!--
+      PRIV-003 / ADR-0003: no external origins are permitted. There is no CDN, no
+      analytics, no external AI, and no remote font. Everything is same-origin.
+      This is a starting Content Security Policy direction; Phase 6 hardens it.
+
+      `frame-ancestors` is deliberately absent: it is ignored when delivered via a
+      <meta> element, and GitHub Pages does not allow custom response headers. So
+      clickjacking protection is not available on the owner preview. Recorded as a
+      known limitation rather than papered over with a directive that does nothing.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <title>Life Command OS</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>Life Command OS requires JavaScript to run.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

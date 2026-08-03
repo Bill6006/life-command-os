@@ -1,0 +1,71 @@
+# Life Command OS — .gitignore
+#
+# PRIV-001: real personal data must never enter tracked content or Git history.
+# PRIV-002: development and automated tests use neutral synthetic data only.
+#
+# This file is defence in depth, not the strategy. The strategy is ADR-0007:
+# the repository contains synthetic data only, permanently. Never use `git add -f`
+# to bypass these rules.
+
+# --- Private runtime data and exports (PRIV-001, PRIV-003) ---
+# Real life data lives in local IndexedDB and must never be committed.
+*.backup
+*.lcos-backup
+/exports/
+/backups/
+/local-data/
+/private/
+/owner-only/
+*.indexeddb
+*.sqlite
+*.sqlite3
+*.db
+
+# --- Owner-only and private capture ---
+/screenshots/private/
+/docs/private/
+*.private.*
+*.owner.*
+
+# --- Secrets and environment ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.json
+credentials.json
+
+# --- Dependencies and build output ---
+node_modules/
+dist/
+dist-ssr/
+build/
+*.local
+
+# --- Test and tooling output ---
+coverage/
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/blob-report/
+.vitest/
+
+# --- Editor and OS ---
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+
+# --- Logs ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

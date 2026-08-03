@@ -1,0 +1,12 @@
+dist/
+dev-dist/
+coverage/
+node_modules/
+playwright-report/
+test-results/
+package-lock.json
+
+# Phase 0 controlling documents are hand-formatted for readability.
+docs/
+README.md
+PROJECT_STATUS.md
