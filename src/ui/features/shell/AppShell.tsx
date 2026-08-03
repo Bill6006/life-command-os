@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { buildInfo, shortCommit } from '../../../app/buildInfo';
+import { DesignSelection } from '../design-selection/DesignSelection';
 
 /**
  * Phase 1 application shell.
@@ -13,9 +14,14 @@ import { buildInfo, shortCommit } from '../../../app/buildInfo';
  * Data & Privacy) arrive in Phase 3 after the owner selects a command surface.
  */
 
-type View = 'foundation' | 'about';
+type View = 'design' | 'foundation' | 'about';
 
+/**
+ * `design` leads, because Phase 3 is waiting on one decision from the owner and
+ * everything else here is context for it. It disappears once a variant is selected.
+ */
 const VIEWS: readonly { id: View; label: string }[] = [
+  { id: 'design', label: 'Design' },
   { id: 'foundation', label: 'Foundation' },
   { id: 'about', label: 'About' },
 ];
@@ -121,7 +127,7 @@ function AboutView(): React.JSX.Element {
 }
 
 export function AppShell(): React.JSX.Element {
-  const [view, setView] = useState<View>('foundation');
+  const [view, setView] = useState<View>('design');
   const offline = useIsOffline();
 
   return (
@@ -165,7 +171,9 @@ export function AppShell(): React.JSX.Element {
             ) : null}
           </div>
 
-          {view === 'foundation' ? <FoundationView /> : <AboutView />}
+          {view === 'design' ? <DesignSelection /> : null}
+          {view === 'foundation' ? <FoundationView /> : null}
+          {view === 'about' ? <AboutView /> : null}
         </main>
 
         <footer className="footer">

@@ -19,7 +19,12 @@
   --text-primary: #f4f8fc;
   --text-muted: #a9bed2;
   --cyan: #28d7e5;
+  --teal: #19c3b1;
+  --violet: #8b7cff;
+  --warm-gold: #f2c75c;
+  --success: #45d483;
   --warning: #ffb45c;
+  --danger: #ff7082;
 
   --radius: 10px;
   --tap-target: 44px;

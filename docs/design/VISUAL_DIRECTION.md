@@ -130,6 +130,22 @@ The goal is to choose a design **without building three applications** (`LEAN-00
 
 **Do not** create every secondary state for all three variants.
 
+### 6.1a The representative test device (owner-decided 2026-08-03)
+
+| Budget input | Decision |
+|---|---|
+| Representative device | The owner's **Samsung phone** |
+| Repeatable test viewport | **375 × 812 CSS pixels** |
+
+Every `UX-005` budget is measured against this. The viewport is what makes the budget
+repeatable in CI — `tests/e2e/design-variants.spec.ts` sets exactly 375 × 812 before
+checking horizontal overflow and touch-target size, so the check does not depend on
+whoever runs it. The physical device remains the authority for the 3-second cached
+startup target, which cannot be measured honestly on CI hardware.
+
+This resolves the open decision carried since Phase 1. It is recorded here now and is
+restated in the design ADR (ADR-0008) at selection.
+
 ### 6.2 After selection, within the same phase
 
 - record the selection in **one ADR (ADR-0008)**, including the named representative test

@@ -23,16 +23,18 @@ test.describe('application shell', () => {
   test('navigates between views and marks the current one', async ({ page }) => {
     await page.goto('./');
 
-    const foundation = page.getByRole('button', { name: 'Foundation' });
-    const about = page.getByRole('button', { name: 'About' });
+    // Design leads during Phase 3: the phase is waiting on one owner decision.
+    const design = page.getByRole('button', { name: 'Design', exact: true });
+    const about = page.getByRole('button', { name: 'About', exact: true });
 
-    await expect(foundation).toHaveAttribute('aria-current', 'page');
+    await expect(design).toHaveAttribute('aria-current', 'page');
     await expect(about).not.toHaveAttribute('aria-current', 'page');
 
     await about.click();
 
     await expect(page.getByRole('heading', { name: 'Build', level: 2 })).toBeVisible();
     await expect(about).toHaveAttribute('aria-current', 'page');
+    await expect(design).not.toHaveAttribute('aria-current', 'page');
   });
 
   test('shows build metadata under About, not on the primary surface', async ({ page }) => {
@@ -50,7 +52,7 @@ test.describe('application shell', () => {
     // OPS-002: the four fields the owner needs to verify a deployed preview.
     await expect(build.getByText('Plan version')).toBeVisible();
     await expect(build.getByText('2.6 Lean Execution')).toBeVisible();
-    await expect(build.getByText('Phase 2', { exact: true })).toBeVisible();
+    await expect(build.getByText('Phase 3', { exact: true })).toBeVisible();
     await expect(build.getByText('Built')).toBeVisible();
   });
 
@@ -74,25 +76,30 @@ test.describe('application shell', () => {
     expect(problems).toEqual([]);
   });
 
-  test('exposes no life-domain feature or intelligence yet', async ({ page }) => {
+  test('the shell itself still exposes no life-domain feature or intelligence', async ({
+    page,
+  }) => {
     await page.goto('./');
-    const body = (await page.locator('body').textContent()) ?? '';
+    await page.getByRole('button', { name: 'Foundation', exact: true }).click();
 
-    // Prohibited constructs, none of which may ever reach the primary surface
-    // (UX-009, UX-011). The shell is allowed to *say* it has no recommendation —
-    // what it may not do is present one the structured engine did not produce,
-    // because there is no engine yet.
+    const body = (await page.locator('main').textContent()) ?? '';
+
+    // Prohibited constructs (UX-009, UX-011).
     expect(body).not.toMatch(/life score/i);
     expect(body).not.toMatch(/streak/i);
     expect(body).not.toMatch(/all systems operational/i);
 
-    // No decision affordance exists: the only controls are the two nav buttons.
-    const buttons = await page.getByRole('button').allTextContents();
-    expect(buttons).toEqual(['Foundation', 'About']);
-
     // No score rings, gauges, meters, or progress indicators.
     await expect(page.getByRole('meter')).toHaveCount(0);
     await expect(page.getByRole('progressbar')).toHaveCount(0);
+
+    // The Phase 3 variants render explicit synthetic view models. No engine exists
+    // to produce a recommendation, so none is reachable outside the design gallery.
+    const diagnostics = await page.evaluate(() =>
+      Object.keys(globalThis.__lifeCommandOsDiagnostics ?? {}).sort(),
+    );
+    expect(diagnostics).not.toContain('recommend');
+    expect(diagnostics).not.toContain('decide');
   });
 });
 

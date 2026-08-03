@@ -2,7 +2,7 @@
 
 **Status:** Controlling
 **Plan version:** 2.6 Lean Execution
-**Current phase:** Phase 2
+**Current phase:** Phase 3 (paused for owner design selection)
 
 This registry preserves the approved requirement IDs. It is the lean traceability spine:
 every implemented behavior carries an approved requirement ID in its implementation and its
@@ -61,6 +61,7 @@ documentation).
 | STORE-001 | IndexedDB is the sole canonical life-data authority. | 1–10 | ACTIVE |
 | STORE-002 | Projections are rebuildable and non-authoritative. | 2–10 | ACTIVE |
 | STORE-003 | Encrypted backup and fresh-profile recovery pass before private alpha. | 6 | PENDING |
+| STORE-004 | A synthetic development export and restore round trip preserves canonical records, and a damaged backup is rejected before any mutation. | 2–10 | ACTIVE |
 | INTEL-001 | Local deterministic structured logic is authoritative. | 4–10 | PENDING |
 | INTEL-002 | Every forecast has an explicit target, horizon, assumptions, uncertainty, and reason trace. | 4–10 | PENDING |
 | INTEL-003 | Predicted intervention effects remain separate from untreated forecasts. | 4–10 | PENDING |
@@ -275,6 +276,20 @@ blocks that carry the evidence.
 | **Status** | ACTIVE |
 | **Open decisions** | `src/importers/` and `src/intelligence/` still do not exist; their boundary rules activate with their code. |
 
+### STORE-004 — synthetic development export and restore
+
+| Field | Value |
+|---|---|
+| **Owning phase** | 2–10 |
+| **Approved** | 2026-08-03 by the owner, covering behaviour already implemented in Phase 2 |
+| **Implementation artifact** | `src/infrastructure/backup/developmentBackup.ts` (format, complete validation before any mutation); `src/application/commands/backupCommands.ts` |
+| **Test IDs** | `backup.test.ts` → `development backup round trip` (2), `a damaged backup is rejected before anything is written` (6); `persistence.spec.ts` → `exports and restores through a real reload`, `a damaged backup is rejected without touching canonical state` |
+| **UI surface** | None yet. Phase 3 Data & Privacy at the earliest. |
+| **Privacy / safety classification** | Integrity-critical. **Unencrypted by design** — the file declares `encrypted: false` so it cannot be mistaken for a Phase 6 backup, and `STORE-003` still gates real private data. |
+| **Evidence artifact** | Round trip preserves superseded history; six damaged-backup cases each leave canonical state untouched |
+| **Status** | ACTIVE |
+| **Open decisions** | None. Encrypted portable backup remains `STORE-003`, Phase 6. |
+
 ---
 
 ## 4. Traceability fields used when a requirement becomes active
@@ -288,18 +303,8 @@ privacy and safety classification · evidence artifact · status · deferred or 
 Proposals identified during Phase 0. **Not approved and not in force.** Each requires
 explicit owner approval before its owning phase begins.
 
-| Proposed ID | Gap | Needed by | Rationale |
-|---|---|---:|---|
-| `STORE-004` *(proposed — implemented, ID unapproved)* | No approved requirement covers the **unencrypted synthetic development export and restore** format. `STORE-003` covers only Phase 6 encrypted backup. | Phase 2 | Prompt pack Phase 2 task 9 and master plan §29 both mandate the development export/restore, and the Phase 2 gate requires that canonical data survive synthetic restore — but no ID exists to carry the traceability. |
-
-**Status of `STORE-004`.** The *behaviour* is implemented, because Prompt 3 task 9 mandates
-it directly and the Phase 2 gate depends on it. The *requirement ID* remains unapproved, so
-the work is traced here rather than in Section 2. Implementation:
-`src/infrastructure/backup/developmentBackup.ts`, `src/application/commands/backupCommands.ts`.
-Tests: `backup.test.ts` → `development backup round trip` (2) and
-`a damaged backup is rejected before anything is written` (6); `persistence.spec.ts` →
-`exports and restores through a real reload`, `a damaged backup is rejected without touching
-canonical state`. Awaiting owner approval to move into Section 2.
+**No open requirement gaps.** `STORE-004` was owner-approved on 2026-08-03 and moved into
+Section 2; its traceability record is in Section 3a.
 
 New requirement IDs are **not** minted silently. Anything implemented under a proposed ID
 must first be approved by the owner and moved into Section 2.
