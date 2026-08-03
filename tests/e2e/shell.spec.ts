@@ -179,16 +179,63 @@ test.describe('installability and offline startup', () => {
 });
 
 test.describe('storage foundation', () => {
-  test('opens a versioned IndexedDB database in a real browser', async ({ page }) => {
+  /**
+   * Scope note, deliberately narrow: this proves the *platform preconditions* the
+   * canonical store depends on. It does not exercise src/infrastructure/database,
+   * which the shell has no reason to open in Phase 1 — there is nothing to store.
+   * Browser-backed persistence of canonical records is Phase 2 gate evidence.
+   */
+  test('provides a secure context with usable IndexedDB from the Pages origin', async ({
+    page,
+  }) => {
     await page.goto('./');
 
-    const result = await page.evaluate(async () => {
-      const databases = await indexedDB.databases();
-      return databases.map((entry) => ({ name: entry.name, version: entry.version }));
+    const environment = await page.evaluate(() => ({
+      secure: window.isSecureContext,
+      available: typeof indexedDB !== 'undefined',
+    }));
+
+    // IndexedDB durability guarantees are weaker outside a secure context, and the
+    // service worker would not register at all.
+    expect(environment).toEqual({ secure: true, available: true });
+
+    // A round trip through the real (non-shimmed) browser implementation.
+    const roundTrip = await page.evaluate(async () => {
+      const database = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open('phase1-precondition-probe', 1);
+        request.onupgradeneeded = () => {
+          request.result.createObjectStore('probe', { keyPath: 'key' });
+        };
+        request.onsuccess = () => {
+          resolve(request.result);
+        };
+        request.onerror = () => {
+          reject(new Error('open failed'));
+        };
+      });
+
+      const value = await new Promise<unknown>((resolve, reject) => {
+        const tx = database.transaction('probe', 'readwrite');
+        tx.objectStore('probe').put({ key: 'k', value: 'synthetic' });
+        tx.oncomplete = () => {
+          const read = database.transaction('probe', 'readonly').objectStore('probe').get('k');
+          read.onsuccess = () => {
+            resolve(read.result);
+          };
+          read.onerror = () => {
+            reject(new Error('read failed'));
+          };
+        };
+        tx.onerror = () => {
+          reject(new Error('write failed'));
+        };
+      });
+
+      database.close();
+      indexedDB.deleteDatabase('phase1-precondition-probe');
+      return value;
     });
 
-    // Phase 1 only needs IndexedDB to be reachable and usable from the page origin.
-    // Phase 2 proves canonical records survive reload and restore.
-    expect(Array.isArray(result)).toBe(true);
+    expect(roundTrip).toEqual({ key: 'k', value: 'synthetic' });
   });
 });
