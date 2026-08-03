@@ -5,135 +5,139 @@ import {
   Panel,
   ReasonTrace,
 } from '../../components/primitives';
-import type { ActionDecision, NowState, Situation } from '../../view-models/prototype';
+import type { EpisodeResult } from '../../../intelligence';
+import {
+  categoryLabel,
+  confidenceLabel,
+  evidenceText,
+  freshnessLabel,
+  isKnownValue,
+  trajectoryLabel,
+} from '../../view-models/present';
 
 /**
- * The Now surface — Console (ADR-0008).
+ * The Now surface — Console (ADR-0008), driven by real engine output.
  *
- * **The decision always leads.** On every viewport and in every state the first
- * panel is the answer: one best move, one high-value question, or deliberate
- * silence. The panels describing the situation follow it. A layout where the answer
- * sits below the evidence is the Briefing variant, which was not selected.
+ * **Every word of substance here comes from `EpisodeResult`.** The component chooses
+ * layout and labels; it never composes a conclusion, a confidence, or a reason. If
+ * the engine abstains, this surface says so — it has no fallback content to fill the
+ * gap with, deliberately.
  *
- * **Five panels maximum** (ADR-0008 rule 2). More panels is precisely how a console
- * becomes a widget wall. Anything further belongs in a destination.
+ * **The decision always leads** (ADR-0008 rule 1), and **five panels maximum**
+ * (rule 2), in every state.
  */
 
+export type NowView = 'decision' | 'what-changed' | 'weekly-direction';
+
+/** Presentation modes the engine cannot produce. Phase 6 makes lock and recovery real. */
+export type InterfaceState = 'engine' | 'loading' | 'error' | 'locked' | 'recovery';
+
 interface NowProps {
-  readonly state: NowState;
+  readonly episode: EpisodeResult;
+  readonly view: NowView;
+  readonly interfaceState: InterfaceState;
+  readonly offline: boolean;
   readonly onOpenChanges: () => void;
+  readonly onOpenWeekly: () => void;
   readonly onOpenDirection: () => void;
+  readonly onBack: () => void;
 }
 
 function SituationPanels({
-  situation,
+  episode,
   onOpenChanges,
   onOpenDirection,
 }: {
-  situation: Situation;
+  episode: EpisodeResult;
   onOpenChanges: () => void;
   onOpenDirection: () => void;
 }): React.JSX.Element {
+  const { state, trajectory, forecast, whatChanged } = episode;
+
   return (
     <>
       <Panel label="State">
-        {/*
-          Two columns, not three. The evidence tag cannot wrap, so giving it its own
-          column forces the table wider than a phone at 200% zoom. Pairing it with
-          the value is also the truer reading: the tag qualifies that number, it is
-          not an independent field.
-        */}
         <table className="readings">
           <tbody>
-            {situation.readings.map((reading) => (
+            {state.readings.map((reading) => (
               <tr key={reading.label}>
                 <th scope="row">{reading.label}</th>
                 <td>
-                  <span className="value">{reading.value}</span>{' '}
+                  <span className={isKnownValue(reading.value) ? 'value' : 'value absent'}>
+                    {evidenceText(reading.value)}
+                  </span>{' '}
                   <EvidenceTag kind={reading.evidence} />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        <p className="fine">{situation.readings[1]?.basis}</p>
+        <p className="fine">
+          {state.readings[1]?.basis} · {freshnessLabel(state.readings[0]?.freshness ?? 'none')}
+        </p>
+        {state.contradictions.length > 0 ? (
+          <p className="fine why">
+            Conflicting records on {state.contradictions.map((c) => c.attribute).join(', ')}.
+            Left unresolved — it lowers confidence rather than being decided for you.
+          </p>
+        ) : null}
+        {state.unknowns.length > 0 ? (
+          <p className="fine">Not known: {state.unknowns.join('; ')}.</p>
+        ) : null}
       </Panel>
 
       <Panel label="What changed">
-        <ul className="changes">
-          {situation.whatChanged.map((change) => (
-            <li key={change.change}>
-              <span className="change-main">{change.change}</span>
-              <span className="fine">
-                {change.detail} · {change.when} · altered the {change.altered}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="fine why">{situation.whyTheAnswerChanged}</p>
+        {whatChanged.changes.length === 0 ? (
+          <p className="body">{whatChanged.why}</p>
+        ) : (
+          <ul className="changes">
+            {whatChanged.changes.map((change) => (
+              <li key={`${change.change}-${change.when}`}>
+                <span className="change-main">{change.change}</span>
+                <span className="fine">
+                  {change.detail === '' ? '' : `${change.detail} · `}
+                  {change.when} · altered the {change.altered}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {whatChanged.changes.length > 0 ? <p className="fine why">{whatChanged.why}</p> : null}
         <button type="button" className="btn btn-link" onClick={onOpenChanges}>
           See everything that changed
         </button>
       </Panel>
 
       <Panel label="Trajectory">
-        <p className="lead lead-term">{situation.trajectory.direction}</p>
-        <p className="fine">{situation.trajectory.question}</p>
-        <p className="value series">{situation.trajectory.detail}</p>
+        <p className="lead lead-term">{trajectoryLabel(trajectory.direction)}</p>
+        <p className="fine">{trajectory.question}</p>
+        <p className="value series">{trajectory.detail}</p>
         <p className="fine">
-          {situation.trajectory.confidence} · {situation.trajectory.freshness}
+          {confidenceLabel(trajectory.confidence)} · {freshnessLabel(trajectory.freshness)}
         </p>
         <button type="button" className="btn btn-link" onClick={onOpenDirection}>
           All categories
         </button>
       </Panel>
 
-      <Panel label={`If untreated · ${situation.untreatedPath.horizon}`}>
-        <p className="body">{situation.untreatedPath.summary}</p>
-        {situation.untreatedPath.assumptions.length > 0 ? (
-          <p className="fine">Assumes: {situation.untreatedPath.assumptions.join('; ')}.</p>
+      <Panel label={`If untreated · ${forecast.horizon.label}`}>
+        {forecast.projection.status === 'known' ? (
+          <p className="body">{forecast.projection.value.summary}</p>
+        ) : (
+          <p className="body">
+            No projection —{' '}
+            {forecast.projection.status === 'unknown'
+              ? (forecast.projection.reason ?? 'not enough evidence')
+              : forecast.projection.status}
+            .
+          </p>
+        )}
+        {forecast.assumptions.length > 0 ? (
+          <p className="fine">Assumes: {forecast.assumptions.join('; ')}.</p>
         ) : null}
-        <p className="fine">{situation.untreatedPath.uncertainty}</p>
+        <p className="fine">{forecast.uncertainty}</p>
       </Panel>
     </>
-  );
-}
-
-function DecisionPanel({ decision }: { decision: ActionDecision }): React.JSX.Element {
-  return (
-    <Panel label="Best move" tone="decision" wide>
-      <p className="decision-statement">
-        {decision.statement} <span className="value">· {decision.duration}</span>
-      </p>
-      <p className="fine">
-        Min: {decision.minimumVersion} · Stop: {decision.stoppingPoint}
-      </p>
-
-      <EffectsTable effects={decision.effects} />
-
-      <dl className="kv">
-        <div className="kv-row">
-          <dt>North Star</dt>
-          <dd>
-            {decision.northStar.relevance} — {decision.northStar.statement}
-          </dd>
-        </div>
-        <div className="kv-row">
-          <dt>Confidence</dt>
-          <dd>
-            {decision.confidence} — {decision.confidenceWhy}
-          </dd>
-        </div>
-        <div className="kv-row">
-          <dt>Because</dt>
-          <dd>
-            <ReasonTrace reasons={decision.reasonTrace} />
-          </dd>
-        </div>
-      </dl>
-
-      <Actions primary={decision.primaryAction} secondary={decision.secondaryActions} />
-    </Panel>
   );
 }
 
@@ -156,236 +160,293 @@ function Standalone({
 }
 
 export function NowSurface({
-  state,
+  episode,
+  view,
+  interfaceState,
+  offline,
   onOpenChanges,
+  onOpenWeekly,
   onOpenDirection,
+  onBack,
 }: NowProps): React.JSX.Element {
-  switch (state.kind) {
-    case 'loading':
-      return (
-        <Standalone label="Loading" headline="Reading local records…">
-          <p className="fine">
-            Nothing is being fetched from a network. This is on-device only.
-          </p>
-        </Standalone>
-      );
-
-    case 'empty':
-      return (
-        <Standalone label="Nothing recorded yet" headline="There is nothing to work from yet">
-          <p className="fine">
-            Record one observation — how much time is free, or what you just finished — and the
-            surface has something to reason about. You are not asked to rank anything or to say
-            what matters most.
-          </p>
-          <Actions primary="Record something" secondary={['What this needs']} />
-        </Standalone>
-      );
-
-    case 'locked':
-      return (
-        <Standalone label="Locked" headline="This device session is locked">
-          <p className="fine">
-            Records stay on this device either way. The lock keeps them off the screen; it does
-            not encrypt the local database, and it cannot protect against someone with access to
-            the device itself.
-          </p>
-          <Actions primary="Unlock" secondary={[]} />
-        </Standalone>
-      );
-
-    case 'error':
-      return (
-        <Standalone label="Problem" headline={state.summary}>
-          <p className="fine">{state.detail}</p>
-          <Actions primary="Retry" secondary={['Open Data & Privacy']} />
-        </Standalone>
-      );
-
-    case 'recovery':
-      return (
-        <Standalone label="Recovery" headline={state.summary}>
-          <p className="fine">{state.detail}</p>
-          <Actions primary={state.options[0] ?? 'Retry'} secondary={state.options.slice(1)} />
-        </Standalone>
-      );
-
-    case 'silence':
-      return (
-        <div className="grid">
-          {/* Silence is a conclusion and leads exactly like any other answer. */}
-          <Panel label="Call" tone="quiet" wide>
-            <p className="decision-statement">{state.statement}</p>
-            <p className="body">{state.rationale}</p>
-            <dl className="kv">
-              <div className="kv-row">
-                <dt>Confidence</dt>
-                <dd>
-                  {state.confidence} — {state.confidenceWhy}
-                </dd>
-              </div>
-              <div className="kv-row">
-                <dt>Because</dt>
-                <dd>
-                  <ReasonTrace reasons={state.reasonTrace} />
-                </dd>
-              </div>
-              <div className="kv-row">
-                <dt>Next look</dt>
-                <dd>{state.nextCheck}</dd>
-              </div>
-            </dl>
-            <Actions secondary={state.secondaryActions} />
-          </Panel>
-          <SituationPanels
-            situation={state.situation}
-            onOpenChanges={onOpenChanges}
-            onOpenDirection={onOpenDirection}
-          />
-        </div>
-      );
-
-    case 'insufficient-evidence':
-      return (
-        <div className="grid">
-          <Panel label="Call" tone="quiet" wide>
-            <p className="decision-statement">{state.statement}</p>
-            <p className="fine">
-              This is not a failure state. Guessing from four-day-old evidence would be worse
-              than saying so.
-            </p>
-            <ul className="changes">
-              {state.missing.map((item) => (
-                <li key={item}>
-                  <span className="change-main">{item}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="body">{state.wouldHelp}</p>
-            <Actions primary="Record available time" secondary={['Not now']} />
-          </Panel>
-          <SituationPanels
-            situation={state.situation}
-            onOpenChanges={onOpenChanges}
-            onOpenDirection={onOpenDirection}
-          />
-        </div>
-      );
-
-    case 'question':
-      return (
-        <div className="grid">
-          <Panel label="One question" tone="decision" wide>
-            <p className="decision-statement">{state.prompt}</p>
-            <p className="body">{state.whyItMatters}</p>
-            <p className="fine">Could change: {state.couldChange.join(' · ')}</p>
-            <Actions primary={state.answers[0]} secondary={state.answers.slice(1)} />
-          </Panel>
-          <SituationPanels
-            situation={state.situation}
-            onOpenChanges={onOpenChanges}
-            onOpenDirection={onOpenDirection}
-          />
-        </div>
-      );
-
-    case 'weekly-direction':
-      return (
-        <div className="grid">
-          <Panel label={`Weekly direction · ${state.weekOf}`} tone="decision" wide>
-            <p className="decision-statement">{state.proposal}</p>
-            <p className="fine">
-              Proposed by the system. Confirm, adjust, or choose a quiet week — you are not
-              being asked to invent a priority.
-            </p>
-            <dl className="kv">
-              <div className="kv-row">
-                <dt>Based on</dt>
-                <dd>
-                  <ReasonTrace reasons={state.basedOn} />
-                </dd>
-              </div>
-              <div className="kv-row">
-                <dt>Confidence</dt>
-                <dd>{state.confidence}</dd>
-              </div>
-              <div className="kv-row">
-                <dt>Last week</dt>
-                <dd>{state.lastWeek}</dd>
-              </div>
-            </dl>
-            <Actions primary={state.responses[0]} secondary={state.responses.slice(1)} />
-          </Panel>
-          <SituationPanels
-            situation={state.situation}
-            onOpenChanges={onOpenChanges}
-            onOpenDirection={onOpenDirection}
-          />
-        </div>
-      );
-
-    case 'what-changed':
-      return (
-        <div className="grid">
-          <Panel label="Everything that changed" tone="decision" wide>
-            <p className="fine">{state.since}</p>
-            <ul className="changes">
-              {state.situation.whatChanged.map((change) => (
-                <li key={change.change}>
-                  <span className="change-main">{change.change}</span>
-                  <span className="fine">
-                    {change.detail} · {change.when} · altered the {change.altered}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <p className="body why">{state.situation.whyTheAnswerChanged}</p>
-            <p className="panel-label">Deliberately unchanged</p>
-            <ul className="changes">
-              {state.unchanged.map((item) => (
-                <li key={item}>
-                  <span className="fine">{item}</span>
-                </li>
-              ))}
-            </ul>
-            <Actions secondary={['Back to Now']} />
-          </Panel>
-        </div>
-      );
-
-    case 'offline':
-      return (
-        <div className="grid">
-          {/*
-            A banner, not a panel. Actionable status must not consume one of the five
-            panel slots (ADR-0008 rule 2), and offline changes nothing about the
-            answer — everything here is on-device, so the surface says so rather than
-            degrading.
-          */}
-          <p className="banner" role="status">
-            <span className="banner-label">Offline</span>
-            <span>Working from the cached build. The answer below is unaffected.</span>
-          </p>
-          <DecisionPanel decision={state.decision} />
-          <SituationPanels
-            situation={state.situation}
-            onOpenChanges={onOpenChanges}
-            onOpenDirection={onOpenDirection}
-          />
-        </div>
-      );
-
-    case 'action':
-    case 'mixed-effects':
-      return (
-        <div className="grid">
-          <DecisionPanel decision={state.decision} />
-          <SituationPanels
-            situation={state.situation}
-            onOpenChanges={onOpenChanges}
-            onOpenDirection={onOpenDirection}
-          />
-        </div>
-      );
+  /* --- Presentation modes the engine cannot produce ----------------------- */
+  if (interfaceState === 'loading') {
+    return (
+      <Standalone label="Loading" headline="Reading local records…">
+        <p className="fine">Nothing is being fetched from a network. This is on-device only.</p>
+      </Standalone>
+    );
   }
+
+  if (interfaceState === 'error') {
+    return (
+      <Standalone label="Problem" headline="Could not read local records">
+        <p className="fine">
+          The local database did not respond. Nothing was written, and nothing has been lost.
+          Retrying is safe.
+        </p>
+        <Actions primary="Retry" secondary={['Open Data & Privacy']} />
+      </Standalone>
+    );
+  }
+
+  if (interfaceState === 'locked') {
+    return (
+      <Standalone label="Locked" headline="This device session is locked">
+        <p className="fine">
+          Records stay on this device either way. The lock keeps them off the screen; it does
+          not encrypt the local database, and it cannot protect against someone with access to
+          the device itself.
+        </p>
+        <Actions primary="Unlock" secondary={[]} />
+      </Standalone>
+    );
+  }
+
+  if (interfaceState === 'recovery') {
+    return (
+      <Standalone label="Recovery" headline="A write was interrupted">
+        <p className="fine">
+          The last change did not finish committing, so it was not applied. Your existing
+          records are intact and unchanged.
+        </p>
+        <Actions primary="Retry the change" secondary={['Discard it', 'Open Data & Privacy']} />
+      </Standalone>
+    );
+  }
+
+  /* --- Views reachable from the decision ---------------------------------- */
+  if (view === 'what-changed') {
+    return (
+      <div className="grid">
+        <Panel label="Everything that changed" tone="decision" wide>
+          <p className="fine">{episode.whatChanged.since}</p>
+          {episode.whatChanged.changes.length === 0 ? (
+            <p className="body">{episode.whatChanged.why}</p>
+          ) : (
+            <>
+              <ul className="changes">
+                {episode.whatChanged.changes.map((change) => (
+                  <li key={`${change.change}-${change.when}`}>
+                    <span className="change-main">{change.change}</span>
+                    <span className="fine">
+                      {change.detail === '' ? '' : `${change.detail} · `}
+                      {change.when} · altered the {change.altered}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="body why">{episode.whatChanged.why}</p>
+            </>
+          )}
+          {episode.whatChanged.unchanged.length > 0 ? (
+            <>
+              <p className="panel-label">Deliberately unchanged</p>
+              <ul className="changes">
+                {episode.whatChanged.unchanged.map((item) => (
+                  <li key={item}>
+                    <span className="fine">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+          <div className="actions">
+            <button type="button" className="btn btn-secondary" onClick={onBack}>
+              Back to Now
+            </button>
+          </div>
+        </Panel>
+      </div>
+    );
+  }
+
+  if (view === 'weekly-direction') {
+    const weekly = episode.weeklyDirection;
+    return (
+      <div className="grid">
+        <Panel label={`Weekly direction · ${weekly.weekOf}`} tone="decision" wide>
+          <p className="decision-statement">{weekly.proposal}</p>
+          <p className="fine">
+            Proposed by the system. Confirm, adjust, or choose a quiet week — you are not being
+            asked to invent a priority.
+          </p>
+          <dl className="kv">
+            <div className="kv-row">
+              <dt>Based on</dt>
+              <dd>
+                <ReasonTrace reasons={weekly.basedOn} />
+              </dd>
+            </div>
+            <div className="kv-row">
+              <dt>Confidence</dt>
+              <dd>
+                {confidenceLabel(weekly.confidence)} — {weekly.confidence.why}
+              </dd>
+            </div>
+            <div className="kv-row">
+              <dt>Last week</dt>
+              <dd>{weekly.lastWeek}</dd>
+            </div>
+          </dl>
+          <Actions primary={weekly.responses[0]} secondary={weekly.responses.slice(1)} />
+          <div className="actions">
+            <button type="button" className="btn btn-link" onClick={onBack}>
+              Back to Now
+            </button>
+          </div>
+        </Panel>
+      </div>
+    );
+  }
+
+  /* --- The engine's single output ----------------------------------------- */
+  const { output } = episode;
+
+  const banner = offline ? (
+    <p className="banner" role="status">
+      <span className="banner-label">Offline</span>
+      <span>Working from the cached build. The answer below is unaffected.</span>
+    </p>
+  ) : null;
+
+  const situation = (
+    <SituationPanels
+      episode={episode}
+      onOpenChanges={onOpenChanges}
+      onOpenDirection={onOpenDirection}
+    />
+  );
+
+  if (output.kind === 'action') {
+    return (
+      <div className="grid">
+        {banner}
+        <Panel label="Best move" tone="decision" wide>
+          <p className="decision-statement">
+            {output.candidate.statement}{' '}
+            <span className="value">· {String(output.candidate.durationMinutes)} min</span>
+          </p>
+          <p className="fine">
+            Min: {output.candidate.minimumVersion} · Stop: {output.candidate.stoppingPoint}
+          </p>
+
+          <EffectsTable
+            effects={output.effects.map((effect) => ({
+              ...effect,
+              category: categoryLabel(effect.category),
+            }))}
+          />
+
+          <dl className="kv">
+            {output.northStar === undefined ? null : (
+              <div className="kv-row">
+                <dt>North Star</dt>
+                <dd>
+                  {output.northStar.relevance} — {output.northStar.statement}
+                </dd>
+              </div>
+            )}
+            <div className="kv-row">
+              <dt>Confidence</dt>
+              <dd>
+                {confidenceLabel(output.confidence)} — {output.confidence.why}
+              </dd>
+            </div>
+            <div className="kv-row">
+              <dt>Because</dt>
+              <dd>
+                <ReasonTrace reasons={output.reasonTrace} />
+              </dd>
+            </div>
+          </dl>
+
+          <Actions primary={output.primaryAction} secondary={output.secondaryActions} />
+          <button type="button" className="btn btn-link" onClick={onOpenWeekly}>
+            This week’s direction
+          </button>
+        </Panel>
+        {situation}
+      </div>
+    );
+  }
+
+  if (output.kind === 'question') {
+    return (
+      <div className="grid">
+        {banner}
+        <Panel label="One question" tone="decision" wide>
+          <p className="decision-statement">{output.prompt}</p>
+          <p className="body">{output.whyItMatters}</p>
+          <p className="fine">Could change: {output.couldChange.join(' · ')}</p>
+          <Actions primary={output.answers[0]} secondary={output.answers.slice(1)} />
+          <button type="button" className="btn btn-link" onClick={onOpenWeekly}>
+            This week’s direction
+          </button>
+        </Panel>
+        {situation}
+      </div>
+    );
+  }
+
+  if (output.kind === 'insufficient-evidence') {
+    return (
+      <div className="grid">
+        {banner}
+        <Panel label="Call" tone="quiet" wide>
+          <p className="decision-statement">{output.statement}</p>
+          <p className="fine">
+            This is not a failure state. Guessing from evidence this thin would be worse than
+            saying so.
+          </p>
+          <ul className="changes">
+            {output.missing.map((item) => (
+              <li key={item}>
+                <span className="change-main">{item}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="body">{output.wouldHelp}</p>
+          <Actions primary="Record something" secondary={['Not now']} />
+          <button type="button" className="btn btn-link" onClick={onOpenWeekly}>
+            This week’s direction
+          </button>
+        </Panel>
+        {situation}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid">
+      {banner}
+      <Panel label="Call" tone="quiet" wide>
+        <p className="decision-statement">{output.statement}</p>
+        <p className="body">{output.rationale}</p>
+        <dl className="kv">
+          <div className="kv-row">
+            <dt>Confidence</dt>
+            <dd>
+              {confidenceLabel(output.confidence)} — {output.confidence.why}
+            </dd>
+          </div>
+          <div className="kv-row">
+            <dt>Because</dt>
+            <dd>
+              <ReasonTrace reasons={output.reasonTrace} />
+            </dd>
+          </div>
+          <div className="kv-row">
+            <dt>Next look</dt>
+            <dd>{output.nextCheck}</dd>
+          </div>
+        </dl>
+        <Actions secondary={output.secondaryActions} />
+        <button type="button" className="btn btn-link" onClick={onOpenWeekly}>
+          This week’s direction
+        </button>
+      </Panel>
+      {situation}
+    </div>
+  );
 }

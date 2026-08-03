@@ -1,24 +1,27 @@
-import { useEffect, useState } from 'react';
-import { NowSurface } from '../now/NowSurface';
+import { useEffect, useMemo, useState } from 'react';
+import { NowSurface, type InterfaceState, type NowView } from '../now/NowSurface';
 import { TimelineSurface } from '../timeline/TimelineSurface';
 import { DirectionSurface } from '../direction/DirectionSurface';
 import { CommitmentsSurface } from '../commitments/CommitmentsSurface';
 import { LearningSurface } from '../learning/LearningSurface';
 import { DataPrivacySurface } from '../data-privacy/DataPrivacySurface';
-import { NOW_STATES, NOW_STATE_KINDS, type NowStateKind } from '../../view-models/prototype';
+import { SCENARIOS, scenarioById } from '../../../app/scenarios';
+import { runEpisode } from '../../../intelligence';
 import '../../design-system/console.css';
 
 /**
- * The Console shell (ADR-0008).
+ * The Console shell (ADR-0008), now driven by the intelligence engine.
  *
  * Six logical destinations. **Five persistent on mobile** — Learning and Data &
- * Privacy live under More, per `UX-010` — and all six on the desktop rail, which has
- * the room.
+ * Privacy live under More, per `UX-010` — and all six on the desktop rail.
  *
- * The prototype state switcher is temporary scaffolding, styled deliberately unlike
- * the product so it cannot be mistaken for part of it. Phase 3 must demonstrate
- * thirteen interaction states and there is no engine to produce them; it is removed
- * when Phase 4 makes the states real.
+ * **The Phase 3 prototype state switcher is gone.** It has been replaced by a
+ * scenario picker, which is a materially different thing: it selects a set of
+ * synthetic *records*, and the engine computes the state, forecast, effects,
+ * recommendation, and confidence from them. Nothing on screen is hand-written any
+ * more. Four interface states the engine cannot produce — loading, error, locked,
+ * recovery — remain selectable and are grouped separately and labelled as such;
+ * lock and recovery become real in Phase 6.
  */
 
 type Destination =
@@ -36,21 +39,12 @@ const UNDER_MORE: readonly { id: Destination; label: string }[] = [
   { id: 'data-privacy', label: 'Data & Privacy' },
 ];
 
-const STATE_LABELS: Record<NowStateKind, string> = {
-  action: 'Action',
-  silence: 'Deliberate silence',
-  'insufficient-evidence': 'Insufficient evidence',
-  question: 'One question',
-  'what-changed': 'What changed',
-  'mixed-effects': 'Mixed effects',
-  'weekly-direction': 'Weekly direction',
-  loading: 'Loading',
-  empty: 'Empty',
-  offline: 'Offline',
-  error: 'Error',
-  locked: 'Locked',
-  recovery: 'Recovery',
-};
+const INTERFACE_STATES: readonly { id: InterfaceState; label: string }[] = [
+  { id: 'loading', label: 'Loading' },
+  { id: 'error', label: 'Error' },
+  { id: 'locked', label: 'Locked (Phase 6)' },
+  { id: 'recovery', label: 'Recovery (Phase 6)' },
+];
 
 function useIsOffline(): boolean {
   const [offline, setOffline] = useState(() => !navigator.onLine);
@@ -73,17 +67,23 @@ function useIsOffline(): boolean {
 
 export function AppShell(): React.JSX.Element {
   const [destination, setDestination] = useState<Destination>('now');
-  const [stateKind, setStateKind] = useState<NowStateKind>('action');
+  const [scenarioId, setScenarioId] = useState<string>('action');
+  const [interfaceState, setInterfaceState] = useState<InterfaceState>('engine');
+  const [nowView, setNowView] = useState<NowView>('decision');
   const [moreOpen, setMoreOpen] = useState(false);
   const offline = useIsOffline();
 
-  // Genuine offline is shown by the Now surface's offline composition rather than a
-  // separate chrome banner, so there is one place that says it and one only.
-  const effectiveState: NowStateKind =
-    offline && stateKind === 'action' ? 'offline' : stateKind;
+  const scenario = useMemo(() => scenarioById(scenarioId), [scenarioId]);
+
+  // Deterministic: the same scenario at the same instant always yields the same episode.
+  const episode = useMemo(
+    () => runEpisode(scenario.records, new Date(scenario.nowIso)),
+    [scenario],
+  );
 
   const go = (next: Destination): void => {
     setDestination(next);
+    setNowView('decision');
     setMoreOpen(false);
   };
 
@@ -96,25 +96,46 @@ export function AppShell(): React.JSX.Element {
         Skip to main content
       </a>
 
-      {/* Temporary Phase 3 scaffolding. Removed when Phase 4 makes the states real. */}
+      {/*
+        Scenario scaffolding, not state scaffolding. It chooses which synthetic
+        records the engine reasons over. Removed when the owner is entering real
+        records in Phase 6.
+      */}
       <div className="proto">
-        <label className="proto-label" htmlFor="proto-state">
-          prototype state
+        <label className="proto-label" htmlFor="scenario">
+          scenario
         </label>
         <select
-          id="proto-state"
+          id="scenario"
           className="proto-select"
-          value={stateKind}
+          value={interfaceState === 'engine' ? scenarioId : interfaceState}
           onChange={(event) => {
-            setStateKind(event.target.value as NowStateKind);
+            const value = event.target.value;
+            const uiState = INTERFACE_STATES.find((entry) => entry.id === value);
+            if (uiState === undefined) {
+              setScenarioId(value);
+              setInterfaceState('engine');
+            } else {
+              setInterfaceState(uiState.id);
+            }
             setDestination('now');
+            setNowView('decision');
           }}
         >
-          {NOW_STATE_KINDS.map((kind) => (
-            <option value={kind} key={kind}>
-              {STATE_LABELS[kind]}
-            </option>
-          ))}
+          <optgroup label="Evidence — the engine computes these">
+            {SCENARIOS.map((entry) => (
+              <option value={entry.id} key={entry.id}>
+                {entry.name}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="Interface states — not engine output">
+            {INTERFACE_STATES.map((entry) => (
+              <option value={entry.id} key={entry.id}>
+                {entry.label}
+              </option>
+            ))}
+          </optgroup>
         </select>
       </div>
 
@@ -135,8 +156,6 @@ export function AppShell(): React.JSX.Element {
             </button>
           ))}
 
-          {/* On mobile this is the fifth persistent destination; on desktop the
-              two entries below it are shown directly and this button is hidden. */}
           <button
             type="button"
             className="rail-item rail-more"
@@ -186,9 +205,8 @@ export function AppShell(): React.JSX.Element {
         <main className="body" id="main" tabIndex={-1}>
           <header className="head">
             <span className="clock">
-              {destination === 'now' && 'situation' in NOW_STATES[effectiveState]
-                ? (NOW_STATES[effectiveState] as { situation: { clock: string } }).situation
-                    .clock
+              {destination === 'now' && interfaceState === 'engine'
+                ? episode.clock
                 : activeLabel}
             </span>
             <h1 className="headline">{destination === 'now' ? 'Now' : activeLabel}</h1>
@@ -196,20 +214,35 @@ export function AppShell(): React.JSX.Element {
 
           {destination === 'now' ? (
             <NowSurface
-              state={NOW_STATES[effectiveState]}
+              episode={episode}
+              view={nowView}
+              interfaceState={interfaceState}
+              offline={offline}
               onOpenChanges={() => {
-                setStateKind('what-changed');
+                setNowView('what-changed');
+              }}
+              onOpenWeekly={() => {
+                setNowView('weekly-direction');
               }}
               onOpenDirection={() => {
                 go('direction');
               }}
+              onBack={() => {
+                setNowView('decision');
+              }}
             />
           ) : null}
-          {destination === 'timeline' ? <TimelineSurface /> : null}
-          {destination === 'direction' ? <DirectionSurface /> : null}
-          {destination === 'commitments' ? <CommitmentsSurface /> : null}
-          {destination === 'learning' ? <LearningSurface /> : null}
-          {destination === 'data-privacy' ? <DataPrivacySurface /> : null}
+          {destination === 'timeline' ? <TimelineSurface records={scenario.records} /> : null}
+          {destination === 'direction' ? (
+            <DirectionSurface episode={episode} records={scenario.records} />
+          ) : null}
+          {destination === 'commitments' ? (
+            <CommitmentsSurface records={scenario.records} />
+          ) : null}
+          {destination === 'learning' ? <LearningSurface records={scenario.records} /> : null}
+          {destination === 'data-privacy' ? (
+            <DataPrivacySurface records={scenario.records} />
+          ) : null}
         </main>
       </div>
     </>

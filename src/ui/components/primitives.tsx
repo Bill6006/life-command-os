@@ -1,5 +1,5 @@
 import { useId, type ReactNode } from 'react';
-import type { PredictedEffect, EvidenceKind } from '../view-models/prototype';
+import type { DisplayEffect, EvidenceKind } from '../view-models/present';
 
 /**
  * Console primitives (ADR-0008).
@@ -56,7 +56,7 @@ export function EvidenceTag({ kind }: { kind: EvidenceKind }): React.JSX.Element
 export function EffectsTable({
   effects,
 }: {
-  effects: readonly PredictedEffect[];
+  effects: readonly DisplayEffect[];
 }): React.JSX.Element {
   return (
     <table className="effects">

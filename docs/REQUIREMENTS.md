@@ -2,7 +2,7 @@
 
 **Status:** Controlling
 **Plan version:** 2.6 Lean Execution
-**Current phase:** Phase 3 (paused for owner design selection)
+**Current phase:** Phase 4
 
 This registry preserves the approved requirement IDs. It is the lean traceability spine:
 every implemented behavior carries an approved requirement ID in its implementation and its
@@ -43,18 +43,18 @@ documentation).
 | ID | Requirement | Owning phase | Status |
 |---|---|---:|---|
 | PROD-001 | The product is a private local-first decision-intelligence system, not primarily a tracker. | 0 | ACTIVE |
-| PROD-002 | The system may intentionally determine that no action is warranted. | 4–10 | PENDING |
-| PROD-003 | The opening surface communicates state, evidence status, trajectory, untreated path, action or silence, effects, reason, and confidence in about ten seconds. | 3–10 | PENDING |
-| PROD-004 | Useful projections, category effects, North Star relevance, and graphs remain visible while technical machinery stays internal. | 3–10 | PENDING |
-| PROD-005 | The interface exposes only one best recommendation, one high-value question, or deliberate silence, never a ranked or comparative recommendation menu. | 3–10 | PENDING |
+| PROD-002 | The system may intentionally determine that no action is warranted. | 4–10 | ACTIVE |
+| PROD-003 | The opening surface communicates state, evidence status, trajectory, untreated path, action or silence, effects, reason, and confidence in about ten seconds. | 3–10 | ACTIVE |
+| PROD-004 | Useful projections, category effects, North Star relevance, and graphs remain visible while technical machinery stays internal. | 3–10 | ACTIVE |
+| PROD-005 | The interface exposes only one best recommendation, one high-value question, or deliberate silence, never a ranked or comparative recommendation menu. | 3–10 | ACTIVE |
 | LEAN-001 | No speculative code or empty framework may be created without an active requirement. | every phase | ACTIVE |
 | LEAN-002 | Research, privacy, traceability, and model infrastructure activate only when their owning behavior exists. | every phase | ACTIVE |
-| LEAN-003 | UI variants are limited to the primary surface until one design is selected. | 3 | PENDING |
+| LEAN-003 | UI variants are limited to the primary surface until one design is selected. | 3 | ACTIVE |
 | LEAN-004 | Domains are implemented one at a time after the first vertical slice. | 7 | PENDING |
 | LEAN-005 | Every new abstraction, registry, dependency, service, or infrastructure system must identify its current approved requirement and why a smaller direct implementation is insufficient. | every phase | ACTIVE |
 | PRIV-001 | Real personal data may not enter tracked repository content or Git history. | every phase | ACTIVE |
 | PRIV-002 | Development and automated tests use neutral synthetic data. | every phase | ACTIVE |
-| PRIV-003 | Private runtime data stays local unless the user explicitly exports or shares it. | 1–10 | PENDING |
+| PRIV-003 | Private runtime data stays local unless the user explicitly exports or shares it. | 1–10 | ACTIVE |
 | ARCH-001 | UI, domain, application, intelligence, storage, and legacy boundaries remain explicit. | 1–10 | ACTIVE |
 | DATA-001 | Observations, inferences, forecasts, effects, recommendations, executions, outcomes, evaluations, and beliefs remain separate. | 2–10 | ACTIVE |
 | DATA-002 | Corrections preserve history through append and supersession. | 2–10 | ACTIVE |
@@ -62,34 +62,34 @@ documentation).
 | STORE-002 | Projections are rebuildable and non-authoritative. | 2–10 | ACTIVE |
 | STORE-003 | Encrypted backup and fresh-profile recovery pass before private alpha. | 6 | PENDING |
 | STORE-004 | A synthetic development export and restore round trip preserves canonical records, and a damaged backup is rejected before any mutation. | 2–10 | ACTIVE |
-| INTEL-001 | Local deterministic structured logic is authoritative. | 4–10 | PENDING |
-| INTEL-002 | Every forecast has an explicit target, horizon, assumptions, uncertainty, and reason trace. | 4–10 | PENDING |
-| INTEL-003 | Predicted intervention effects remain separate from untreated forecasts. | 4–10 | PENDING |
-| INTEL-004 | Decisions consider capacity, commitments, safety, timing, North Star, friction, and cross-domain costs. | 4–10 | PENDING |
-| INTEL-005 | Unsupported conclusions abstain. | 4–10 | PENDING |
-| INTEL-006 | Candidate actions are compared internally, but only one selected recommendation is presented to the user. | 4–10 | PENDING |
-| INTEL-007 | The system proposes one weekly direction or a deliberately quiet week from all enabled evidence without requiring the user to identify the priority from a blank slate. | 4–10 | PENDING |
-| INTEL-008 | The system explains material changes that altered state, recommendation, or confidence. | 4–10 | PENDING |
+| INTEL-001 | Local deterministic structured logic is authoritative. | 4–10 | ACTIVE |
+| INTEL-002 | Every forecast has an explicit target, horizon, assumptions, uncertainty, and reason trace. | 4–10 | ACTIVE |
+| INTEL-003 | Predicted intervention effects remain separate from untreated forecasts. | 4–10 | ACTIVE |
+| INTEL-004 | Decisions consider capacity, commitments, safety, timing, North Star, friction, and cross-domain costs. | 4–10 | ACTIVE |
+| INTEL-005 | Unsupported conclusions abstain. | 4–10 | ACTIVE |
+| INTEL-006 | Candidate actions are compared internally, but only one selected recommendation is presented to the user. | 4–10 | ACTIVE |
+| INTEL-007 | The system proposes one weekly direction or a deliberately quiet week from all enabled evidence without requiring the user to identify the priority from a blank slate. | 4–10 | ACTIVE |
+| INTEL-008 | The system explains material changes that altered state, recommendation, or confidence. | 4–10 | ACTIVE |
 | LEARN-001 | Forecast accuracy and recommendation effectiveness are evaluated separately. | 5–10 | PENDING |
 | LEARN-002 | Missing outcomes remain unresolved and non-execution is not judged ineffective. | 5–10 | PENDING |
 | LEARN-003 | Strong personal claims require prospective evidence. | 5–10 | PENDING |
-| UX-001 | The approved Luminous Dark Command Surface remains controlling. | 3–10 | PENDING |
-| UX-002 | Facts and inferences are distinguishable without color alone. | 3–10 | PENDING |
-| UX-003 | Graphs answer named questions and include accessible summaries. | 5–10 | PENDING |
-| UX-004 | The Now surface visibly explains what materially changed and why. | 3–10 | PENDING |
-| UX-005 | The selected design meets approved numerical budgets for viewport depth, check-in burden, taps, touch targets, zoom, and local startup. | 3–10 | PENDING |
+| UX-001 | The approved Luminous Dark Command Surface remains controlling. | 3–10 | ACTIVE |
+| UX-002 | Facts and inferences are distinguishable without color alone. | 3–10 | ACTIVE |
+| UX-003 | Graphs answer named questions and include accessible summaries. | 5–10 | ACTIVE |
+| UX-004 | The Now surface visibly explains what materially changed and why. | 3–10 | ACTIVE |
+| UX-005 | The selected design meets approved numerical budgets for viewport depth, check-in burden, taps, touch targets, zoom, and local startup. | 3–10 | ACTIVE |
 | UX-006 | Notifications default to off, require user opt-in, respect protected contexts, and never use streak, guilt, or inactivity bait. | 6–10 | PENDING |
-| UX-007 | Cold start does not require the user to rank domains or declare what matters most before the system can help. | 3–10 | PENDING |
-| UX-008 | Every enabled category has an understandable overview using condition, trajectory, confidence, freshness, drivers, and meaningful domain metrics where available. | 3–10 | PENDING |
-| UX-009 | No overall Life Score exists; a numerical category score is optional and may appear only after the numerical-score gate passes. | 3–10 | PENDING |
-| UX-010 | Mobile persistent navigation contains no more than five destinations; less frequent areas remain under More. | 3–10 | PENDING |
-| UX-011 | The primary experience excludes habit-streak grids, decorative AI imagery, crowded widget walls, and normal-state operational-status panels. | 3–10 | PENDING |
-| SAFE-001 | Unsafe actions are filtered before recommendation ranking. | 4–10 | PENDING |
+| UX-007 | Cold start does not require the user to rank domains or declare what matters most before the system can help. | 3–10 | ACTIVE |
+| UX-008 | Every enabled category has an understandable overview using condition, trajectory, confidence, freshness, drivers, and meaningful domain metrics where available. | 3–10 | ACTIVE |
+| UX-009 | No overall Life Score exists; a numerical category score is optional and may appear only after the numerical-score gate passes. | 3–10 | ACTIVE |
+| UX-010 | Mobile persistent navigation contains no more than five destinations; less frequent areas remain under More. | 3–10 | ACTIVE |
+| UX-011 | The primary experience excludes habit-streak grids, decorative AI imagery, crowded widget walls, and normal-state operational-status panels. | 3–10 | ACTIVE |
+| SAFE-001 | Unsafe actions are filtered before recommendation ranking. | 4–10 | ACTIVE |
 | DOMAIN-001 | Every activated domain uses shared architecture and exposes cross-domain effects. | 7–10 | PENDING |
 | TEST-001 | Critical paths have behavioral evidence; coverage percentage alone is insufficient. | every phase | ACTIVE |
 | MIG-001 | Legacy import is one-way, optional, quarantined, and canonicalizing. | 9 | PENDING |
 | OPS-001 | Release requires tested rollback and exact build evidence. | 10 | PENDING |
-| OPS-002 | A stable synthetic-only GitHub Pages owner-preview URL exists from Phase 1 and is updated from each later application-changing gate-approved commit, with deployed-commit evidence recorded. | 1–10 | PENDING |
+| OPS-002 | A stable synthetic-only GitHub Pages owner-preview URL exists from Phase 1 and is updated from each later application-changing gate-approved commit, with deployed-commit evidence recorded. | 1–10 | ACTIVE |
 
 ## 3. Active requirement records — Phase 0
 
@@ -289,6 +289,47 @@ blocks that carry the evidence.
 | **Evidence artifact** | Round trip preserves superseded history; six damaged-backup cases each leave canonical state untouched |
 | **Status** | ACTIVE |
 | **Open decisions** | None. Encrypted portable backup remains `STORE-003`, Phase 6. |
+
+---
+
+## 3b. Active requirement records — Phase 4
+
+The intelligence requirements, mapped to the modules that implement them and the tests that
+carry the evidence. Test IDs are `describe` blocks.
+
+**Every rule below is classified `unproven-transparent-baseline`.** None has been validated
+against this owner's outcomes, because no outcome has been observed yet. Full contracts —
+decision target, horizon, abstention, failure, safety, privacy, validation path, retirement —
+are machine-readable in `src/intelligence/contracts.ts` and asserted complete by test.
+
+| ID | Implementation | Test IDs | Notes |
+|---|---|---|---|
+| `INTEL-001` | Whole of `src/intelligence/`; no network, no external AI, `now` always injected | `engine.test.ts` → `determinism` | Identical inputs produce byte-identical episodes |
+| `INTEL-002` | `forecast/untreatedForecast.ts` | `abstention` (4) | Target, horizon, assumptions, uncertainty, and reason trace all required; abstains as `unknown` rather than guessing |
+| `INTEL-003` | `intervention/predictedEffects.ts` requires `candidateId`; forecast carries no action | `predicted effects stay separate from the untreated forecast` (3) | The two cannot be confused structurally |
+| `INTEL-004` | `decision/selectOutput.ts` — safety, protected contexts, commitments, time, capacity, then comparison | `constraint-first selection` (3) | Filtering happens before ranking and cannot be outscored |
+| `INTEL-005` | Abstention paths in trajectory, forecast, and selection | `abstention` (4), `cold start` (3) | Insufficient evidence is a distinct output, not a degraded silence |
+| `INTEL-006` | `internal.rejected` audit trail, never rendered | `exactly one output, always` (2); `console-shell.spec.ts` → `one best move, never a menu` (17) | At most one primary action in every scenario, at both viewports |
+| `INTEL-007` | `decision/weeklyDirection.ts` | `weekly direction` (3) | System proposes; quiet week is a proposal on its merits |
+| `INTEL-008` | `change-detection/materialChange.ts` — diffs two real engine runs | `material change` (2) | What changed is what demonstrably differs |
+| `SAFE-001` | Safety filter runs first; the candidate generator has no vocabulary for unsafe actions | `constraint-first selection` | Unsafe actions are removed, never penalised |
+| `PROD-002` | `DeliberateSilence` branch | `silence is a conclusion with no action to take` | Silence is a first-class result |
+| `PROD-003` | `NowSurface` renders the full payload from `EpisodeResult` | `console-shell.spec.ts` → `the decision always leads` (16) | Decision within the first viewport at 375 × 812 |
+| `PROD-005` | `DecisionOutput` is a four-branch union; a list is unrepresentable | `one best move, never a menu` | — |
+| `UX-002` | `EvidenceTag` renders the word and differs by border style | `facts and inferences` | Computed `border-style` asserted |
+| `UX-004` | What-changed panel plus the expanded view | `explains what changed and why the answer moved` | — |
+| `UX-005` | Console layout | `interaction budgets at 375 x 812` (4) | Cached-startup target remains owner-measured |
+| `UX-007` | Cold start emits insufficient evidence and asks nothing | `cold start` (3); `cold start asks for nothing and ranks no domains` | No questionnaire is representable |
+| `UX-008` | `state/categorySummaries.ts` | `categories` (2) | Six required elements per enabled category |
+| `UX-009` | No score is computed anywhere | `emits no numerical category score anywhere` | Asserted across every scenario |
+| `UX-003` | `components/TrendChart.tsx`, series typed to carry its obligations | `console-shell.spec.ts` → `the chart states everything the graph policy requires` (2) | Every gap marked; points + gaps = window length |
+
+### Confidence ceiling — recorded deliberately
+
+`assessConfidence` cannot return `strong-personal-evidence` in this phase, and a test asserts
+it never appears anywhere in any scenario. The top label requires prospective validation
+(`LEARN-003`), which does not exist until Phase 5. A baseline able to award itself the highest
+confidence on its first day would be exactly the false precision the Constitution forbids.
 
 ---
 

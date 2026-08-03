@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import type { TrendSeries } from '../view-models/prototype';
+import type { TrendSeries } from '../view-models/present';
 
 /**
  * The one trend graph required by Phase 3 (`UX-003`).
@@ -45,7 +45,14 @@ export function TrendChart({ series }: { series: TrendSeries }): React.JSX.Eleme
   });
   if (current.length > 0) runs.push(current);
 
-  const gapIndex = series.points.findIndex((point) => point.value === null);
+  /*
+   * Every gap is marked, not just the first. Drawing one band when five weeks are
+   * missing would imply the rest carried evidence — which is the same lie as
+   * plotting them at zero, told more quietly.
+   */
+  const gapIndexes = series.points.flatMap((point, index) =>
+    point.value === null ? [index] : [],
+  );
 
   return (
     <figure className="chart">
@@ -82,15 +89,16 @@ export function TrendChart({ series }: { series: TrendSeries }): React.JSX.Eleme
             className="chart-grid"
           />
 
-          {gapIndex >= 0 ? (
+          {gapIndexes.map((gapIndex) => (
             <rect
+              key={`gap-${String(gapIndex)}`}
               x={toX(gapIndex) - stepX / 2}
               y={padY}
               width={stepX}
               height={height - padY * 2}
               className="chart-gap"
             />
-          ) : null}
+          ))}
 
           {runs.map((run) => (
             <polyline

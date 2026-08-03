@@ -60,7 +60,7 @@ test.describe('application shell', () => {
     const main = page.getByRole('main');
     await expect(main).toContainText('Plan version');
     await expect(main).toContainText('2.6 Lean Execution');
-    await expect(main).toContainText('Phase 3');
+    await expect(main).toContainText('Phase 4');
     await expect(main).toContainText('Built');
   });
 });
@@ -116,8 +116,10 @@ test.describe('installability and offline startup', () => {
         .evaluate((el) => getComputedStyle(el).backgroundColor);
       expect(styled).toBe('rgb(7, 17, 31)');
 
-      // Offline changes nothing about the answer, which is the point.
-      await expect(page.getByRole('main')).toContainText('Activity One');
+      // Offline changes nothing about the answer, which is the point. The engine
+      // computed this on-device, so there is nothing for a network to affect.
+      await expect(page.getByRole('main')).toContainText('Best move');
+      await expect(page.getByRole('main')).toContainText('Goal One');
     } finally {
       await context.setOffline(false);
     }

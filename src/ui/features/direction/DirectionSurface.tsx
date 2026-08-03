@@ -1,52 +1,79 @@
 import { KeyValues, Panel } from '../../components/primitives';
 import { TrendChart } from '../../components/TrendChart';
+import type { EpisodeResult } from '../../../intelligence';
+import type { CanonicalRecord } from '../../../domain/records';
 import {
-  CATEGORY_OVERVIEW,
-  FOCUSED_HOURS_TREND,
-  NORTH_STAR,
-  NOW_STATES,
-} from '../../view-models/prototype';
+  categoryLabel,
+  confidenceLabel,
+  freshnessLabel,
+  trajectoryLabel,
+} from '../../view-models/present';
 
 /**
- * Direction — North Star, goals, and the **full enabled-category overview**.
+ * Direction — North Star, goals, and the **full enabled-category overview**, all
+ * computed by the engine.
  *
- * Two rules are load-bearing here:
- *
- *   - **No numerical category score** (`UX-009`). The score gate requires evidence
- *     adequate for the displayed precision, which a synthetic prototype cannot
- *     satisfy honestly. Each category shows condition, trajectory, confidence,
- *     freshness, drivers, and *real domain metrics* — hours, counts, days. Those
- *     mean something on their own; a 0–100 number would not.
- *   - **No overall Life Score**, and nothing here is summed across categories.
+ * **No numerical category score** (`UX-009`). Every metric is a real domain quantity
+ * the engine counted — hours, open loops, days since progress. The score gate needs
+ * evidence adequate for the displayed precision and this baseline has none, so
+ * nothing here manufactures a 0–100 number to look complete.
  *
  * Reachable from Now in one interaction via the Trajectory panel (`UX-005`).
  */
-export function DirectionSurface(): React.JSX.Element {
-  const action = NOW_STATES.action;
-  const effects = action.kind === 'action' ? action.decision.effects : [];
+export function DirectionSurface({
+  episode,
+  records,
+}: {
+  episode: EpisodeResult;
+  records: readonly CanonicalRecord[];
+}): React.JSX.Element {
+  const star = records.find((record) => record.recordType === 'north-star');
+  const goals = records.filter((record) => record.recordType === 'goal');
+
+  const series = {
+    question: episode.trajectory.question,
+    metric: 'Hours in blocks of 25 minutes or more, summed per week',
+    window: 'Last eight weeks',
+    evidence: 'observed' as const,
+    missingDataTreatment:
+      'Weeks with no recorded evidence are drawn as gaps. They are not counted as zero.',
+    uncertainty:
+      'Counts are observed, not estimated, so the series carries no model uncertainty. The direction band is a stated convention.',
+    textSummary: episode.trajectory.detail,
+    unit: 'h',
+    points: episode.trajectory.periods,
+  };
 
   return (
     <div className="grid">
       <Panel label="North Star" wide>
-        <p className="lead">{NORTH_STAR.statement}</p>
-        <ul className="goals">
-          {NORTH_STAR.goals.map((goal) => (
-            <li key={goal.statement}>
-              <span className="change-main">{goal.statement}</span>
-              <span className="fine">
-                {goal.category} · {goal.state} · {goal.progress}
-              </span>
-            </li>
-          ))}
-        </ul>
+        {star === undefined ? (
+          <p className="body">No North Star recorded yet.</p>
+        ) : (
+          <p className="lead">{star.statement}</p>
+        )}
+        {goals.length === 0 ? (
+          <p className="fine">No active goals recorded.</p>
+        ) : (
+          <ul className="goals">
+            {goals.map((goal) => (
+              <li key={goal.recordId}>
+                <span className="change-main">{goal.statement}</span>
+                <span className="fine">
+                  {categoryLabel(goal.category)} · {goal.state}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </Panel>
 
-      {CATEGORY_OVERVIEW.map((category) => (
-        <Panel label={category.category} key={category.category}>
+      {episode.categories.map((category) => (
+        <Panel label={categoryLabel(category.category)} key={category.category}>
           <p className="lead">{category.condition}</p>
           <p className="fine">
-            Trajectory: <strong>{category.trajectory}</strong> · {category.confidence} ·{' '}
-            {category.freshness}
+            Trajectory: <strong>{trajectoryLabel(category.trajectory)}</strong> ·{' '}
+            {confidenceLabel(category.confidence)} · {freshnessLabel(category.freshness)}
           </p>
 
           <p className="panel-label">Principal drivers</p>
@@ -66,48 +93,60 @@ export function DirectionSurface(): React.JSX.Element {
       ))}
 
       <Panel label="Expected effects of the current best move" wide>
-        <p className="fine">
-          What the recommendation on Now is expected to do to each category. Benefits and costs
-          are shown together and are never combined into a single figure.
-        </p>
-        <table className="effects">
-          <thead>
-            <tr>
-              <th scope="col">Category</th>
-              <th scope="col">Effect</th>
-              <th scope="col">When</th>
-            </tr>
-          </thead>
-          <tbody>
-            {effects.map((effect) => (
-              <tr key={`${effect.category}-${effect.note}`}>
-                <th scope="row">
-                  {effect.category}
-                  <span className="effect-note">{effect.note}</span>
-                </th>
-                <td>
-                  <span className={`dir dir-${effect.direction}`}>
-                    {effect.direction === 'positive'
-                      ? '+ benefit'
-                      : effect.direction === 'negative'
-                        ? '− cost'
-                        : '= neutral'}
-                  </span>
-                  {effect.magnitude === 'unknown' ? '' : ` ${effect.magnitude}`}
-                  {effect.uncertain ? <span className="uncertain"> · uncertain</span> : null}
-                </td>
-                <td>
-                  {effect.timing}
-                  {effect.crossDomain ? <span className="cross"> · cross-domain</span> : null}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {episode.output.kind === 'action' ? (
+          <>
+            <p className="fine">
+              What the recommendation on Now is expected to do to each category. Benefits and
+              costs are shown together and are never combined into a single figure.
+            </p>
+            <table className="effects">
+              <thead>
+                <tr>
+                  <th scope="col">Category</th>
+                  <th scope="col">Effect</th>
+                  <th scope="col">When</th>
+                </tr>
+              </thead>
+              <tbody>
+                {episode.output.effects.map((effect) => (
+                  <tr key={`${effect.category}-${effect.note}`}>
+                    <th scope="row">
+                      {categoryLabel(effect.category)}
+                      <span className="effect-note">{effect.note}</span>
+                    </th>
+                    <td>
+                      <span className={`dir dir-${effect.direction}`}>
+                        {effect.direction === 'positive'
+                          ? '+ benefit'
+                          : effect.direction === 'negative'
+                            ? '− cost'
+                            : '= neutral'}
+                      </span>
+                      {effect.magnitude === 'unknown' ? '' : ` ${effect.magnitude}`}
+                      {effect.uncertain ? (
+                        <span className="uncertain"> · uncertain</span>
+                      ) : null}
+                    </td>
+                    <td>
+                      {effect.timing}
+                      {effect.crossDomain ? (
+                        <span className="cross"> · cross-domain</span>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        ) : (
+          <p className="body">
+            There is no action recommended right now, so there are no predicted effects to show.
+          </p>
+        )}
       </Panel>
 
       <Panel label="Trend" wide>
-        <TrendChart series={FOCUSED_HOURS_TREND} />
+        <TrendChart series={series} />
       </Panel>
     </div>
   );

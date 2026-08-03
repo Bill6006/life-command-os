@@ -1,55 +1,71 @@
 import { buildInfo, shortCommit } from '../../../app/buildInfo';
 import { Actions, KeyValues, Panel } from '../../components/primitives';
-import { DATA_PRIVACY } from '../../view-models/prototype';
+import type { CanonicalRecord } from '../../../domain/records';
+import { CANONICAL_SCHEMA_VERSION } from '../../../application/queries/storageInfo';
 
 /**
  * Data & Privacy.
  *
- * Operational status appears **only when actionable** (`UX-011`). `DATA_PRIVACY.attention`
- * is empty in the prototype, so the attention panel does not render at all — there is
- * deliberately no "all systems operational" counterpart to it.
+ * Operational status appears **only when actionable** (`UX-011`). There is
+ * deliberately no "all systems operational" counterpart, so when nothing needs
+ * attention this surface simply does not show an attention panel.
  *
- * There is **no delete control**, by owner instruction. Deletion semantics are still
+ * There is **no delete control**, by owner instruction. Deletion semantics remain
  * undecided: append-oriented storage preserves corrected values, so correcting and
  * deleting cannot be the same operation, and shipping a control before deciding what
  * it means would be worse than not having one (ADR-0005).
  *
- * Storage figures here are synthetic. This surface is wired to real storage in
- * Phase 6, alongside encrypted backup and recovery.
+ * Storage is wired to real backup, restore, and lock in Phase 6.
  */
-export function DataPrivacySurface(): React.JSX.Element {
+export function DataPrivacySurface({
+  records,
+}: {
+  records: readonly CanonicalRecord[];
+}): React.JSX.Element {
   return (
     <div className="grid">
-      {DATA_PRIVACY.attention.length > 0 ? (
-        <Panel label="Needs attention" tone="attention" wide>
-          <ul className="changes">
-            {DATA_PRIVACY.attention.map((item) => (
-              <li key={item.summary}>
-                <span className="change-main">{item.summary}</span>
-                <span className="fine">{item.detail}</span>
-              </li>
-            ))}
-          </ul>
-        </Panel>
-      ) : null}
-
       <Panel label="Not ready for private data" tone="attention" wide>
-        <p className="lead">{DATA_PRIVACY.notReady.headline}</p>
-        <p className="body">{DATA_PRIVACY.notReady.detail}</p>
+        <p className="lead">Not ready for private data yet</p>
+        <p className="body">
+          Encrypted backup and fresh-profile recovery are proven in Phase 6. Until then,
+          entering meaningful private information is not safe.
+        </p>
       </Panel>
 
       <Panel label="Storage">
-        <KeyValues entries={DATA_PRIVACY.storage} />
-        <p className="fine">Synthetic figures. Wired to real storage in Phase 6.</p>
+        <KeyValues
+          entries={[
+            { label: 'Records in view', value: String(records.length) },
+            { label: 'Schema version', value: String(CANONICAL_SCHEMA_VERSION) },
+            { label: 'Encrypted at rest', value: 'No — Phase 6' },
+          ]}
+        />
+        <p className="fine">
+          These are the synthetic scenario records currently loaded, not a private database.
+        </p>
       </Panel>
 
       <Panel label="What leaves this device">
         <ul className="changes">
-          {DATA_PRIVACY.facts.map((fact) => (
-            <li key={fact}>
-              <span className="fine">{fact}</span>
-            </li>
-          ))}
+          <li>
+            <span className="fine">
+              All data stays on this device. There is no server and no account.
+            </span>
+          </li>
+          <li>
+            <span className="fine">No analytics, no telemetry, no external AI.</span>
+          </li>
+          <li>
+            <span className="fine">
+              This build and the repository behind it contain synthetic content only.
+            </span>
+          </li>
+          <li>
+            <span className="fine">
+              Every conclusion on Now was computed here, on this device, by local deterministic
+              logic.
+            </span>
+          </li>
         </ul>
       </Panel>
 

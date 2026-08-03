@@ -1,0 +1,157 @@
+import type { CanonicalRecord } from '../../domain/records';
+import { ago } from '../support';
+import type { DecisionOutput, MaterialChange, StateAssessment, WhatChanged } from '../types';
+
+/**
+ * Material-change detection (`CHANGE-MATERIAL`, `INTEL-008`).
+ *
+ * The engine is run twice — once over the records that existed at the previous
+ * assessment, once over everything — and the two results are diffed. **What changed
+ * is what demonstrably differs**, not a list of new records and not a hand-written
+ * changelog, either of which would start drifting from the truth immediately.
+ *
+ * The distinction the user actually needs is not "what is new" but "why is the
+ * answer different", so each change names what it altered: the state, the
+ * recommendation, or the confidence.
+ */
+
+export interface Snapshot {
+  readonly output: DecisionOutput;
+  readonly state: StateAssessment;
+}
+
+/** Records sharing the newest `recordedAt` — the batch that arrived since last time. */
+export function newestCluster(records: readonly CanonicalRecord[]): CanonicalRecord[] {
+  if (records.length === 0) return [];
+  const newest = records.reduce(
+    (latest, record) => (record.recordedAt > latest ? record.recordedAt : latest),
+    records[0]?.recordedAt ?? '',
+  );
+  return records.filter((record) => record.recordedAt === newest);
+}
+
+export function recordsBefore(
+  records: readonly CanonicalRecord[],
+  instant: string,
+): CanonicalRecord[] {
+  return records.filter((record) => record.recordedAt < instant);
+}
+
+function describe(record: CanonicalRecord): { change: string; detail: string } {
+  switch (record.recordType) {
+    case 'observation':
+      return {
+        change: `Recorded ${record.attribute.replace(/-/g, ' ')}`,
+        detail: JSON.stringify(record.value).replace(/[{}"]/g, '').replace(/,/g, ', '),
+      };
+    case 'observation-correction':
+      return {
+        change: `Corrected ${record.attribute.replace(/-/g, ' ')}`,
+        detail: record.reason,
+      };
+    case 'context-snapshot':
+      return {
+        change: 'Context updated',
+        detail:
+          record.protectedContexts.length > 0
+            ? `Protected: ${record.protectedContexts.join(', ')}`
+            : 'Nothing protected',
+      };
+    case 'commitment':
+      return { change: `Commitment ${record.state}`, detail: record.statement };
+    case 'goal':
+      return { change: `Goal ${record.state}`, detail: record.statement };
+    case 'life-context-change':
+      return { change: 'Life context changed', detail: record.summary };
+    default:
+      return { change: `Recorded ${record.recordType.replace(/-/g, ' ')}`, detail: '' };
+  }
+}
+
+function outputLabel(output: DecisionOutput): string {
+  switch (output.kind) {
+    case 'action':
+      return output.candidate.statement;
+    case 'question':
+      return 'a question';
+    case 'silence':
+      return 'deliberate silence';
+    case 'insufficient-evidence':
+      return 'insufficient evidence';
+  }
+}
+
+export function detectMaterialChange(
+  allRecords: readonly CanonicalRecord[],
+  previous: Snapshot | undefined,
+  current: Snapshot,
+  now: Date,
+): WhatChanged {
+  const cluster = newestCluster(allRecords);
+
+  if (previous === undefined) {
+    return {
+      changes:
+        cluster.length === 0
+          ? []
+          : cluster.slice(0, 3).map((record) => {
+              const described = describe(record);
+              return {
+                change: described.change,
+                detail: described.detail,
+                when: ago(record.recordedAt, now),
+                altered: 'state' as const,
+                recordIds: [record.recordId],
+              };
+            }),
+      why: 'This is the first assessment, so there is nothing to compare it against yet.',
+      since: 'No previous assessment',
+      unchanged: [],
+    };
+  }
+
+  const changes: MaterialChange[] = [];
+
+  const outputChanged =
+    previous.output.kind !== current.output.kind ||
+    outputLabel(previous.output) !== outputLabel(current.output);
+  const confidenceChanged = previous.state.confidence.label !== current.state.confidence.label;
+
+  for (const record of cluster) {
+    const described = describe(record);
+    changes.push({
+      change: described.change,
+      detail: described.detail,
+      when: ago(record.recordedAt, now),
+      altered: outputChanged ? 'recommendation' : confidenceChanged ? 'confidence' : 'state',
+      recordIds: [record.recordId],
+    });
+  }
+
+  const why = outputChanged
+    ? `The answer moved from ${outputLabel(previous.output)} to ${outputLabel(current.output)}.`
+    : confidenceChanged
+      ? `The answer is the same, but confidence moved from ${previous.state.confidence.label.replace(/-/g, ' ')} to ${current.state.confidence.label.replace(/-/g, ' ')}.`
+      : 'Nothing material has moved. The picture is the same as it was.';
+
+  const unchanged: string[] = [];
+  if (!outputChanged) unchanged.push('The recommendation');
+  if (!confidenceChanged) unchanged.push('Confidence in it');
+  if (
+    previous.state.protectedContexts.join(',') === current.state.protectedContexts.join(',')
+  ) {
+    unchanged.push('Protected contexts');
+  }
+
+  const since = cluster[0]?.recordedAt;
+
+  return {
+    changes,
+    why,
+    since:
+      since === undefined
+        ? 'No previous assessment'
+        : `Last useful assessment: ${ago(since, now)}`,
+    unchanged,
+  };
+}
