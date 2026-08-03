@@ -2,7 +2,7 @@
 
 **Status:** Controlling
 **Plan version:** 2.6 Lean Execution
-**Current phase:** Phase 0
+**Current phase:** Phase 2
 
 This registry preserves the approved requirement IDs. It is the lean traceability spine:
 every implemented behavior carries an approved requirement ID in its implementation and its
@@ -55,11 +55,11 @@ documentation).
 | PRIV-001 | Real personal data may not enter tracked repository content or Git history. | every phase | ACTIVE |
 | PRIV-002 | Development and automated tests use neutral synthetic data. | every phase | ACTIVE |
 | PRIV-003 | Private runtime data stays local unless the user explicitly exports or shares it. | 1–10 | PENDING |
-| ARCH-001 | UI, domain, application, intelligence, storage, and legacy boundaries remain explicit. | 1–10 | PENDING |
-| DATA-001 | Observations, inferences, forecasts, effects, recommendations, executions, outcomes, evaluations, and beliefs remain separate. | 2–10 | PENDING |
-| DATA-002 | Corrections preserve history through append and supersession. | 2–10 | PENDING |
-| STORE-001 | IndexedDB is the sole canonical life-data authority. | 1–10 | PENDING |
-| STORE-002 | Projections are rebuildable and non-authoritative. | 2–10 | PENDING |
+| ARCH-001 | UI, domain, application, intelligence, storage, and legacy boundaries remain explicit. | 1–10 | ACTIVE |
+| DATA-001 | Observations, inferences, forecasts, effects, recommendations, executions, outcomes, evaluations, and beliefs remain separate. | 2–10 | ACTIVE |
+| DATA-002 | Corrections preserve history through append and supersession. | 2–10 | ACTIVE |
+| STORE-001 | IndexedDB is the sole canonical life-data authority. | 1–10 | ACTIVE |
+| STORE-002 | Projections are rebuildable and non-authoritative. | 2–10 | ACTIVE |
 | STORE-003 | Encrypted backup and fresh-profile recovery pass before private alpha. | 6 | PENDING |
 | INTEL-001 | Local deterministic structured logic is authoritative. | 4–10 | PENDING |
 | INTEL-002 | Every forecast has an explicit target, horizon, assumptions, uncertainty, and reason trace. | 4–10 | PENDING |
@@ -203,6 +203,80 @@ Full traceability fields for the seven requirements active in Phase 0.
 
 ---
 
+## 3a. Active requirement records — Phase 2
+
+Requirements that became active with the canonical model. Test IDs are the `describe`
+blocks that carry the evidence.
+
+---
+
+### DATA-001 — canonical concepts remain separate
+
+| Field | Value |
+|---|---|
+| **Owning phase** | 2–10 |
+| **Implementation artifact** | `src/domain/records/*` (twenty families, each a strict object with a literal `recordType` and a constrained provenance basis); `src/domain/policies/invariants.ts` |
+| **Test IDs** | `records.test.ts` → `invariant 1 — inference must not masquerade as observation` (5 cases); `invariant 2 — forecast must not masquerade as outcome` (3); `invariant 3 — recommendation must not masquerade as execution` (3); `invariant 4 — outcome must not masquerade as causal effect` (2); `core record families` (4) |
+| **UI surface** | None yet. Phase 3. |
+| **Privacy / safety classification** | Integrity-critical |
+| **Evidence artifact** | 20/20 families validate independently; every attempted substitution is rejected |
+| **Status** | ACTIVE |
+| **Open decisions** | None |
+
+### DATA-002 — corrections preserve history
+
+| Field | Value |
+|---|---|
+| **Owning phase** | 2–10 |
+| **Implementation artifact** | `observationCorrectionRecord` (required `supersedesRecordId` and `reason`); `recordRepository.appendRecord` uses Dexie `add`, never `put`, so a stored record cannot be overwritten; `invariants.currentRecords` / `supersessionChain` |
+| **Test IDs** | `invariants.test.ts` → `supersession resolution` (3); `storage.test.ts` → `corrections` (1), `the write path` → `refuses to overwrite an existing record`; `persistence.spec.ts` → `a correction supersedes without destroying the original, across a reload`, `refuses to overwrite an existing record` |
+| **UI surface** | None yet. Phase 3 Timeline. |
+| **Privacy / safety classification** | Integrity-critical |
+| **Evidence artifact** | Superseded values remain readable after correction and after reload |
+| **Status** | ACTIVE |
+| **Open decisions** | **Deletion semantics distinct from correction remain undecided.** Append-oriented storage preserves corrected values, so correction is not redaction. Not implemented in Phase 2. |
+
+### STORE-001 — IndexedDB is the sole canonical authority
+
+| Field | Value |
+|---|---|
+| **Owning phase** | 1–10 |
+| **Implementation artifact** | `src/infrastructure/database/connection.ts` (schema v2); `recordRepository.ts`; ESLint `no-restricted-imports` blocking UI→storage and `no-restricted-globals` blocking `localStorage` in `src/` |
+| **Test IDs** | `database.test.ts` (6); `storage.test.ts` → `the write path` (4); `migrations.test.ts` → `upgrading a version 1 database`; `persistence.spec.ts` → `canonical records survive a full page reload` |
+| **UI surface** | None yet. Phase 3 Data & Privacy. |
+| **Privacy / safety classification** | Integrity-critical |
+| **Evidence artifact** | One `records` store; no per-domain table; `localStorage` unreachable from `src/`; boundary lint verified to fire |
+| **Status** | ACTIVE |
+| **Open decisions** | None |
+
+### STORE-002 — projections are rebuildable and non-authoritative
+
+| Field | Value |
+|---|---|
+| **Owning phase** | 2–10 |
+| **Implementation artifact** | `src/application/projections/index.ts` (two projections, each a pure function of canonical records); `projectionStore.ts`; projections are dropped automatically on every canonical write |
+| **Test IDs** | `storage.test.ts` → `projections` (4); `persistence.spec.ts` → `projections rebuild identically after being dropped` |
+| **UI surface** | None yet. Phase 3 Direction. |
+| **Privacy / safety classification** | Not sensitive (derived only) |
+| **Evidence artifact** | Dropping every projection and rebuilding produces byte-identical output; a category with no evidence reports `unknown`, never zero or the epoch |
+| **Status** | ACTIVE |
+| **Open decisions** | None |
+
+### ARCH-001 — boundaries remain explicit
+
+| Field | Value |
+|---|---|
+| **Owning phase** | 1–10 |
+| **Implementation artifact** | `eslint.config.js` boundary rules; `src/application/commands/writeRecord.ts` as the sole validated write path; intelligence layer does not exist yet and therefore cannot violate its boundary |
+| **Test IDs** | Boundary probe (manual, reproducible — see `PROJECT_STATUS.md`); `storage.test.ts` → `the write path` |
+| **UI surface** | Not applicable |
+| **Privacy / safety classification** | Integrity-critical |
+| **Evidence artifact** | A UI file importing `dexie` or the database module produces two lint errors with the ADR-0004 messages |
+| **Status** | ACTIVE |
+| **Open decisions** | `src/importers/` and `src/intelligence/` still do not exist; their boundary rules activate with their code. |
+
+---
+
 ## 4. Traceability fields used when a requirement becomes active
 
 Per master plan §68, each active requirement record includes: ID · statement · source
@@ -216,7 +290,16 @@ explicit owner approval before its owning phase begins.
 
 | Proposed ID | Gap | Needed by | Rationale |
 |---|---|---:|---|
-| `STORE-004` *(proposed)* | No approved requirement covers the **unencrypted synthetic development export and restore** format. `STORE-003` covers only Phase 6 encrypted backup. | Phase 2 | Prompt pack Phase 2 task 9 and master plan §29 both mandate the development export/restore, and the Phase 2 gate requires that canonical data survive synthetic restore — but no ID exists to carry the traceability. |
+| `STORE-004` *(proposed — implemented, ID unapproved)* | No approved requirement covers the **unencrypted synthetic development export and restore** format. `STORE-003` covers only Phase 6 encrypted backup. | Phase 2 | Prompt pack Phase 2 task 9 and master plan §29 both mandate the development export/restore, and the Phase 2 gate requires that canonical data survive synthetic restore — but no ID exists to carry the traceability. |
+
+**Status of `STORE-004`.** The *behaviour* is implemented, because Prompt 3 task 9 mandates
+it directly and the Phase 2 gate depends on it. The *requirement ID* remains unapproved, so
+the work is traced here rather than in Section 2. Implementation:
+`src/infrastructure/backup/developmentBackup.ts`, `src/application/commands/backupCommands.ts`.
+Tests: `backup.test.ts` → `development backup round trip` (2) and
+`a damaged backup is rejected before anything is written` (6); `persistence.spec.ts` →
+`exports and restores through a real reload`, `a damaged backup is rejected without touching
+canonical state`. Awaiting owner approval to move into Section 2.
 
 New requirement IDs are **not** minted silently. Anything implemented under a proposed ID
 must first be approved by the owner and moved into Section 2.

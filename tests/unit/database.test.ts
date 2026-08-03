@@ -40,13 +40,14 @@ describe('IndexedDB connection foundation', () => {
     expect(second).toBe(first);
   });
 
-  it('declares no canonical life-data stores yet (LEAN-001)', async () => {
+  it('declares one canonical store, one projection store, and nothing per-domain', async () => {
     const database = await openDatabase();
-    const tableNames = database.tables.map((table) => table.name);
+    const tableNames = database.tables.map((table) => table.name).sort();
 
-    // Phase 2 introduces the twenty core record families. Anything beyond
-    // infrastructure bookkeeping appearing here now would be speculative.
-    expect(tableNames).toEqual(['_meta']);
+    // The twenty record families share a single `records` store because they share
+    // one envelope. A per-family or per-domain table appearing here would mean a
+    // domain schema had been created ahead of its Phase 7 activation (LEAN-001).
+    expect(tableNames).toEqual(['_meta', 'projections', 'records']);
   });
 
   it('commits a transaction and reads the value back', async () => {

@@ -50,7 +50,7 @@ test.describe('application shell', () => {
     // OPS-002: the four fields the owner needs to verify a deployed preview.
     await expect(build.getByText('Plan version')).toBeVisible();
     await expect(build.getByText('2.6 Lean Execution')).toBeVisible();
-    await expect(build.getByText('Phase 1', { exact: true })).toBeVisible();
+    await expect(build.getByText('Phase 2', { exact: true })).toBeVisible();
     await expect(build.getByText('Built')).toBeVisible();
   });
 

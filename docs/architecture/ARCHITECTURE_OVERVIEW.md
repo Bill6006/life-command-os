@@ -102,6 +102,16 @@ These are enforced boundaries, not conventions:
 Module-boundary enforcement is added only to the degree the current repository structure
 requires (`ARCH-001`).
 
+### 2.1a Resolutions applied as directories gained content
+
+- **`domain/schemas/` is not created.** With a TypeScript-first validator, the schema and
+  the type are one artifact — the type is inferred from the schema. Splitting them across
+  two directories would mean either duplicating declarations or separating things that must
+  change together. Record families live in `domain/records/`, each exporting its schema and
+  its inferred type.
+- **`src/intelligence/` does not exist yet.** Phase 4 creates it. Its boundary rules are
+  documented here and activate with its code.
+
 ### 2.2 The importer boundary is a rule, not a directory
 
 `src/importers/legacy/` is **not created in Phase 1**. Phase 1 records the importer
@@ -194,6 +204,17 @@ storage health.
 
 Projections must be deletable and rebuildable deterministically from canonical records.
 This is a Phase 2 gate requirement.
+
+**Implemented in Phase 2 (two, because two have a current need):**
+
+| Projection | Question it answers |
+|---|---|
+| `open-commitments` | Which commitments are still open, and which are non-negotiable? |
+| `category-freshness` | When did each enabled category last have evidence, and how much? |
+
+Every projection is a pure function of the canonical records, and all projections are
+dropped automatically on any canonical write. A stale projection is a second source of
+truth; dropping is safe precisely because rebuilding is deterministic.
 
 ## 6. Intelligence lifecycle
 

@@ -24,6 +24,16 @@ Versions are the ranges declared in `package.json`; exact resolutions are pinned
 | **Privacy impact** | None. No network access, no telemetry. |
 | **Removal** | Confined to `src/ui/` and `src/main.tsx`. The domain, application, and intelligence layers are framework-agnostic TypeScript by design, so replacing React would not touch them. |
 
+### `zod` — ^4.4.3
+
+| Field | Value |
+|---|---|
+| **Active requirement** | `DATA-001`, `DATA-002`, ADR-0002, Phase 2 task 1 (runtime-validated schemas) |
+| **Why not native** | Data crossing the storage boundary is untrusted with respect to the current schema: records come back from IndexedDB written under an older version, and restores come from files. TypeScript types vanish at runtime and cannot help there. Beyond validation, the schemas are where six of the seven Phase 2 invariants are *enforced* — strict objects, literal record types, constrained provenance, and refinements make an invalid substitution a parse failure rather than a review comment. Hand-written validators for twenty families would be more code and less reliable. |
+| **Maintenance impact** | Widely used, actively maintained, no transitive dependencies. Contributes meaningfully to bundle size — the build grew from ~62 kB to ~116 kB gzipped when zod and the canonical model landed. Tracked against the 3-second startup budget. |
+| **Privacy impact** | None. Pure local computation; no network, no telemetry. |
+| **Removal** | Confined to `src/domain/records/` and `src/infrastructure/backup/`. Removing it means hand-writing validators against the same `parseCanonicalRecord` contract, which every write path already goes through. |
+
 ### `dexie` — ^4.4.4
 
 | Field | Value |

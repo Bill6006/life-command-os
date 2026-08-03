@@ -49,7 +49,7 @@ function FoundationView(): React.JSX.Element {
         <h2 id="what-this-is">This is a foundation, not the product</h2>
         <p>
           Life Command OS is a private, local-first personal decision-intelligence system. It is
-          being built in gated phases, and this build is the Phase 1 foundation.
+          being built in gated phases, and this build is the Phase 2 canonical model.
         </p>
         <p>
           There is no intelligence here yet, and nothing on this screen is a recommendation. The
@@ -64,8 +64,15 @@ function FoundationView(): React.JSX.Element {
           <li>
             Assets, manifest, and service worker resolve correctly under the Pages base path.
           </li>
-          <li>A versioned IndexedDB database opens and runs atomic transactions.</li>
-          <li>Module boundaries between interface, application, and storage are enforced.</li>
+          <li>
+            Twenty canonical record families validate, and a record cannot be stored as a
+            different kind of thing than it is.
+          </li>
+          <li>
+            Corrections append and supersede, so the earlier value stays readable instead of
+            being overwritten.
+          </li>
+          <li>Canonical records survive reload, and derived views can be rebuilt from them.</li>
         </ul>
       </section>
 
