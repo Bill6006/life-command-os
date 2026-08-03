@@ -2,7 +2,12 @@
 
 **Status:** Approved and controlling (`UX-001`)
 **Approved family:** Luminous Dark Command Surface
-**Design ADR:** reserved as **ADR-0008**, authored in Phase 3 after owner selection
+**Selected surface:** **Console** — owner-selected 2026-08-03, recorded in
+[ADR-0008](../decisions/ADR-0008-selected-command-surface.md)
+
+> Variants A (Briefing) and C (Focus) and the selection gallery were deleted after
+> selection. Only Console was expanded. The anti-dashboard rules that now constrain it,
+> and the measurable budgets adopted with it, live in ADR-0008.
 
 Interaction rules, budgets, and primary-surface prohibitions are defined in
 [Product Constitution §12](../PRODUCT_CONSTITUTION.md#12-owner-approved-interaction-rules)
@@ -109,6 +114,9 @@ to leak schema plumbing into the interface.
 ## 6. Phase 3 efficient design-selection process
 
 The goal is to choose a design **without building three applications** (`LEAN-003`).
+
+**Outcome:** Console was selected. The process below is retained as the record of how,
+and as the method to reuse if a future phase ever reopens the primary surface.
 
 ### 6.1 Before selection
 

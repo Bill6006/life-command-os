@@ -1,0 +1,766 @@
+/*
+ * Console — the selected command surface (ADR-0008).
+ *
+ * Only semantic tokens are referenced. A hex code in this file is a bug.
+ *
+ * The standing constraint from ADR-0008: preserve the compact high-information
+ * style, but do not drift into a crowded generic dashboard. Practically that means
+ * density is spent on making decision-relevant content legible at once — never on
+ * fitting more panels. The decision panel is the only one carrying accent treatment,
+ * so accent means "this is the answer" and nothing else.
+ */
+
+/* ========================================================================== */
+/* Prototype scaffolding — deliberately unlike the product                    */
+/* ========================================================================== */
+
+.proto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: #000;
+  border-bottom: 1px solid #3a3a3a;
+  font-family: var(--font-mono);
+  font-size: var(--text-fine);
+  color: #8a8a8a;
+}
+
+.proto-select {
+  min-height: var(--tap-min);
+  flex: 1 1 12rem;
+  /* `max-width: 18rem` reads as 576px at 200% zoom, which is wider than the phone. */
+  max-width: 100%;
+  padding: 0 var(--space-2);
+  background: #141414;
+  color: #e8e8e8;
+  border: 1px solid #4a4a4a;
+  border-radius: var(--radius-sm);
+  font: inherit;
+}
+
+/* ========================================================================== */
+/* Shell                                                                       */
+/* ========================================================================== */
+
+.shell {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  min-height: 100dvh;
+}
+
+.rail {
+  display: flex;
+  align-items: stretch;
+  /*
+   * Wraps rather than truncating. At 200% text zoom five destinations cannot fit
+   * one row, and ellipsing them would lose information the user needs to navigate —
+   * which `UX-005` forbids. A second row is the honest answer.
+   */
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-2);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.rail-brand {
+  display: none;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-fine);
+  letter-spacing: 0.18em;
+  color: var(--accent-primary);
+}
+
+/*
+ * Five destinations must fit 375px without sideways scrolling. A nav strip that
+ * scrolls hides destinations, which is what the five-destination limit exists to
+ * prevent (UX-005, UX-010).
+ */
+.rail-item {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--tap-min);
+  padding: var(--space-1) var(--space-1);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.rail-item:hover {
+  color: var(--text-primary);
+}
+
+/* Current destination is marked by weight and border, not colour alone. */
+.rail-item[aria-current='page'] {
+  background: var(--surface-panel-raised);
+  border-color: var(--border-accent);
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.rail-secondary {
+  display: none;
+}
+
+.more-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  margin: 0 var(--space-2) var(--space-2);
+  background: var(--surface-panel);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.more-item {
+  min-height: var(--tap-comfortable);
+  text-align: left;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--text-body);
+  cursor: pointer;
+}
+
+.body {
+  padding: var(--space-3) var(--space-2) var(--space-6);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.clock {
+  font-family: var(--font-mono);
+  font-size: var(--text-fine);
+  letter-spacing: 0.1em;
+  color: var(--accent-attention);
+}
+
+.headline {
+  margin: 0;
+  font-size: var(--text-headline);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: var(--leading-tight);
+}
+
+/* ========================================================================== */
+/* Panels                                                                      */
+/* ========================================================================== */
+
+.grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: 1fr;
+}
+
+/*
+ * Grid and flex children default to `min-width: auto`, which refuses to shrink
+ * below their content and pushes the whole layout sideways. At 200% zoom that is
+ * the difference between reflowing and scrolling horizontally.
+ */
+.grid > * {
+  min-width: 0;
+}
+
+.panel {
+  min-width: 0;
+  overflow-wrap: break-word;
+  background: var(--surface-panel);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-3) var(--space-4);
+}
+
+/* The only accent treatment on the surface. Accent means "this is the answer". */
+.panel-decision {
+  border-color: var(--border-strong);
+  background: linear-gradient(180deg, var(--surface-panel-raised), var(--surface-panel));
+}
+
+.panel-decision > .panel-label {
+  color: var(--accent-primary);
+}
+
+.panel-quiet > .panel-label {
+  color: var(--text-secondary);
+}
+
+.panel-attention {
+  border-left: 3px solid var(--signal-cost);
+}
+
+.panel-attention > .panel-label {
+  color: var(--signal-cost);
+}
+
+.panel-label {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  text-align: left;
+}
+
+.lead {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-lead);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+/*
+ * For single-word values that arrive lowercase from the view model, such as a
+ * trajectory direction. Never applied to a sentence — capitalising every word of a
+ * condition turns plain language into a headline, which is the opposite of the
+ * non-moral, readable tone the category overview is supposed to have.
+ */
+.lead-term {
+  text-transform: capitalize;
+}
+
+.body-text,
+.panel p.body {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+.fine {
+  margin: var(--space-1) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-fine);
+  line-height: var(--leading-body);
+}
+
+.why {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.value,
+.series {
+  font-family: var(--font-mono);
+  font-size: var(--text-value);
+}
+
+/* ========================================================================== */
+/* Evidence, readings, changes                                                 */
+/* ========================================================================== */
+
+.tag {
+  display: inline-block;
+  font-size: var(--text-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.08rem 0.4rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+/* Solid versus dashed, plus the word itself — never colour alone (UX-002). */
+.tag-observed {
+  border: 1px solid var(--evidence-observed);
+  color: var(--evidence-observed);
+}
+
+.tag-inferred {
+  border: 1px dashed var(--evidence-inferred);
+  color: var(--evidence-inferred);
+  font-style: italic;
+}
+
+.readings {
+  width: 100%;
+  border-collapse: collapse;
+  /* Fixed layout so columns reflow at 200% zoom instead of forcing the page wide. */
+  table-layout: fixed;
+}
+
+.readings th {
+  width: 45%;
+  text-align: left;
+  font-weight: 400;
+  color: var(--text-secondary);
+  font-size: var(--text-body);
+  padding: var(--space-1) 0;
+}
+
+.readings td {
+  padding: var(--space-1) 0 var(--space-1) var(--space-2);
+  text-align: right;
+}
+
+.changes,
+.goals {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.changes > li,
+.goals > li {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.changes > li:last-child,
+.goals > li:last-child {
+  border-bottom: 0;
+}
+
+.change-main {
+  display: block;
+  font-weight: 600;
+  font-size: var(--text-body);
+}
+
+/* ========================================================================== */
+/* Decision                                                                    */
+/* ========================================================================== */
+
+.decision-statement {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-decision);
+  font-weight: 650;
+  letter-spacing: -0.012em;
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+}
+
+.effects {
+  width: 100%;
+  border-collapse: collapse;
+  /*
+   * Fixed columns with declared widths. `auto` layout sizes to content, which at
+   * 200% zoom on a phone makes the table wider than the screen — and a data table
+   * the user has to scroll sideways has lost the comparison it exists to show.
+   */
+  table-layout: fixed;
+  margin: var(--space-3) 0;
+  font-size: var(--text-fine);
+}
+
+.effects th:nth-child(1) {
+  width: 42%;
+}
+
+.effects th:nth-child(2) {
+  width: 30%;
+}
+
+.effects th:nth-child(3) {
+  width: 28%;
+}
+
+.effects caption {
+  margin-bottom: var(--space-2);
+}
+
+.effects th,
+.effects td {
+  text-align: left;
+  padding: var(--space-2) var(--space-2) var(--space-2) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+}
+
+.effects thead th {
+  font-size: var(--text-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.effects tbody th {
+  font-weight: 600;
+}
+
+.effect-note {
+  display: block;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.dir {
+  font-family: var(--font-mono);
+  /* Wraps as a last resort at large zoom rather than forcing a horizontal scroll. */
+  overflow-wrap: break-word;
+}
+
+.dir-positive {
+  color: var(--signal-benefit);
+}
+
+.dir-negative {
+  color: var(--signal-cost);
+}
+
+.dir-neutral {
+  color: var(--signal-neutral);
+}
+
+.uncertain,
+.cross {
+  color: var(--text-secondary);
+}
+
+.kv {
+  margin: var(--space-2) 0 var(--space-3);
+  font-size: var(--text-fine);
+}
+
+.kv-row {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.kv-row:last-child {
+  border-bottom: 0;
+}
+
+.kv dt {
+  font-size: var(--text-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.kv dd {
+  margin: var(--space-1) 0 0;
+}
+
+.reason {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--text-secondary);
+}
+
+.reason li {
+  margin-bottom: var(--space-1);
+}
+
+/* ========================================================================== */
+/* Actions                                                                     */
+/* ========================================================================== */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.btn {
+  min-height: var(--tap-comfortable);
+  min-width: var(--tap-min);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: var(--text-body);
+  cursor: pointer;
+}
+
+.btn-primary {
+  border: 0;
+  background: var(--accent-primary);
+  color: var(--text-on-accent);
+  font-weight: 700;
+}
+
+.btn-secondary {
+  border: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.btn-link {
+  min-height: var(--tap-min);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-primary);
+  font-size: var(--text-fine);
+  text-align: left;
+}
+
+/* ========================================================================== */
+/* Actionable status only — never a normal-state panel (UX-011)               */
+/* ========================================================================== */
+
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  margin: 0;
+  padding: var(--space-3);
+  background: var(--surface-panel-raised);
+  border: 1px solid var(--signal-cost);
+  border-left-width: 3px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-fine);
+}
+
+.banner-label {
+  font-weight: 700;
+  color: var(--signal-cost);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: var(--text-label);
+}
+
+/* ========================================================================== */
+/* Standalone states (loading, empty, locked, error, recovery)                 */
+/* ========================================================================== */
+
+.standalone {
+  padding: var(--space-5) var(--space-3);
+  background: var(--surface-panel);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  max-width: 34rem;
+}
+
+.standalone-headline {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-decision);
+  font-weight: 650;
+  letter-spacing: -0.012em;
+  line-height: var(--leading-tight);
+}
+
+.standalone .actions {
+  margin-top: var(--space-4);
+}
+
+/* ========================================================================== */
+/* Timeline                                                                    */
+/* ========================================================================== */
+
+.timeline {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+}
+
+.tl {
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.tl:last-child {
+  border-bottom: 0;
+}
+
+.tl-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.tl-when {
+  color: var(--text-secondary);
+  font-size: var(--text-fine);
+}
+
+.tl-type {
+  font-size: var(--text-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  padding: 0.08rem 0.4rem;
+}
+
+.tl-correction .tl-type {
+  border-color: var(--accent-reasoning);
+  color: var(--accent-reasoning);
+}
+
+.tl p {
+  margin: 0;
+}
+
+/* ========================================================================== */
+/* Trend chart (UX-003)                                                        */
+/* ========================================================================== */
+
+.chart {
+  margin: 0;
+}
+
+.chart-caption {
+  margin-bottom: var(--space-3);
+}
+
+.chart-question {
+  margin: 0;
+  font-size: var(--text-body);
+  font-weight: 650;
+}
+
+.chart-meta {
+  margin: var(--space-1) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-fine);
+}
+
+.chart-plot {
+  background: var(--surface-inset);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}
+
+.chart-plot svg {
+  display: block;
+  width: 100%;
+  height: 9rem;
+}
+
+.chart-axis {
+  stroke: var(--border-default);
+  stroke-width: 1;
+}
+
+.chart-grid {
+  stroke: var(--border-subtle);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+/* The missing week is a gap, never a zero. */
+.chart-gap {
+  fill: var(--surface-panel-raised);
+  opacity: 0.55;
+}
+
+.chart-line {
+  stroke: var(--accent-primary);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-point {
+  fill: var(--accent-primary);
+}
+
+.chart-tick {
+  fill: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.chart-labels {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-2);
+  margin: var(--space-2) 0 0;
+  padding: 0 0 0 1.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+}
+
+.chart-label-gap {
+  color: var(--accent-attention);
+}
+
+.chart-summary {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+.chart-fine {
+  margin: var(--space-2) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-fine);
+}
+
+/* ========================================================================== */
+/* Desktop                                                                     */
+/* ========================================================================== */
+
+@media (min-width: 46rem) {
+  .shell {
+    display: grid;
+    grid-template-columns: var(--rail-width) 1fr;
+  }
+
+  .rail {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-1);
+    border-bottom: 0;
+    border-right: 1px solid var(--border-default);
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .rail-brand {
+    display: block;
+    margin: 0 0 var(--space-3) var(--space-2);
+  }
+
+  .rail-item {
+    flex: 0 0 auto;
+    text-align: left;
+    padding: 0 var(--space-3);
+    font-size: var(--text-fine);
+    letter-spacing: 0.04em;
+  }
+
+  /* Desktop has room for all six, so More is unnecessary here. */
+  .rail-more {
+    display: none;
+  }
+
+  .rail-secondary {
+    display: block;
+  }
+
+  .more-sheet {
+    display: none;
+  }
+
+  .body {
+    padding: var(--space-5) var(--space-5) var(--space-6);
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .panel-wide {
+    grid-column: 1 / -1;
+  }
+
+  .chart-plot svg {
+    height: 11rem;
+  }
+}

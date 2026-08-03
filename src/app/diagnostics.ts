@@ -31,8 +31,16 @@ import { SCHEMA_VERSION } from '../infrastructure/database/connection';
  * already have. Any code able to call these functions could read and write the same
  * IndexedDB database directly. There is no server, no account, and no secret here.
  *
- * **Removal trigger:** when Phase 3 delivers the Data & Privacy surface, the
- * browser tests move to driving the real interface and this module is deleted.
+ * **Removal trigger — revised in Phase 3.** The original trigger said "when Phase 3
+ * delivers the Data & Privacy surface". That turned out to be wrong: Phase 3's
+ * Data & Privacy is a static synthetic view, because the whole phase renders explicit
+ * view models and implements no production behaviour. It cannot exercise real
+ * storage, so removing the bridge now would delete the Phase 2 persistence evidence
+ * and replace it with nothing.
+ *
+ * The corrected trigger is **Phase 6**, when Data & Privacy is wired to real storage
+ * health, backup, and restore. At that point the browser tests drive the real
+ * interface and this module is deleted.
  */
 
 export interface DiagnosticsBridge {

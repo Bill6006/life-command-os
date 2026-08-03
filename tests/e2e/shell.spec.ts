@@ -1,59 +1,20 @@
 import { expect, test } from '@playwright/test';
 
 /**
- * Phase 1 gate evidence.
+ * Platform evidence — carried forward from Phase 1 and kept green.
  *
- * Proves: the shell renders and navigates; assets, manifest, and service worker
- * resolve under the repository base path; the application starts offline from the
- * cached build; IndexedDB opens in a real browser; and no life-domain feature or
- * intelligence has leaked into the foundation.
+ * These prove the things that have nothing to do with which design was selected:
+ * the base path, the manifest, offline startup, and the secure context IndexedDB
+ * needs. Phase 3's own gate evidence lives in `console-shell.spec.ts`.
  */
 
 test.describe('application shell', () => {
-  test('renders the shell under the repository base path', async ({ page }) => {
+  test('renders under the repository base path', async ({ page }) => {
     await page.goto('./');
 
-    await expect(
-      page.getByRole('heading', { name: 'Life Command OS', level: 1 }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Now', level: 1 })).toBeVisible();
     await expect(page.getByRole('main')).toBeVisible();
-    await expect(page.getByRole('navigation', { name: 'Sections' })).toBeVisible();
-  });
-
-  test('navigates between views and marks the current one', async ({ page }) => {
-    await page.goto('./');
-
-    // Design leads during Phase 3: the phase is waiting on one owner decision.
-    const design = page.getByRole('button', { name: 'Design', exact: true });
-    const about = page.getByRole('button', { name: 'About', exact: true });
-
-    await expect(design).toHaveAttribute('aria-current', 'page');
-    await expect(about).not.toHaveAttribute('aria-current', 'page');
-
-    await about.click();
-
-    await expect(page.getByRole('heading', { name: 'Build', level: 2 })).toBeVisible();
-    await expect(about).toHaveAttribute('aria-current', 'page');
-    await expect(design).not.toHaveAttribute('aria-current', 'page');
-  });
-
-  test('shows build metadata under About, not on the primary surface', async ({ page }) => {
-    await page.goto('./');
-
-    // UX-011: build metadata is quiet. It must not occupy the opening surface.
-    // `exact` matters: without it, "Build" also matches the region labelled
-    // "What this build actually proves".
-    const build = page.getByRole('region', { name: 'Build', exact: true });
-    await expect(build).toBeHidden();
-
-    await page.getByRole('button', { name: 'About' }).click();
-    await expect(build).toBeVisible();
-
-    // OPS-002: the four fields the owner needs to verify a deployed preview.
-    await expect(build.getByText('Plan version')).toBeVisible();
-    await expect(build.getByText('2.6 Lean Execution')).toBeVisible();
-    await expect(build.getByText('Phase 3', { exact: true })).toBeVisible();
-    await expect(build.getByText('Built')).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Main' })).toBeVisible();
   });
 
   test('loads every asset without a console or network error', async ({ page }) => {
@@ -76,30 +37,31 @@ test.describe('application shell', () => {
     expect(problems).toEqual([]);
   });
 
-  test('the shell itself still exposes no life-domain feature or intelligence', async ({
-    page,
-  }) => {
+  test('keeps build metadata quiet, under Data & Privacy', async ({ page }) => {
     await page.goto('./');
-    await page.getByRole('button', { name: 'Foundation', exact: true }).click();
 
-    const body = (await page.locator('main').textContent()) ?? '';
+    // UX-011: build metadata must not occupy the opening surface.
+    await expect(page.getByRole('main')).not.toContainText('Plan version');
 
-    // Prohibited constructs (UX-009, UX-011).
-    expect(body).not.toMatch(/life score/i);
-    expect(body).not.toMatch(/streak/i);
-    expect(body).not.toMatch(/all systems operational/i);
+    // Behind More on a phone, directly on the rail on desktop.
+    const direct = page
+      .getByRole('button', { name: 'Data & Privacy', exact: true })
+      .filter({ visible: true });
+    if ((await direct.count()) === 0) {
+      await page.getByRole('button', { name: 'More', exact: true }).click();
+    }
+    await page
+      .getByRole('button', { name: 'Data & Privacy', exact: true })
+      .filter({ visible: true })
+      .first()
+      .click();
 
-    // No score rings, gauges, meters, or progress indicators.
-    await expect(page.getByRole('meter')).toHaveCount(0);
-    await expect(page.getByRole('progressbar')).toHaveCount(0);
-
-    // The Phase 3 variants render explicit synthetic view models. No engine exists
-    // to produce a recommendation, so none is reachable outside the design gallery.
-    const diagnostics = await page.evaluate(() =>
-      Object.keys(globalThis.__lifeCommandOsDiagnostics ?? {}).sort(),
-    );
-    expect(diagnostics).not.toContain('recommend');
-    expect(diagnostics).not.toContain('decide');
+    // OPS-002: the four fields needed to verify a deployed preview.
+    const main = page.getByRole('main');
+    await expect(main).toContainText('Plan version');
+    await expect(main).toContainText('2.6 Lean Execution');
+    await expect(main).toContainText('Phase 3');
+    await expect(main).toContainText('Built');
   });
 });
 
@@ -128,7 +90,6 @@ test.describe('installability and offline startup', () => {
     expect(manifest.scope).toContain('/life-command-os/');
     expect(manifest.icons.map((icon) => icon.sizes)).toContain('512x512');
 
-    // Every declared icon must actually exist, or installation silently degrades.
     for (const icon of manifest.icons) {
       const iconResponse = await request.get(new URL(icon.src, response.url()).toString());
       expect(iconResponse.ok(), `icon missing: ${icon.src}`).toBe(true);
@@ -138,8 +99,6 @@ test.describe('installability and offline startup', () => {
   test('starts from the cached build with the network offline', async ({ page, context }) => {
     await page.goto('./');
 
-    // Wait for the service worker to control the page, otherwise the reload below
-    // would test nothing.
     await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, {
       timeout: 30_000,
     });
@@ -148,50 +107,49 @@ test.describe('installability and offline startup', () => {
     try {
       await page.reload();
 
-      // The gate requirement: a full cold start with no network at all.
-      await expect(
-        page.getByRole('heading', { name: 'Life Command OS', level: 1 }),
-      ).toBeVisible();
-      await expect(page.getByRole('navigation', { name: 'Sections' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Now', level: 1 })).toBeVisible();
+      await expect(page.getByRole('navigation', { name: 'Main' })).toBeVisible();
 
-      // Styles and script both came from the precache, not just the HTML shell.
+      // Styles came from the precache too, not just the HTML shell.
       const styled = await page
         .locator('body')
         .evaluate((el) => getComputedStyle(el).backgroundColor);
       expect(styled).toBe('rgb(7, 17, 31)');
+
+      // Offline changes nothing about the answer, which is the point.
+      await expect(page.getByRole('main')).toContainText('Activity One');
     } finally {
       await context.setOffline(false);
     }
   });
 
-  test('surfaces offline as actionable status, and stays quiet otherwise', async ({
+  /**
+   * Split from the cold-start test deliberately. Emulated offline does not reliably
+   * flip `navigator.onLine` for a document that loads *while already* offline, so
+   * folding both into one test would make a real assertion depend on an emulation
+   * detail. Going offline on a live page is the case the banner actually serves.
+   */
+  test('surfaces offline as actionable status when the connection drops', async ({
     page,
     context,
   }) => {
     await page.goto('./');
-
-    // UX-011 / master plan §34.4: a normal operational state consumes no panel.
-    // There is deliberately no "all systems operational" counterpart to this.
-    await expect(page.getByRole('status')).toBeEmpty();
+    await expect(page.locator('.banner')).toHaveCount(0);
 
     await context.setOffline(true);
     try {
-      await expect(page.getByRole('status')).toContainText('Offline');
+      await expect(page.locator('.banner')).toContainText('Offline');
+      // Still a banner, never one of the five panels (ADR-0008 rule 2).
+      expect(await page.locator('.grid > .panel').count()).toBeLessThanOrEqual(5);
     } finally {
       await context.setOffline(false);
     }
 
-    await expect(page.getByRole('status')).toBeEmpty();
+    await expect(page.locator('.banner')).toHaveCount(0);
   });
 });
 
 test.describe('storage foundation', () => {
-  /**
-   * Scope note, deliberately narrow: this proves the *platform preconditions* the
-   * canonical store depends on. It does not exercise src/infrastructure/database,
-   * which the shell has no reason to open in Phase 1 — there is nothing to store.
-   * Browser-backed persistence of canonical records is Phase 2 gate evidence.
-   */
   test('provides a secure context with usable IndexedDB from the Pages origin', async ({
     page,
   }) => {
@@ -201,12 +159,8 @@ test.describe('storage foundation', () => {
       secure: window.isSecureContext,
       available: typeof indexedDB !== 'undefined',
     }));
-
-    // IndexedDB durability guarantees are weaker outside a secure context, and the
-    // service worker would not register at all.
     expect(environment).toEqual({ secure: true, available: true });
 
-    // A round trip through the real (non-shimmed) browser implementation.
     const roundTrip = await page.evaluate(async () => {
       const database = await new Promise<IDBDatabase>((resolve, reject) => {
         const request = indexedDB.open('phase1-precondition-probe', 1);

@@ -1,35 +1,59 @@
 import { useEffect, useState } from 'react';
-import { buildInfo, shortCommit } from '../../../app/buildInfo';
-import { DesignSelection } from '../design-selection/DesignSelection';
+import { NowSurface } from '../now/NowSurface';
+import { TimelineSurface } from '../timeline/TimelineSurface';
+import { DirectionSurface } from '../direction/DirectionSurface';
+import { CommitmentsSurface } from '../commitments/CommitmentsSurface';
+import { LearningSurface } from '../learning/LearningSurface';
+import { DataPrivacySurface } from '../data-privacy/DataPrivacySurface';
+import { NOW_STATES, NOW_STATE_KINDS, type NowStateKind } from '../../view-models/prototype';
+import '../../design-system/console.css';
 
 /**
- * Phase 1 application shell.
+ * The Console shell (ADR-0008).
  *
- * Its only job is to make rendering, navigation, installability, and offline
- * startup verifiable. It contains no life-domain feature and no intelligence:
- * there is nothing to recommend yet, and inventing a placeholder recommendation
- * would violate both the greenfield boundary and LEAN-001.
+ * Six logical destinations. **Five persistent on mobile** — Learning and Data &
+ * Privacy live under More, per `UX-010` — and all six on the desktop rail, which has
+ * the room.
  *
- * The real destinations (Now, Timeline, Direction, Commitments, Learning,
- * Data & Privacy) arrive in Phase 3 after the owner selects a command surface.
+ * The prototype state switcher is temporary scaffolding, styled deliberately unlike
+ * the product so it cannot be mistaken for part of it. Phase 3 must demonstrate
+ * thirteen interaction states and there is no engine to produce them; it is removed
+ * when Phase 4 makes the states real.
  */
 
-type View = 'design' | 'foundation' | 'about';
+type Destination =
+  'now' | 'timeline' | 'direction' | 'commitments' | 'learning' | 'data-privacy';
 
-/**
- * `design` leads, because Phase 3 is waiting on one decision from the owner and
- * everything else here is context for it. It disappears once a variant is selected.
- */
-const VIEWS: readonly { id: View; label: string }[] = [
-  { id: 'design', label: 'Design' },
-  { id: 'foundation', label: 'Foundation' },
-  { id: 'about', label: 'About' },
+const PRIMARY: readonly { id: Destination; label: string }[] = [
+  { id: 'now', label: 'Now' },
+  { id: 'timeline', label: 'Timeline' },
+  { id: 'direction', label: 'Direction' },
+  { id: 'commitments', label: 'Commitments' },
 ];
 
-/** Reports offline state. Operational status stays quiet unless actionable. */
+const UNDER_MORE: readonly { id: Destination; label: string }[] = [
+  { id: 'learning', label: 'Learning' },
+  { id: 'data-privacy', label: 'Data & Privacy' },
+];
+
+const STATE_LABELS: Record<NowStateKind, string> = {
+  action: 'Action',
+  silence: 'Deliberate silence',
+  'insufficient-evidence': 'Insufficient evidence',
+  question: 'One question',
+  'what-changed': 'What changed',
+  'mixed-effects': 'Mixed effects',
+  'weekly-direction': 'Weekly direction',
+  loading: 'Loading',
+  empty: 'Empty',
+  offline: 'Offline',
+  error: 'Error',
+  locked: 'Locked',
+  recovery: 'Recovery',
+};
+
 function useIsOffline(): boolean {
   const [offline, setOffline] = useState(() => !navigator.onLine);
-
   useEffect(() => {
     const goOffline = (): void => {
       setOffline(true);
@@ -44,91 +68,27 @@ function useIsOffline(): boolean {
       window.removeEventListener('online', goOnline);
     };
   }, []);
-
   return offline;
 }
 
-function FoundationView(): React.JSX.Element {
-  return (
-    <>
-      <section className="panel" aria-labelledby="what-this-is">
-        <h2 id="what-this-is">This is a foundation, not the product</h2>
-        <p>
-          Life Command OS is a private, local-first personal decision-intelligence system. It is
-          being built in gated phases, and this build is the Phase 2 canonical model.
-        </p>
-        <p>
-          There is no intelligence here yet, and nothing on this screen is a recommendation. The
-          decision surface is designed in Phase 3 and becomes useful in Phase 4.
-        </p>
-      </section>
-
-      <section className="panel" aria-labelledby="what-exists">
-        <h2 id="what-exists">What this build actually proves</h2>
-        <ul>
-          <li>The application installs and starts offline from a cached shell.</li>
-          <li>
-            Assets, manifest, and service worker resolve correctly under the Pages base path.
-          </li>
-          <li>
-            Twenty canonical record families validate, and a record cannot be stored as a
-            different kind of thing than it is.
-          </li>
-          <li>
-            Corrections append and supersede, so the earlier value stays readable instead of
-            being overwritten.
-          </li>
-          <li>Canonical records survive reload, and derived views can be rebuilt from them.</li>
-        </ul>
-      </section>
-
-      <section className="panel" aria-labelledby="what-is-stored">
-        <h2 id="what-is-stored">Nothing personal is stored</h2>
-        <p>
-          This build holds no life data, and the repository behind it contains synthetic content
-          only. Entering meaningful private data is not safe until Phase 6 proves encrypted
-          backup and fresh-profile recovery.
-        </p>
-      </section>
-    </>
-  );
-}
-
-function AboutView(): React.JSX.Element {
-  return (
-    <>
-      <section className="panel" aria-labelledby="build-heading">
-        <h2 id="build-heading">Build</h2>
-        <p>Use this to confirm that the deployed preview matches the gate-approved commit.</p>
-        <dl className="meta">
-          <dt>Plan version</dt>
-          <dd>{buildInfo.planVersion}</dd>
-          <dt>Phase</dt>
-          <dd>{buildInfo.phase}</dd>
-          <dt>Commit</dt>
-          <dd>
-            <abbr title={buildInfo.commit}>{shortCommit(buildInfo.commit)}</abbr>
-          </dd>
-          <dt>Built</dt>
-          <dd>{buildInfo.builtAt}</dd>
-        </dl>
-      </section>
-
-      <section className="panel" aria-labelledby="privacy-heading">
-        <h2 id="privacy-heading">Data and privacy</h2>
-        <ul>
-          <li>All data stays on this device. There is no server and no account.</li>
-          <li>No analytics, no telemetry, no external AI.</li>
-          <li>The repository and this hosted build contain synthetic content only.</li>
-        </ul>
-      </section>
-    </>
-  );
-}
-
 export function AppShell(): React.JSX.Element {
-  const [view, setView] = useState<View>('design');
+  const [destination, setDestination] = useState<Destination>('now');
+  const [stateKind, setStateKind] = useState<NowStateKind>('action');
+  const [moreOpen, setMoreOpen] = useState(false);
   const offline = useIsOffline();
+
+  // Genuine offline is shown by the Now surface's offline composition rather than a
+  // separate chrome banner, so there is one place that says it and one only.
+  const effectiveState: NowStateKind =
+    offline && stateKind === 'action' ? 'offline' : stateKind;
+
+  const go = (next: Destination): void => {
+    setDestination(next);
+    setMoreOpen(false);
+  };
+
+  const activeLabel =
+    [...PRIMARY, ...UNDER_MORE].find((entry) => entry.id === destination)?.label ?? 'Now';
 
   return (
     <>
@@ -136,51 +96,121 @@ export function AppShell(): React.JSX.Element {
         Skip to main content
       </a>
 
-      <div className="app">
-        <header className="masthead">
-          <h1>Life Command OS</h1>
-          <p>Private, local-first decision intelligence</p>
-        </header>
+      {/* Temporary Phase 3 scaffolding. Removed when Phase 4 makes the states real. */}
+      <div className="proto">
+        <label className="proto-label" htmlFor="proto-state">
+          prototype state
+        </label>
+        <select
+          id="proto-state"
+          className="proto-select"
+          value={stateKind}
+          onChange={(event) => {
+            setStateKind(event.target.value as NowStateKind);
+            setDestination('now');
+          }}
+        >
+          {NOW_STATE_KINDS.map((kind) => (
+            <option value={kind} key={kind}>
+              {STATE_LABELS[kind]}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        <nav className="nav" aria-label="Sections">
-          {VIEWS.map((entry) => (
+      <div className="shell">
+        <nav className="rail" aria-label="Main">
+          <p className="rail-brand">LCOS</p>
+          {PRIMARY.map((entry) => (
             <button
-              key={entry.id}
               type="button"
+              key={entry.id}
+              className="rail-item"
               onClick={() => {
-                setView(entry.id);
+                go(entry.id);
               }}
-              {...(view === entry.id ? { 'aria-current': 'page' as const } : {})}
+              {...(destination === entry.id ? { 'aria-current': 'page' as const } : {})}
+            >
+              {entry.label}
+            </button>
+          ))}
+
+          {/* On mobile this is the fifth persistent destination; on desktop the
+              two entries below it are shown directly and this button is hidden. */}
+          <button
+            type="button"
+            className="rail-item rail-more"
+            aria-expanded={moreOpen}
+            onClick={() => {
+              setMoreOpen((open) => !open);
+            }}
+            {...(UNDER_MORE.some((entry) => entry.id === destination)
+              ? { 'aria-current': 'page' as const }
+              : {})}
+          >
+            More
+          </button>
+
+          {UNDER_MORE.map((entry) => (
+            <button
+              type="button"
+              key={entry.id}
+              className="rail-item rail-secondary"
+              onClick={() => {
+                go(entry.id);
+              }}
+              {...(destination === entry.id ? { 'aria-current': 'page' as const } : {})}
             >
               {entry.label}
             </button>
           ))}
         </nav>
 
-        <main className="main" id="main" tabIndex={-1}>
-          {/* Announced to screen readers because it changes the meaning of what is shown. */}
-          <div role="status" aria-live="polite">
-            {offline ? (
-              <p className="notice">
-                <span className="notice-label">Offline</span>
-                <span>
-                  You are working from the cached build. Nothing is lost — this application does
-                  not need a network connection.
-                </span>
-              </p>
-            ) : null}
+        {moreOpen ? (
+          <div className="more-sheet">
+            {UNDER_MORE.map((entry) => (
+              <button
+                type="button"
+                key={entry.id}
+                className="more-item"
+                onClick={() => {
+                  go(entry.id);
+                }}
+              >
+                {entry.label}
+              </button>
+            ))}
           </div>
+        ) : null}
 
-          {view === 'design' ? <DesignSelection /> : null}
-          {view === 'foundation' ? <FoundationView /> : null}
-          {view === 'about' ? <AboutView /> : null}
+        <main className="body" id="main" tabIndex={-1}>
+          <header className="head">
+            <span className="clock">
+              {destination === 'now' && 'situation' in NOW_STATES[effectiveState]
+                ? (NOW_STATES[effectiveState] as { situation: { clock: string } }).situation
+                    .clock
+                : activeLabel}
+            </span>
+            <h1 className="headline">{destination === 'now' ? 'Now' : activeLabel}</h1>
+          </header>
+
+          {destination === 'now' ? (
+            <NowSurface
+              state={NOW_STATES[effectiveState]}
+              onOpenChanges={() => {
+                setStateKind('what-changed');
+              }}
+              onOpenDirection={() => {
+                go('direction');
+              }}
+            />
+          ) : null}
+          {destination === 'timeline' ? <TimelineSurface /> : null}
+          {destination === 'direction' ? <DirectionSurface /> : null}
+          {destination === 'commitments' ? <CommitmentsSurface /> : null}
+          {destination === 'learning' ? <LearningSurface /> : null}
+          {destination === 'data-privacy' ? <DataPrivacySurface /> : null}
         </main>
-
-        <footer className="footer">
-          <p>
-            {buildInfo.phase} · {buildInfo.planVersion} · {shortCommit(buildInfo.commit)}
-          </p>
-        </footer>
       </div>
     </>
   );

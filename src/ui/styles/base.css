@@ -1,37 +1,11 @@
 /*
- * Phase 1 minimum stylesheet.
+ * Global reset and document-level rules.
  *
- * These are the approved Luminous Dark Command Surface *starting* tokens
- * (docs/design/VISUAL_DIRECTION.md), not the semantic design-token system.
- * Semantic tokens are formalised in Phase 3 after the owner selects a primary
- * command surface — building them now would be speculative (LEAN-003).
- *
- * Accessibility baseline enforced here: 44px touch targets, visible focus,
- * reduced-motion support, no horizontal scrolling, usable at 200% text zoom.
+ * Component styling lives in `src/ui/design-system/console.css`. This file holds
+ * only what must apply to the document itself, so there is one place to look for
+ * "why does the page behave like that" as opposed to "why does that panel look
+ * like that".
  */
-
-:root {
-  --canvas: #07111f;
-  --surface-1: #0c1929;
-  --surface-2: #11243a;
-  --elevated: #17304b;
-  --border: #25415d;
-  --text-primary: #f4f8fc;
-  --text-muted: #a9bed2;
-  --cyan: #28d7e5;
-  --teal: #19c3b1;
-  --violet: #8b7cff;
-  --warm-gold: #f2c75c;
-  --success: #45d483;
-  --warning: #ffb45c;
-  --danger: #ff7082;
-
-  --radius: 10px;
-  --tap-target: 44px;
-  --measure: 68ch;
-
-  color-scheme: dark;
-}
 
 *,
 *::before,
@@ -40,28 +14,24 @@
 }
 
 html {
-  /* Relative units throughout so 200% text zoom reflows instead of clipping. */
+  /* Relative sizing throughout, so 200% text zoom reflows instead of clipping. */
   font-size: 100%;
 }
 
 body {
   margin: 0;
   min-height: 100dvh;
-  background: var(--canvas);
+  background: var(--surface-canvas);
   color: var(--text-primary);
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
-  line-height: 1.55;
-  /* No horizontal scrolling in normal flows (UX-005). */
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  line-height: var(--leading-body);
+  /* No sideways scrolling in normal phone flows (UX-005). */
   overflow-x: hidden;
 }
 
 :focus-visible {
-  outline: 2px solid var(--cyan);
+  outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -71,175 +41,13 @@ body {
   position: absolute;
   left: -9999px;
   top: 0;
-  padding: 0.75rem 1rem;
-  background: var(--elevated);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-elevated);
   color: var(--text-primary);
-  z-index: 10;
+  z-index: 30;
 }
 
 .skip-link:focus {
-  left: 0.5rem;
-  top: 0.5rem;
-}
-
-.app {
-  display: flex;
-  flex-direction: column;
-  min-height: 100dvh;
-  max-width: var(--measure);
-  margin: 0 auto;
-  padding: 0 1rem env(safe-area-inset-bottom);
-}
-
-.masthead {
-  padding: 1.5rem 0 0.75rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.masthead h1 {
-  margin: 0;
-  font-size: clamp(1.25rem, 4vw, 1.6rem);
-  letter-spacing: -0.01em;
-}
-
-.masthead p {
-  margin: 0.25rem 0 0;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-.nav {
-  display: flex;
-  gap: 0.5rem;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.nav button {
-  min-height: var(--tap-target);
-  min-width: var(--tap-target);
-  padding: 0 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface-1);
-  color: var(--text-muted);
-  font: inherit;
-  font-size: 0.95rem;
-  cursor: pointer;
-}
-
-.nav button:hover {
-  background: var(--surface-2);
-  color: var(--text-primary);
-}
-
-/* Selected state uses text weight and a border, never colour alone (UX-002). */
-.nav button[aria-current='page'] {
-  background: var(--surface-2);
-  border-color: var(--cyan);
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-.main {
-  flex: 1;
-  padding: 1.25rem 0 2rem;
-}
-
-.panel {
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem 1.125rem;
-  margin: 0 0 1rem;
-}
-
-.panel h2 {
-  margin: 0 0 0.5rem;
-  font-size: 1.05rem;
-}
-
-.panel p {
-  margin: 0 0 0.75rem;
-  color: var(--text-muted);
-}
-
-.panel p:last-child,
-.panel ul:last-child {
-  margin-bottom: 0;
-}
-
-.panel ul {
-  margin: 0 0 0.75rem;
-  padding-left: 1.15rem;
-  color: var(--text-muted);
-}
-
-.panel li {
-  margin-bottom: 0.3rem;
-}
-
-/*
- * Operational status is quiet unless actionable (UX-011, master plan §34.4).
- * This renders only when the application is genuinely offline. There is no
- * "all systems operational" counterpart, by design.
- */
-.notice {
-  display: flex;
-  gap: 0.6rem;
-  align-items: flex-start;
-  background: var(--surface-2);
-  border: 1px solid var(--warning);
-  border-left-width: 4px;
-  border-radius: var(--radius);
-  padding: 0.75rem 1rem;
-  margin: 0 0 1rem;
-  font-size: 0.92rem;
-}
-
-.notice-label {
-  font-weight: 600;
-  color: var(--warning);
-  white-space: nowrap;
-}
-
-.meta {
-  display: grid;
-  grid-template-columns: minmax(7rem, auto) 1fr;
-  gap: 0.4rem 1rem;
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-.meta dt {
-  color: var(--text-muted);
-}
-
-.meta dd {
-  margin: 0;
-  font-family: ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, monospace;
-  font-size: 0.85rem;
-  overflow-wrap: anywhere;
-}
-
-.footer {
-  padding: 1rem 0 1.5rem;
-  border-top: 1px solid var(--border);
-  color: var(--text-muted);
-  font-size: 0.82rem;
-}
-
-.footer p {
-  margin: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+  left: var(--space-2);
+  top: var(--space-2);
 }

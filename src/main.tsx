@@ -2,9 +2,12 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { installDiagnosticsBridge } from './app/diagnostics';
 import { AppShell } from './ui/features/shell/AppShell';
+
+// Tokens first: the reset and every component style reference them.
+import './ui/design-system/tokens.css';
 import './ui/styles/base.css';
 
-// Temporary; removed in Phase 3 once the real interface can exercise storage.
+// Temporary; removed when the interface can exercise storage directly.
 installDiagnosticsBridge();
 
 const container = document.getElementById('root');

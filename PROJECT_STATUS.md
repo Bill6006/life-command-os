@@ -4,135 +4,179 @@
 - Repository: life-command-os (https://github.com/Bill6006/life-command-os)
 - Plan version: 2.6 Lean Execution
 - Current phase: Phase 3 — Command-surface selection and UX foundation
-- Current prompt: PROMPT 4 (**paused mid-phase, awaiting owner selection**)
+- Current prompt: PROMPT 4 (complete)
 
 ## Gate status
-- Status: **YELLOW — awaiting owner design selection**
-- This is the planned mid-phase stop. Prompt 4 publishes three primary command-surface variants and halts until one is chosen. Nothing is expanded until then.
-- Pre-selection evidence:
-  - *Exactly three variants of the primary command surface exist* — asserted by test, and only the primary surface was built. No secondary screens, no second destination, no third application (`LEAN-003`).
-  - *One shared synthetic decision scenario* — all three render identical content, which is the only way the comparison means anything.
-  - *Each variant carries the full ten-second payload* — current state, observed versus inferred, what materially changed and why, trajectory, untreated path, one best move, positive/negative/delayed/uncertain/cross-domain effects, North Star relevance, confidence, reason trace, and one next interaction. Asserted per variant.
-  - *No competing recommendation menu in any variant* — exactly one primary action; no runner-up is representable in the view model.
-  - *Deliberate silence renders as a conclusion in all three*, not an empty or apologetic screen.
-  - *Prohibited constructs absent from all three* — no Life Score, no numerical category score, no streak grid, no "all systems operational" panel, no meter or progressbar, and zero `img`/`svg`/`canvas` elements (no decorative AI imagery).
-  - *Mobile navigation is exactly five destinations in all three.*
-  - *Budgets pass at 375 × 812* — no horizontal overflow on any element, every interactive target ≥ 44 × 44, and the decision survives 200% text zoom without sideways scrolling.
-  - *No production intelligence algorithm exists* — every variant reads from an explicit hand-written view model.
-- Still owner-judged, and deliberately not automated: the ten-second comprehension test, and which composition to build on.
+- Status: **GREEN**
+- Gate evidence:
+  - *The owner explicitly approves one primary design* — **Console (Variant B)**, selected against the live build on the owner's Samsung phone. Recorded in ADR-0008.
+  - *Only the selected design is expanded* — Variants A and C and the selection gallery were **deleted**, not archived. Verified: no reference to them remains anywhere in the tree.
+  - *The ten-second synthetic comprehension test passes* — owner-judged against the live build. Mechanically, every element of the contract is present without an interaction: current state with observed/inferred labels, what changed and why, trajectory, untreated path, one best move, effects with costs, North Star relevance, confidence with its reasoning, reason trace, and one next interaction.
+  - *The useful intelligence is visible rather than buried* — nothing on Now sits behind disclosure. This was the decisive reason Console was chosen over Focus.
+  - *Only one best recommendation is shown; no competing menu exists* — at most one primary action in every state, asserted across all seven answer states.
+  - *The weekly direction review does not require inventing a priority* — the system proposes, with its basis shown; the user confirms, adjusts, or takes a quiet week.
+  - *The approved interaction budgets pass* — at 375 × 812: no element past the viewport edge in any of thirteen states or four destinations, every interactive target ≥ 44 × 44, usable at 200% text zoom, respond/adjust/decline within two taps.
+  - *Compact, accessible, dark but energetic, non-generic* — preserved and constrained by the ADR-0008 anti-dashboard rules, which are enforced by test rather than left to taste.
+  - *No overall Life Score, and no numerical category score* — asserted across every state and every destination.
+  - *The full enabled-category overview is reachable within one interaction* — one click from Now's Trajectory panel.
+  - *Mobile persistent navigation contains no more than five destinations* — exactly five; all six on desktop.
+  - *No habit-streak grid, widget wall, decorative AI imagery, normal-state status panel, or meaningless graph* — asserted; the only graphic in the product is the trend chart, which carries an accessible name and lives in a `figure`.
+  - *No production intelligence algorithm exists* — every surface reads a hand-written view model typed independently of the canonical records.
 
 ## GitHub Pages owner preview
-- URL: **https://bill6006.github.io/life-command-os/** → **Design** tab
+- URL: **https://bill6006.github.io/life-command-os/**
 - Deployment status: **LIVE**
-- Deployed commit: the current head of `main`. The About surface reports the exact commit it was built from.
+- Deployed commit: the current head of `main`. Data & Privacy reports the exact commit it was built from.
 - Last phone-and-desktop verification: 2026-08-03 at 375 × 812 and desktop.
 - Hosted build contains synthetic content only: **YES**
 
-> **Service-worker note.** A returning visitor may see the previous build once. If the
-> Design tab is missing, reload a second time.
+> **Service-worker note.** A returning visitor may see the previous build once; reload a
+> second time.
 
-## Owner decisions recorded this phase
-1. **Representative device: the owner's Samsung phone, repeatable test viewport 375 × 812.** Recorded in `docs/design/VISUAL_DIRECTION.md` §6.1a and enforced in `tests/e2e/design-variants.spec.ts`. This closes the open decision carried since Phase 1 and makes the `UX-005` budgets testable. The physical device remains the authority for the 3-second startup target, which CI hardware cannot measure honestly.
-2. **Deletion semantics stay deferred; no delete control added.** Nothing in this phase deletes a canonical record, and no variant offers such a control.
-3. **`STORE-004` approved** and moved into the approved requirements table with a full traceability record. `docs/REQUIREMENTS.md` §5 now reports no open requirement gaps.
+## The selection
+**Console (Variant B).** Parallel panels read like an instrument; state, change,
+trajectory, and untreated path are all readable without a disclosure step.
 
-## The three variants
+It was chosen because the Constitution requires the useful intelligence to stay *visible
+rather than buried*, and Console was the only variant that showed all four without a fold.
+Focus was the strongest first impression and would likely win a snap test, but it put four
+required elements behind disclosure — an argument that gets weaker every phase as there is
+more to show. Briefing put the answer below the situation.
 
-| | **A — Briefing** | **B — Console** | **C — Focus** |
-|---|---|---|---|
-| Hierarchy | Linear narrative; situation before answer | Parallel panels, all visible at once | One dominant answer, rest folded away |
-| Density | Low | High | Very low above the fold |
-| Typography | Large headline, comfortable prose | Compact, monospace values, small caps | Large decision type, minimal labels |
-| Surface | Flat bands, one elevated block | Layered bordered panels | One strongly elevated card |
-| Navigation | Bottom tab bar | Segmented bar (phone) / rail (desktop) | Minimal header menu |
-| Expression | Complete sentences, calm | Terse labelled readouts | Short and decisive |
-| **Its risk** | The move sits below the situation; may take a short scroll on a phone | Density — most likely to drift toward the dashboard the Constitution warns against | Folding the evidence — tests hardest against "visible rather than buried" |
+**Its risk was named up front and is now a written rule.** The owner's constraint —
+preserve the compact high-information style without drifting into a crowded generic
+dashboard — became five enforceable rules in ADR-0008:
 
-Each variant's risk is stated in the gallery itself, and a test asserts all three are
-stated. A comparison that lists only strengths is not a comparison.
+1. The decision always leads and is never displaced.
+2. Now is capped at **five panels**.
+3. Every panel answers a named question.
+4. No panel renders in a normal operational state.
+5. Density serves reading, not volume.
+
+Rules 1 and 2 are asserted by test. Rule 2 caught a real violation during construction: the
+offline state had six panels, and the offline notice became a banner instead — which is the
+correct treatment for actionable status anyway.
 
 ## Work completed
-- Recorded the three owner decisions above.
-- Wrote one shared synthetic decision scenario, deliberately a **hard** case: capacity is inferred rather than observed, the trajectory is declining, one predicted effect is a cost, another is uncertain and delayed, and confidence is only "early signal". A layout that only looks good on good news would be the wrong choice.
-- Built exactly three high-fidelity variants of the **primary command surface only**, each owning the full viewport including its own navigation — because navigation is one of the six dimensions they must differ on, and judging them inside a shared chrome would hide exactly that.
-- Added a deliberate-silence toggle inside each variant. This is one extra state, not a full secondary-state build: task 4 names "one best move **or** deliberate silence" as part of the primary contract, and a composition that looks broken when the honest answer is "nothing" is disqualifying — invisible if every variant is only ever shown its best case.
-- Published to the existing Pages URL under a **Design** tab and verified live at 375 × 812 and desktop.
-- Added Phase 3 pre-selection gate tests covering the payload, the one-best-move rule, silence, the prohibitions, the five-destination limit, and the budgets.
+- Recorded the selection and its full rationale, including why A and C were rejected, in **ADR-0008**, with the adopted budgets and the named representative device.
+- **Deleted** Variants A and C, the gallery, the switcher, and the pre-selection spec.
+- Formalised **semantic design tokens** (`src/ui/design-system/tokens.css`). Raw palette values appear once; components ask for `--evidence-inferred`, never "the violet one".
+- Built the accessible responsive Console shell: segmented bar on a phone, left rail on desktop, six logical destinations with five persistent on mobile.
+- Implemented all **thirteen interaction states** on Now.
+- Implemented all six destinations: Now, Timeline, Direction, Commitments, Learning, Data & Privacy.
+- Built the **full enabled-category overview** in Direction — condition, trajectory, confidence, freshness, principal drivers, real domain metrics, and what would change the interpretation — for all three enabled categories.
+- Built static synthetic views for **expected category effects** and **one useful trend graph**.
+- Added Phase 3 gate tests and updated the Phase 1 platform tests for the new shell.
+
+### Decisions worth naming
+- **Learning is honestly empty.** Nothing has been learned, because no recommendation has been executed and observed through a full outcome window. Filling it with plausible accuracy percentages would be the easiest thing in the product to fake convincingly, and exactly the false precision the Constitution forbids. The surface says so and lists what it is waiting on.
+- **The chart's missing week is a gap, not a zero.** The line breaks, the week is marked, and the treatment is stated in text. A chart that plots absent evidence at the bottom of the axis tells the user something false about their life.
+- **The chart's text summary is visible**, not only in the SVG description. A chart whose meaning is available only to screen readers has been designed twice, badly.
+- **No delete control anywhere**, per owner instruction. Data & Privacy says why: correcting and deleting are different operations and deletion semantics are undecided.
+- **The Timeline states plainly that a declined recommendation is not evidence about it** (`LEARN-002`) — that is precisely where a user would otherwise assume they had been judged.
 
 ## Files created or modified
-Created (6): `src/ui/features/design-selection/{scenario.ts,DesignSelection.tsx,VariantBriefing.tsx,VariantConsole.tsx,VariantFocus.tsx,variants.css}`, `tests/e2e/design-variants.spec.ts`
+Created (13): `docs/decisions/ADR-0008-selected-command-surface.md`; `src/ui/design-system/{tokens.css,console.css}`; `src/ui/view-models/prototype.ts`; `src/ui/components/{primitives.tsx,TrendChart.tsx}`; `src/ui/features/{now/NowSurface,timeline/TimelineSurface,direction/DirectionSurface,commitments/CommitmentsSurface,learning/LearningSurface,data-privacy/DataPrivacySurface}.tsx`; `tests/e2e/console-shell.spec.ts`
 
-Modified: `src/ui/features/shell/AppShell.tsx` (Design view, three destinations), `src/ui/styles/base.css` (remaining approved colour tokens), `vite.config.ts` (phase marker), `tests/e2e/shell.spec.ts`, `docs/REQUIREMENTS.md`, `docs/design/VISUAL_DIRECTION.md`, `PROJECT_STATUS.md`
+Deleted (7): the entire `src/ui/features/design-selection/` directory (6 files) and `tests/e2e/design-variants.spec.ts`
+
+Modified: `src/ui/features/shell/AppShell.tsx` (rewritten as the Console shell), `src/ui/styles/base.css` (reduced to a reset), `src/main.tsx`, `src/app/diagnostics.ts` (removal trigger corrected), `vite.config.ts`, `tests/e2e/shell.spec.ts`, `docs/design/VISUAL_DIRECTION.md`, `docs/REQUIREMENTS.md`, `PROJECT_STATUS.md`
 
 ## Tests and evidence
-- **Unit: 84 passed** — unchanged; Phase 3 adds no domain or storage behaviour.
-- **Browser: 80 passed** across desktop and mobile viewports, up from 34. 23 new Phase 3 tests × 2 viewports.
-- Three issues were found by these tests and **fixed rather than tested around**:
-  1. Variant B's mobile navigation overflowed 375px, clipping "Commitments". A nav strip that scrolls sideways hides destinations, which is what the five-destination limit exists to prevent. Fixed by tightening the phone layout so all five fit.
-  2. Variants A and C omitted the cross-domain marker on predicted effects. Cross-domain cost is explicitly required by task 4.
-  3. A copy bug lowercased "Friday" in the assumptions line.
-- The overflow test reports offending elements by selector, so a future failure says what to fix rather than only that something is wrong.
+- **Unit: 84 passed** — unchanged. Phase 3 adds no domain or storage behaviour.
+- **Browser: 122 passed** across desktop and mobile viewports, up from 80.
+  - All thirteen states render with no console errors.
+  - The decision leads, and begins within the first viewport at 375 × 812, in all seven answer states.
+  - Now never exceeds five panels, in any state.
+  - At most one primary action per state; silence has none.
+  - Prohibited constructs absent across all thirteen states **and** all six destinations.
+  - The only graphic in the product is the trend chart; it has `role="img"`, a non-empty title, and a `figure`.
+  - Five persistent destinations on a phone, six on desktop with no More.
+  - Category overview and full What-changed each reachable in one interaction.
+  - The chart states its question, metric, window, missing-data treatment, and uncertainty; seven points, two line runs, one gap rectangle — proving the missing week is not plotted.
+  - Budgets at 375 × 812, including 200% zoom.
+  - Evidence tags differ by computed `border-style`, not colour alone.
+- **Four real defects found by these tests and fixed rather than tested around:**
+  1. The offline state rendered six panels, breaking the ADR's own cap.
+  2. At 200% zoom the navigation ellipsed destination names — information loss. It now wraps to a second row.
+  3. At 200% zoom grid children and tables refused to shrink, pushing the page sideways. Fixed with `min-width: 0` and fixed table layout; the evidence tag moved into the value cell rather than holding its own column.
+  4. The prototype scaffolding bar itself overflowed at 200% zoom. The overflow scan now covers the whole body, so scaffolding cannot hide a failure.
+- A Title Case bug was also caught by eye: `text-transform: capitalize` was turning category conditions into headlines. It now applies only to single-word terms.
 
 ## Privacy status
 - Synthetic-only repository: **YES**
 - Real personal data detected in tracked content: **NO**
-- Runtime private-data readiness: **NOT YET** — requires the Phase 6 gate.
+- Runtime private-data readiness: **NOT YET** — requires the Phase 6 gate. Data & Privacy states this on the surface rather than only in documentation.
 
 ## Architecture decisions
-No new ADRs yet. **ADR-0008 is written at selection**, recording the chosen variant, the
-representative device and viewport, and any owner-approved budget adjustment with its
-repeatable test method.
+**ADR-0008 — Console selected as the primary command surface.** Records the choice, why A
+and C were rejected, the five anti-dashboard rules, the adopted budgets, the representative
+device, and the reversal strategy.
+
+No budget was tightened or relaxed. The plan's defaults are adopted as written.
 
 ## New dependencies
 **None.**
 
 ## New abstractions or infrastructure
-**One, and it is temporary.**
 
-- Artifact: `src/ui/features/design-selection/` (six files).
-- Active requirement: `LEAN-003`, `UX-001`, Prompt 4 tasks 2–6.
-- Why a smaller direct implementation was insufficient: the phase requires three
-  meaningfully different high-fidelity variants that the owner can judge on their own
-  phone against the live build. Static mockups could not be checked against the budgets
-  or the prohibitions, and could not demonstrate navigation differences.
-- **Removal trigger: immediately after selection.** Only the chosen variant is expanded;
-  the gallery, the switcher, and the two unchosen variants are deleted.
+**1. Semantic design tokens** — `src/ui/design-system/tokens.css`
+- Active requirement: `UX-001`, Prompt 4 task 8 ("formalize semantic design tokens").
+- Why smaller was insufficient: raw hex values scattered through components cannot be adjusted for measured accessibility without hunting. Tokens give the palette meaning, so a component asks for `--evidence-inferred` rather than a colour.
 
-Carried forward, unchanged: the Phase 2 diagnostics bridge remains and is still scheduled
-for removal in Phase 3 once Data & Privacy exists.
+**2. Console primitives** — `src/ui/components/primitives.tsx`
+- Active requirement: `UX-002`, `PROD-005`, ADR-0008 rule 3.
+- Why smaller was insufficient: the panel is the entire design language, and the `label` prop being required is what enforces "every panel answers a named question". The `Actions` component has no shape that could hold a ranked list.
+
+**3. Trend chart** — `src/ui/components/TrendChart.tsx`
+- Active requirement: `UX-003`, Prompt 4 task 8 ("one useful trend graph").
+- Why smaller was insufficient: the graph policy's obligations are enforced by the `TrendSeries` type, so a chart that cannot state its question, window, missing-data treatment, and text summary cannot be constructed at all.
+
+**4. Prototype state switcher — TEMPORARY** — the `.proto` bar in `AppShell`
+- Active requirement: Prompt 4 task 8 (thirteen interaction states must be demonstrable).
+- Why smaller was insufficient: there is no engine to produce these states and no other way for the owner to see them on their own device.
+- **Removal trigger: Phase 4**, when the states become real engine outputs.
+
+**Carried forward — diagnostics bridge, with its removal trigger corrected.** The Phase 2
+trigger said "when Phase 3 delivers Data & Privacy". That was wrong: Phase 3's Data &
+Privacy is a static synthetic view and cannot exercise real storage, so removing the bridge
+now would delete the Phase 2 persistence evidence and replace it with nothing. **Corrected
+trigger: Phase 6**, when Data & Privacy is wired to real storage health, backup, and
+restore.
 
 ## Known limitations
-- **The gate is YELLOW by design.** It cannot go green without a human judgement.
-- **The 3-second cached startup target is not yet measured.** It needs the physical Samsung phone; CI hardware would produce a number that means nothing. Measure after selection, once the real shell exists.
-- **Two of three variants will be discarded.** That is the intended cost of the approach — cheaper than building three applications.
-- **The design gallery ships to the public preview** while selection is open. It is synthetic-only and disappears at selection.
-- Carried forward: diagnostics bridge still shipping; bundle ~116 kB gzipped before the variants; `frame-ancestors` unenforceable on Pages; Chromium-only matrix; no router; service-worker staleness on first load after deploy.
+- **The 3-second cached startup target is still not measured.** It needs the physical Samsung phone; CI hardware would produce a number that means nothing. This is the one adopted budget without automated evidence, and it is the owner's to measure.
+- **Two pieces of temporary scaffolding now ship**: the prototype state switcher (removed in Phase 4) and the diagnostics bridge (Phase 6).
+- **Every surface is a synthetic view model.** Nothing reads storage. The Data & Privacy storage figures in particular are invented and labelled as such.
+- **Check-in burden budget (≤ 5 responses, ≤ 60s) is not yet testable** — no check-in flow exists until Phase 4.
+- **Bundle is ~117 kB gzipped.** The shell added little; zod and the canonical model remain the bulk.
+- Carried forward: `frame-ancestors` unenforceable on Pages; Chromium-only matrix; no router; service-worker staleness on first load after a deploy; deletion semantics undecided.
 
 ## Deferred work
 | Deferred | Activates |
 |---|---|
-| Expanding the selected variant into its interaction states, semantic design tokens, ADR-0008, the six destinations, the enabled-category overview, one trend graph | Immediately after selection, same phase |
-| Router, component-test library, diagnostics-bridge removal | With the expanded shell |
-| Partial execution, declined action, graceful return after absence, check-in, evidence, timeline states | Phase 6 ("full selected-design states") |
-| `src/intelligence/`, research cards | Phase 4 |
-| `LearnedBeliefRecord` | Phase 5 |
-| Encrypted backup, app lock, notifications | Phase 6 |
-| Deletion semantics and any delete control | Undecided; owner deferred again this phase |
+| Partial execution, declined action, graceful return after absence, check-in, evidence, and timeline states ("full selected-design states") | Phase 6 |
+| Router and component-test library | When real routing and component tests are needed |
+| Prototype state switcher removal | Phase 4 |
+| Diagnostics bridge removal | Phase 6 |
+| Cached-startup measurement on the Samsung phone | Owner, against the deployed build |
+| `src/intelligence/`, research cards, real state/forecast/decision behaviour | Phase 4 |
+| `LearnedBeliefRecord`, real Learning content, more graphs | Phase 5 |
+| Encrypted backup, app lock, notifications, real Data & Privacy | Phase 6 |
+| Numerical category scores | Only if the score gate can ever be satisfied with real evidence |
+| Deletion semantics and any delete control | Undecided |
 | Domain schemas / model registry / legacy importer / release artifacts | Phases 7–10 |
 
 ## Blockers
-**One, and it is the intended stop: the owner must select a variant.**
+**None blocking Prompt 5.**
 
-Open the Pages URL on the Samsung phone, go to **Design**, open A, B, and C, toggle each
-between *action* and *quiet*, and name the one to build on.
-
-No other decision is outstanding. Deletion semantics remain deferred by owner instruction
-and are not needed until a delete control is proposed.
+One owner action outstanding, which does not block: **measure cached startup on the Samsung
+phone** against the deployed build, and tell me if it exceeds three seconds.
 
 ## Next permitted prompt
-**Continue PROMPT 4 within Phase 3**, after the owner names a variant. The remainder of the
-phase then runs: ADR-0008, semantic design tokens, the accessible responsive shell built
-from the selected variant, its interaction states, the six logical destinations with five
-persistent on mobile, the full enabled-category overview in Direction, static synthetic
-views for expected category effects and one useful trend graph, and a further publish to
-the same Pages URL.
+**PROMPT 5 — Phase 4: Transparent baseline intelligence and first complete vertical slice.**
+
+Phase 4 replaces every view model in `src/ui/view-models/prototype.ts` with real engine
+output. The surface is now the contract: each place that holds a reason trace, an
+untreated forecast, a confidence label, or a decomposed effect is a thing the engine must
+actually produce, and an empty place would be visible.

@@ -1,0 +1,119 @@
+/*
+ * Semantic design tokens — Console (ADR-0008).
+ *
+ * The Phase 0 palette gave *values*. These give them *meaning*, so a surface asks
+ * for `--evidence-inferred` rather than "the violet one". That indirection is what
+ * lets the palette be adjusted for measured accessibility later without hunting
+ * through components.
+ *
+ * Raw values are listed once at the top and never referenced directly outside this
+ * file. If a component uses a hex code, that is a bug.
+ */
+
+:root {
+  /* --- Approved palette (docs/design/VISUAL_DIRECTION.md) ------------------ */
+  --raw-canvas: #07111f;
+  --raw-surface-1: #0c1929;
+  --raw-surface-2: #11243a;
+  --raw-elevated: #17304b;
+  --raw-border: #25415d;
+  --raw-text: #f4f8fc;
+  --raw-text-muted: #a9bed2;
+  --raw-cyan: #28d7e5;
+  --raw-teal: #19c3b1;
+  --raw-violet: #8b7cff;
+  --raw-gold: #f2c75c;
+  --raw-success: #45d483;
+  --raw-warning: #ffb45c;
+  --raw-danger: #ff7082;
+
+  /* --- Surfaces ----------------------------------------------------------- */
+  --surface-canvas: var(--raw-canvas);
+  --surface-panel: var(--raw-surface-1);
+  --surface-panel-raised: var(--raw-surface-2);
+  --surface-inset: rgb(7 17 31 / 55%);
+  --surface-elevated: var(--raw-elevated);
+
+  /* --- Borders ------------------------------------------------------------ */
+  --border-subtle: rgb(37 65 93 / 50%);
+  --border-default: var(--raw-border);
+  --border-strong: #2f5578;
+  --border-accent: var(--raw-cyan);
+
+  /* --- Text --------------------------------------------------------------- */
+  --text-primary: var(--raw-text);
+  --text-secondary: var(--raw-text-muted);
+  --text-on-accent: #04121a;
+
+  /* --- Accents ------------------------------------------------------------ */
+  --accent-primary: var(--raw-cyan);
+  --accent-secondary: var(--raw-teal);
+  --accent-attention: var(--raw-gold);
+  --accent-reasoning: var(--raw-violet);
+
+  /*
+   * Evidence status. Colour is the secondary cue only — every consumer also
+   * renders the word and a different border style (UX-002).
+   */
+  --evidence-observed: var(--raw-cyan);
+  --evidence-inferred: var(--raw-violet);
+
+  /* --- Signals. Benefit and cost always appear together, never netted. ----- */
+  --signal-benefit: var(--raw-success);
+  --signal-cost: var(--raw-warning);
+  --signal-neutral: var(--raw-text-muted);
+  --signal-danger: var(--raw-danger);
+
+  /* --- Typography --------------------------------------------------------- */
+  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, monospace;
+
+  /* Console runs compact. Every size is relative so 200% zoom reflows. */
+  --text-label: 0.62rem; /* small-caps label rails */
+  --text-fine: 0.78rem; /* supporting detail */
+  --text-body: 0.88rem;
+  --text-value: 0.9rem; /* monospace readings */
+  --text-lead: 1.15rem; /* panel leads */
+  --text-decision: clamp(1.2rem, 4.6vw, 1.5rem);
+  --text-headline: clamp(1.05rem, 3.6vw, 1.3rem);
+
+  --tracking-label: 0.16em;
+  --leading-tight: 1.35;
+  --leading-body: 1.5;
+
+  /* --- Space and shape ---------------------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.45rem;
+  --space-3: 0.7rem;
+  --space-4: 1rem;
+  --space-5: 1.4rem;
+  --space-6: 2rem;
+
+  --radius-sm: 5px;
+  --radius-md: 7px;
+  --radius-lg: 12px;
+
+  /* Accessibility floors, not suggestions (UX-005). */
+  --tap-min: 44px;
+  --tap-comfortable: 48px;
+
+  --rail-width: 11.5rem;
+  --content-max: 78rem;
+
+  color-scheme: dark;
+}
+
+/*
+ * Reduced motion is honoured globally rather than per-component, so a new
+ * component cannot forget it.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
