@@ -641,6 +641,8 @@ metadata to the Phase 7 shared rules (14–19) for Prompts 8D–8H. It does not 
 | Task 11 | Observable participation, support, completion, and interference prompts | `questions are observable` (4) | Nothing about cause, feeling, or efficacy |
 | Task 12 | Enable and disable through Manage Areas | production `disables without losing anything` | Availability derived from the prompt catalogue — fatherhood became switchable by having its questions, with no list edited |
 | v3.1 §9 | `domain/capture/contextualCapture.ts` + `fatherhood/capture.ts` | `the contextual-capture metadata` (8) | Nine declarations, validated at import |
+| v3.1 §9 | `planGuide` filters Update This Area by declared `owningSurface` | `leaves action follow-ups to the action that started them` | The metadata decides placement rather than describing it |
+| Task 1, 3 | `fatherhood/routing.ts` — two answers, one canonical record | `an answered question becomes a record the domain can read` (4) | A level with no skill, or a status with no milestone, is not a readable fact |
 
 ### The contextual-capture metadata, and what its validator refuses
 
@@ -664,6 +666,19 @@ The validator runs at module load and refuses:
 
 **No scheduler was built.** Phase 8 owns cross-domain orchestration and will read these
 declarations; Prompt 8D defines and tests them.
+
+### Why a question is asked in two parts
+
+"How much help did she need" and "have you seen her do this" are both *about* something.
+The guide's model — one question, one observation, filed under that question's attribute —
+cannot express which skill or which milestone, so the first build of this slice stored
+both answers where nothing could read them. The panel said "nothing recorded here yet"
+straight after the owner had recorded something, and only the deployed build showed it:
+every unit test wrote the per-skill attribute directly.
+
+Each now has a "which one" step before it. `routeFatherhoodAnswers` combines the pair into
+one canonical record and **consumes the selection**, because which question was asked is
+not a fact about anyone. One event, one record, whichever entry path was used.
 
 ### Resolved conflict: "Not Assessed" as a status
 

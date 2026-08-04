@@ -9,6 +9,7 @@ import { domainDefinition, type DomainId } from '../../domain/domains/definition
 import { captureAttribute } from '../../intelligence/domains/captureRouting';
 import type { EpisodeResult } from '../../intelligence';
 import { localTimeContextFor, observationDrafts, type AnsweredPrompt } from './capture';
+import { routeFatherhoodAnswers } from '../../domain/fatherhood/routing';
 import { writeRecord, writeRecords, type WriteResult } from './writeRecord';
 
 /**
@@ -60,7 +61,75 @@ export async function completeGuideSession(
   now: Date,
 ): Promise<GuideCommandResult> {
   const instant = now.toISOString();
-  const drafts = observationDrafts(completion.answers, now);
+
+  /*
+   * Some answers only mean something in pairs.
+   *
+   * "How much help did she need" needs the skill; "have you seen her do this" needs the
+   * item and the list it came from. The domain declares how its answers combine, and
+   * the selections are consumed rather than stored — a record of which question was
+   * asked is not a record of anything that happened.
+   */
+  const routed = routeFatherhoodAnswers(
+    completion.answers.flatMap((entry) =>
+      entry.answer.kind === 'choice'
+        ? [{ promptId: entry.prompt.promptId, text: entry.answer.choice }]
+        : [],
+    ),
+  );
+
+  const rawDrafts = observationDrafts(
+    completion.answers.filter(
+      (entry) => !routed.consumedPromptIds.includes(entry.prompt.promptId),
+    ),
+    now,
+  );
+
+  const envelope = {
+    schemaVersion: RECORD_SCHEMA_VERSION,
+    occurredAt: instant,
+    recordedAt: instant,
+    localTime: localTimeContextFor(now),
+    source: 'user-entry' as const,
+    provenance: { method: 'direct-report' as const },
+    privacy: 'child' as const,
+  };
+
+  const combined = [
+    ...(routed.skillReading === undefined
+      ? []
+      : [
+          {
+            recordId: newRecordId(),
+            draft: {
+              recordId: '',
+              recordType: 'observation',
+              ...envelope,
+              category: 'fatherhood-and-child',
+              attribute: routed.skillReading.attribute,
+              value: { kind: 'state', state: routed.skillReading.state },
+            },
+          },
+        ]),
+    ...(routed.milestone === undefined
+      ? []
+      : [
+          {
+            recordId: newRecordId(),
+            draft: {
+              recordId: '',
+              recordType: 'milestone-observation',
+              ...envelope,
+              ...routed.milestone,
+            },
+          },
+        ]),
+  ].map((entry) => ({
+    recordId: entry.recordId,
+    draft: { ...entry.draft, recordId: entry.recordId },
+  }));
+
+  const drafts = [...rawDrafts, ...combined];
   const answeredPromptIds = completion.answers
     .filter((entry) => entry.answer.kind !== 'not-answered')
     .map((entry) => entry.prompt.promptId);

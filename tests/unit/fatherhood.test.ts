@@ -14,6 +14,7 @@ import {
   lessonFor,
 } from '../../src/domain/fatherhood/actions';
 import { FATHERHOOD_CAPTURES } from '../../src/domain/fatherhood/capture';
+import { routeFatherhoodAnswers } from '../../src/domain/fatherhood/routing';
 import {
   CAPTURE_CLASSES,
   assertContextualCaptures,
@@ -385,6 +386,76 @@ describe('the contextual-capture metadata', () => {
 
 /* -------------------------------------------------------------------------- */
 
+describe('an answered question becomes a record the domain can read', () => {
+  it('pairs the skill with the level, and files it where readings live', () => {
+    const routed = routeFatherhoodAnswers([
+      { promptId: 'father:skill', text: 'Taking turns in a game' },
+      { promptId: 'father:skill-level', text: 'Doing sometimes' },
+    ]);
+
+    expect(routed.skillReading).toEqual({
+      attribute: 'father:skill:taking-turns',
+      state: 'Doing sometimes',
+    });
+    // Both are consumed: the selection is part of the question, not a fact.
+    expect(routed.consumedPromptIds).toContain('father:skill');
+    expect(routed.consumedPromptIds).toContain('father:skill-level');
+  });
+
+  it('pairs the milestone with its status, list, and version', () => {
+    const routed = routeFatherhoodAnswers([
+      { promptId: 'father:milestone', text: 'Puts two words together' },
+      { promptId: 'father:milestone-status', text: 'Not yet' },
+    ]);
+
+    expect(routed.milestone).toEqual({
+      milestoneId: 'two-word-phrases',
+      status: 'not-yet',
+      checklistSource: 'General guidance (built in)',
+      checklistVersion: '2026-08',
+    });
+  });
+
+  it('writes nothing at all when only the selection was answered', () => {
+    // The failure this prevents: a stored record of which question was asked.
+    const routed = routeFatherhoodAnswers([
+      { promptId: 'father:skill', text: 'Taking turns in a game' },
+    ]);
+
+    expect(routed.skillReading).toBeUndefined();
+    expect(routed.consumedPromptIds).toEqual(['father:skill']);
+  });
+
+  it('produces evidence the panel actually shows', () => {
+    // This is the test the deployed build failed. Both answers were stored under
+    // `father:skill-level` and `father:milestone-status`, which nothing reads, so the
+    // panel said "nothing recorded here yet" immediately after the owner recorded
+    // something.
+    const routed = routeFatherhoodAnswers([
+      { promptId: 'father:skill', text: 'Taking turns in a game' },
+      { promptId: 'father:skill-level', text: 'Doing often' },
+    ]);
+    const reading = required(routed.skillReading, 'the reading');
+
+    const evidence = assessFatherhood(
+      [
+        anObservation({
+          attribute: reading.attribute,
+          category: 'fatherhood-and-child',
+          privacy: 'child',
+          value: { kind: 'state', state: reading.state },
+        }),
+      ],
+      NOW,
+    );
+
+    expect(evidence.skills).toHaveLength(1);
+    expect(required(evidence.skills[0], 'the skill').levelLabel).toBe('Doing often');
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+
 describe('milestone review never reaches a daily guide', () => {
   it('is absent from morning, afternoon, and evening', () => {
     for (const kind of ['morning', 'afternoon', 'evening', 'quick-check-in'] as const) {
@@ -409,6 +480,38 @@ describe('milestone review never reaches a daily guide', () => {
     expect(ids).toContain('father:skill-level');
     expect(ids.some((id) => id.startsWith('career:'))).toBe(false);
     expect(ids.some((id) => id.startsWith('health:'))).toBe(false);
+  });
+
+  it('asks which one before asking about it', () => {
+    const plan = planGuide('update-area', 'full', [], NOW, 'fatherhood');
+    const ids = plan.steps.flatMap((step) =>
+      step.kind === 'prompt' ? [step.prompt.promptId] : [],
+    );
+
+    expect(ids.indexOf('father:skill')).toBeLessThan(ids.indexOf('father:skill-level'));
+    expect(ids.indexOf('father:milestone')).toBeLessThan(
+      ids.indexOf('father:milestone-status'),
+    );
+  });
+
+  it('leaves action follow-ups to the action that started them', () => {
+    // They share the domain's prefix, so namespace alone put them here — asked out of
+    // context, with no action to follow up. The declared owning surface decides now.
+    const plan = planGuide('update-area', 'full', [], NOW, 'fatherhood');
+    const ids = plan.steps.flatMap((step) =>
+      step.kind === 'prompt' ? [step.prompt.promptId] : [],
+    );
+
+    for (const followUp of [
+      'father:lesson-happened',
+      'father:child-tried',
+      'father:together-happened',
+      'father:wind-down-happened',
+    ]) {
+      expect(ids, followUp).not.toContain(followUp);
+    }
+    // And the whole thing still fits inside the deepest guide.
+    expect(plan.steps.length).toBeLessThanOrEqual(10);
   });
 
   it('does not lengthen the morning check-in', () => {

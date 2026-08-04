@@ -99,6 +99,18 @@ test.describe('the area works end to end on a fresh profile', () => {
     const after = await recordCount(page);
     expect(after).toBeGreaterThan(0);
 
+    /*
+     * The assertion this file exists for.
+     *
+     * The first build of this slice stored the answers under attributes nothing read,
+     * so the panel said "nothing recorded here yet" straight after the owner had
+     * recorded something. Counting records would not have caught it; reading the panel
+     * does.
+     */
+    await expect(panel(page)).not.toContainText('Nothing recorded here yet');
+    await expect(panel(page)).toContainText('being practised');
+    await expect(panel(page)).toContainText('General guidance (built in)');
+
     /* --- reload ------------------------------------------------------------- */
     await page.reload();
     await goTo(page, 'Direction');

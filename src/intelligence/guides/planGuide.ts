@@ -2,6 +2,7 @@ import type { CanonicalRecord, ExecutionRecord } from '../../domain/records';
 import { assessFreshness } from '../../domain/records';
 import type { GuideDepth, GuideKind } from '../../domain/records/guides';
 import { domainDefinition, type DomainId } from '../../domain/domains/definitions';
+import { capturesForDomain } from '../../domain/capture/registry';
 import {
   ALL_PROMPTS,
   CONTEXT_PROMPTS,
@@ -291,11 +292,29 @@ export function planGuide(
    */
   if (kind === 'update-area' && domainId !== undefined) {
     const definition = domainDefinition(domainId);
+    const declared = capturesForDomain(domainId);
+
+    /*
+     * A domain's questions, minus the ones that belong somewhere else.
+     *
+     * Namespace alone was too broad: a domain's action follow-ups share its prefix and
+     * were being asked here, out of context, with no action to follow up. Where a
+     * domain has declared contextual-capture metadata, that declaration decides — only
+     * captures this surface owns appear. Domains without metadata keep the namespace
+     * behaviour, which is what health and career still rely on.
+     */
+    const ownedElsewhere = new Set(
+      declared
+        .filter((capture) => capture.owningSurface !== 'update-this-area')
+        .flatMap((capture) => (capture.promptId === undefined ? [] : [capture.promptId])),
+    );
+
     const owned = ALL_PROMPTS.filter(
       (prompt) =>
-        prompt.promptId === definition.updatePromptId ||
-        (definition.captureNamespace !== undefined &&
-          prompt.promptId.startsWith(`${definition.captureNamespace}:`)),
+        !ownedElsewhere.has(prompt.promptId) &&
+        (prompt.promptId === definition.updatePromptId ||
+          (definition.captureNamespace !== undefined &&
+            prompt.promptId.startsWith(`${definition.captureNamespace}:`))),
     );
     // The entry question first — it is the one that can change what may be suggested.
     const entry = owned.find((prompt) => prompt.promptId === definition.updatePromptId);

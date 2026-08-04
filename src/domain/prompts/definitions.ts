@@ -1,7 +1,12 @@
 import type { LifeCategory } from '../records/categories';
 import type { PrivacyClass } from '../records/envelope';
 import { STUDY_BARRIERS } from '../career/ladder';
-import { SKILL_LEVELS, SKILL_LEVEL_LABELS } from '../fatherhood/development';
+import {
+  MILESTONE_CATALOGUE,
+  SKILL_LEVELS,
+  SKILL_LEVEL_LABELS,
+  TRACKED_SKILLS,
+} from '../fatherhood/development';
 import { MILESTONE_STATUS_LABELS, REPORTABLE_MILESTONE_STATUSES } from '../records/fatherhood';
 import { MEDITATION_PURPOSE_LABELS, MEDITATION_PURPOSES } from '../health/actions';
 import { SCALE_LIST, scaleAttribute, type ScaleId } from '../records/scales';
@@ -733,6 +738,25 @@ export const FATHERHOOD_PROMPTS: readonly CapturePrompt[] = [
   },
   {
     /**
+     * Which skill, before how much help.
+     *
+     * A level with no skill attached is unreadable — the domain files readings under
+     * `father:skill:<id>`, and an answer that cannot say which skill it is about would
+     * be stored and never read again. The pair is combined into one record on save.
+     */
+    promptId: 'father:skill',
+    text: 'Which one were you practising?',
+    kind: 'observable',
+    answers: TRACKED_SKILLS.map((skill) => skill.label),
+    allowsUnknown: true,
+    whatItCouldChange: ['state-interpretation'],
+    input: choice(TRACKED_SKILLS.map((skill) => skill.label)),
+    attribute: 'father:skill',
+    category: 'fatherhood-and-child',
+    privacy: 'child',
+  },
+  {
+    /**
      * The skill ladder, asked as support rather than as achievement.
      *
      * "How much help did she need" is something a father watched. "What level is she
@@ -814,6 +838,19 @@ export const FATHERHOOD_PROMPTS: readonly CapturePrompt[] = [
     whatItCouldChange: ['recommendation', 'confidence'],
     input: choice(['Yes', 'No', UNSURE]),
     attribute: 'father:concern-still-present',
+    category: 'fatherhood-and-child',
+    privacy: 'child',
+  },
+  {
+    /** Which item on the list, before the answer about it. */
+    promptId: 'father:milestone',
+    text: 'Which one are you looking at?',
+    kind: 'observable',
+    answers: MILESTONE_CATALOGUE.map((entry) => entry.text),
+    allowsUnknown: true,
+    whatItCouldChange: ['state-interpretation'],
+    input: choice(MILESTONE_CATALOGUE.map((entry) => entry.text)),
+    attribute: 'father:milestone',
     category: 'fatherhood-and-child',
     privacy: 'child',
   },

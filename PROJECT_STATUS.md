@@ -103,8 +103,8 @@ must never produce, and the code says so where the next person to read it will s
 
 ## Files created or modified
 
-Created (10): `src/domain/records/fatherhood.ts`;
-`src/domain/fatherhood/{development,actions,capture}.ts`;
+Created (11): `src/domain/records/fatherhood.ts`;
+`src/domain/fatherhood/{development,actions,capture,routing}.ts`;
 `src/domain/capture/{contextualCapture,registry}.ts`;
 `src/application/commands/milestone.ts`;
 `src/intelligence/domains/fatherhood/{index,assessFatherhood,fatherhoodCandidate}.ts`;
@@ -113,7 +113,8 @@ Created (10): `src/domain/records/fatherhood.ts`;
 
 Modified: `domain/records/{index,categories}.ts`; `domain/prompts/definitions.ts`;
 `domain/domains/definitions.ts`; `intelligence/index.ts`;
-`intelligence/state/categorySummaries.ts`; `application/commands/guideSession.ts`;
+`intelligence/state/categorySummaries.ts`; `intelligence/guides/planGuide.ts`;
+`application/commands/guideSession.ts`;
 `ui/features/respond/RespondSurfaces.tsx`; `ui/features/shell/AppShell.tsx`;
 `ui/view-models/present.ts`; `app/scenarios.ts`; `playwright.config.ts`;
 `tests/fixtures/records.ts`; `tests/unit/{records,domains,areas}.test.ts`;
@@ -122,7 +123,7 @@ Modified: `domain/records/{index,categories}.ts`; `domain/prompts/definitions.ts
 
 ## Tests and evidence
 
-- **Unit: 444 passed**, up from 396. 48 new for the slice.
+- **Unit: 450 passed**, up from 396. 54 new for the slice.
 - **Browser: 393 passed**, up from 359. 34 new — 14 against seeded state on desktop and
   mobile, 6 on the **production** build from a fresh profile.
 - Covers all fourteen required proofs: milestones and personal skills separate; Dad
@@ -134,7 +135,21 @@ Modified: `domain/records/{index,categories}.ts`; `domain/prompts/definitions.ts
   causal questions rejected; enable–update–disable–reload–re-enable preserving data; Now
   compact with no domain dashboard; a fresh production profile enabling the area through
   Manage Areas; and no real child name in tracked files or production evidence.
-- **One real defect found and fixed rather than tested around:** `categorySummaries` ended
+- **Two real defects found and fixed rather than tested around.**
+- **The first was found only on the deployed build.** Update This Area asked "how much
+  help did she need" and "have you seen her do this", and stored both under attributes
+  nothing reads — so the panel said "nothing recorded here yet" immediately after the
+  owner had recorded something. A level with no skill and a status with no milestone are
+  not readable facts. Each question now has a "which one" step before it, the pair is
+  combined into one canonical record on save, and the selection is consumed rather than
+  stored. The production test now reads the panel after answering, which is the only
+  check that could have caught this — counting records would not have.
+- **Making the metadata load-bearing fell out of the same fix.** `planGuide` collected a
+  domain's questions by namespace, so fatherhood's action follow-ups were asked inside
+  Update This Area with no action to follow up. The declared `owningSurface` now decides,
+  which shortened the flow to seven questions and made the contextual-capture declarations
+  do real work rather than describe intentions.
+- **The second:** `categorySummaries` ended
   in a fallback branch that applied **career's** focused-hours reading to any category it
   did not recognise. Activating `fatherhood-and-child` put "losing ground on focused work"
   under a heading about a two-year-old. The branching is now exhaustive by assignment, so
