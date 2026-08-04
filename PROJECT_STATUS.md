@@ -93,14 +93,21 @@ Created (14): `src/domain/records/{scales,guides}.ts`; `src/domain/prompts/{poli
 
 Modified: `domain/records/{index,envelope,evidence,direction}.ts`; `domain/policies/invariants.ts`;
 `intelligence/decision/{selectOutput,weeklyDirection}.ts`; `app/{scenarios,diagnostics}.ts`;
-`ui/features/{shell/AppShell,now/NowSurface}.tsx`; `ui/components/primitives.tsx`;
+`ui/features/{shell/AppShell,now/NowSurface,data-privacy/DataPrivacySurface}.tsx`;
+`ui/components/primitives.tsx`;
 `ui/design-system/console.css`; `vite.config.ts`; `tests/fixtures/records.ts`;
 `tests/unit/records.test.ts`; `tests/e2e/{console-shell,shell}.spec.ts`;
 `docs/{REQUIREMENTS.md,architecture/ARCHITECTURE_OVERVIEW.md}`
 
 ## Tests and evidence
-- **Unit: 212 passed**, up from 143. 67 new across prompts and interactions.
-- **Browser: 266 passed**, up from 252, across desktop and mobile viewports.
+- **Unit: 212 passed**, up from 143. 69 new across prompts and interactions.
+- **Browser: 268 passed**, up from 252, across desktop and mobile viewports.
+- **Live verification** at 375 × 812 against the deployed build, service worker cleared and
+  starting from an empty profile: no scenario picker anywhere; the empty state reached; a
+  real morning check-in run through the interface; nothing preselected; the stored
+  observation carrying ordinal `4`, label `Good`, `scaleId`, `scaleVersion`, `privacy:
+  health`, both timestamps and local-time context; two records surviving a reload; and the
+  answered question correctly not asked again.
 - Covers: every prohibited question family rejected; the shipped catalogue passing the policy;
   Unknown writing nothing and Unsure writing something; Start, decline, guide completion,
   outcome, weekly response and capture all surviving a reload; catch-up asking strictly less;
@@ -120,7 +127,16 @@ Modified: `domain/records/{index,envelope,evidence,direction}.ts`; `domain/polic
      different claims about the evidence.
   3. **The browser tests raced their own writes** — reloading before the transaction had
      committed. It passed on desktop and failed on mobile, which is the signature of a timing
-     bug rather than a behavioural one. The tests now wait for the write to settle.
+     bug rather than a behavioural one. My first fix was itself wrong: it waited for the guide
+     bar, which never disappears when the write is made from the console, so it settled
+     instantly for Start and stayed flaky. Console writes now wait for the follow-up control,
+     which cannot render until the execution is stored and re-read. Suite run twice clean.
+  4. **Data & Privacy called the owner's own records synthetic** — found by using the
+     deployed build rather than by a test. The sentence was true through Phase 5 and false
+     the moment the controls became real, in the one place where being trusted matters most.
+     The surface now describes what is actually stored, states plainly that there is no
+     encrypted backup and no tested recovery yet, and stops calling the unencrypted export
+     anything it is not. A browser assertion now guards it.
 - Two of my own assertions were wrong and were corrected: one required Quick Capture to offer
   "Unsure" (the owner is writing something down unprompted — it is not a state they can be
   in), and one asserted guide timing against UTC when the rule is deliberately the owner's

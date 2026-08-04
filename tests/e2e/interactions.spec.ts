@@ -31,15 +31,29 @@ async function open(page: Page, scenario = 'action'): Promise<void> {
 }
 
 /**
- * Waits for a write to actually commit.
+ * Waits for a write made *inside a flow* to commit.
  *
- * The shell returns to the console only after the transaction has committed and the
- * records have been re-read, so the guide bar reappearing is the signal that storage
- * is settled. Reading — or reloading — before that races the write and would make
- * these tests pass or fail on timing rather than on behaviour.
+ * The shell leaves the guide, decline, outcome, or capture surface only after the
+ * transaction has committed and the records have been re-read — so the guide bar,
+ * which exists only on the console, reappearing is a genuine settle signal.
+ *
+ * **It is not a settle signal for a write made from the console**, because the guide
+ * bar never went away. Those need something that only exists after the write; see
+ * `settledOnConsole`. Getting this wrong is what made one test pass alone and fail
+ * under parallel load.
  */
 async function settled(page: Page): Promise<void> {
   await expect(page.locator('.guide-bar')).toBeVisible();
+}
+
+/**
+ * Waits for a write made from the console itself.
+ *
+ * The follow-up control renders only when an open decision episode exists, so it
+ * cannot appear until the execution has actually been stored and re-read.
+ */
+async function settledOnConsole(page: Page): Promise<void> {
+  await expect(page.getByRole('button', { name: /Record outcome/ })).toBeVisible();
 }
 
 /** Record types currently in local storage. Read through the application layer. */
@@ -73,7 +87,7 @@ test.describe('Start writes a real decision episode', () => {
     expect(await storedTypes(page)).not.toContain('recommendation');
 
     await page.getByRole('button', { name: 'Start', exact: true }).click();
-    await settled(page);
+    await settledOnConsole(page);
 
     const types = await storedTypes(page);
     expect(types).toContain('candidate-action');
@@ -227,7 +241,7 @@ test.describe('recording what happened', () => {
   }) => {
     await open(page);
     await page.getByRole('button', { name: 'Start', exact: true }).click();
-    await settled(page);
+    await settledOnConsole(page);
     await page.getByRole('button', { name: /Record outcome/ }).click();
 
     const main = page.getByRole('main');
@@ -309,6 +323,37 @@ test.describe('the weekly direction', () => {
     expect(stored).toHaveLength(1);
     expect(JSON.stringify(stored)).toMatch(/"response":"snoozed"/);
     expect(JSON.stringify(stored)).not.toMatch(/missed|failed|overdue|streak/i);
+  });
+});
+
+test.describe('Data & Privacy tells the truth about the owner’s own records', () => {
+  test('does not call real entries synthetic, and is honest about what is missing', async ({
+    page,
+  }) => {
+    await open(page);
+
+    const direct = page
+      .getByRole('button', { name: 'Data & Privacy', exact: true })
+      .filter({ visible: true });
+    if ((await direct.count()) === 0) {
+      await page.getByRole('button', { name: 'More', exact: true }).click();
+    }
+    await page
+      .getByRole('button', { name: 'Data & Privacy', exact: true })
+      .filter({ visible: true })
+      .first()
+      .click();
+
+    const main = page.getByRole('main');
+    const text = (await main.textContent()) ?? '';
+
+    // The records on this device are the owner's. Calling them synthetic would be
+    // false in the one place where being trusted matters most.
+    expect(text).not.toMatch(/synthetic scenario records/i);
+
+    // And it still leads with what is not yet safe, rather than burying it.
+    await expect(main).toContainText(/no encrypted backup and no tested recovery/i);
+    await expect(main).toContainText(/no delete control/i);
   });
 });
 

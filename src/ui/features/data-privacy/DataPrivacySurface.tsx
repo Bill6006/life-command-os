@@ -15,7 +15,11 @@ import { CANONICAL_SCHEMA_VERSION } from '../../../application/queries/storageIn
  * deleting cannot be the same operation, and shipping a control before deciding what
  * it means would be worse than not having one (ADR-0005).
  *
- * Storage is wired to real backup, restore, and lock in Phase 6.
+ * **From Phase 6 Prompt 7A these are the owner's real records**, not a synthetic
+ * scenario. The copy on this surface changed with them: a page that told the owner
+ * their own entries were synthetic would be false in the one place where being
+ * trusted matters most. Backup, restore, and lock arrive in Prompt 7B, and until they
+ * do this surface says so first, before anything else.
  */
 export function DataPrivacySurface({
   records,
@@ -27,8 +31,10 @@ export function DataPrivacySurface({
       <Panel label="Not ready for private data" tone="attention" wide>
         <p className="lead">Not ready for private data yet</p>
         <p className="body">
-          Encrypted backup and fresh-profile recovery are proven in Phase 6. Until then,
-          entering meaningful private information is not safe.
+          Anything you enter is written to this device and nowhere else — but there is no
+          encrypted backup and no tested recovery yet. If this browser profile is lost, so is
+          everything in it. Both are built next, and until they pass, keep to things you could
+          afford to lose.
         </p>
       </Panel>
 
@@ -41,7 +47,9 @@ export function DataPrivacySurface({
           ]}
         />
         <p className="fine">
-          These are the synthetic scenario records currently loaded, not a private database.
+          These are the canonical records stored on this device. Records are appended, never
+          overwritten, so a correction adds to the history rather than replacing it — which is
+          why this count only ever grows.
         </p>
       </Panel>
 
@@ -57,7 +65,8 @@ export function DataPrivacySurface({
           </li>
           <li>
             <span className="fine">
-              This build and the repository behind it contain synthetic content only.
+              The repository and this build ship no personal data. The app starts empty;
+              everything in it came from you.
             </span>
           </li>
           <li>
@@ -71,10 +80,11 @@ export function DataPrivacySurface({
 
       <Panel label="Export">
         <p className="fine">
-          A development export writes a plain, unencrypted JSON file that declares itself
-          unencrypted, so it cannot be mistaken for the encrypted backup Phase 6 introduces.
+          The development export writes a plain, unencrypted JSON file that declares itself
+          unencrypted, so it cannot be mistaken for the encrypted backup Prompt 7B introduces.
+          It is not yet a recovery package, and this surface will not call it one.
         </p>
-        <Actions secondary={['Export synthetic records']} />
+        <Actions secondary={['Export records (unencrypted)']} />
         <p className="fine why">
           There is no delete control here. Correcting a record and deleting it are different
           operations, and what deletion should mean has not been decided.
