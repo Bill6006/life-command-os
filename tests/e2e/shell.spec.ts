@@ -80,7 +80,7 @@ test.describe('application shell', () => {
     const main = page.getByRole('main');
     await expect(main).toContainText('Plan version');
     await expect(main).toContainText('3.0 Final');
-    await expect(main).toContainText('Phase 6');
+    await expect(main).toContainText('Phase 7');
     await expect(main).toContainText('Built');
   });
 });
