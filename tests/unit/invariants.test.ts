@@ -86,8 +86,13 @@ describe('cross-record invariants', () => {
 
   it('terminates on a long chain instead of exhausting the stack', () => {
     // A damaged or hostile backup should be rejected, never crash the application.
+    //
+    // Twenty thousand rather than five: this check runs on every user write from
+    // Phase 6 onward, so it has to be linear in the number of records. At the old
+    // quadratic cost this length would take minutes, which is what makes the length
+    // itself the assertion — no wall-clock threshold to go flaky on slow hardware.
     const records: CanonicalRecord[] = [];
-    for (let index = 1; index <= 5000; index += 1) {
+    for (let index = 1; index <= 20_000; index += 1) {
       records.push({
         ...anObservation(),
         recordId: fixtureId(index),

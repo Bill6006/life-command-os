@@ -111,6 +111,10 @@ export interface ActionsProps {
   /** Spells out `| undefined` because the project uses `exactOptionalPropertyTypes`. */
   readonly primary?: string | undefined;
   readonly secondary: readonly string[];
+  /** Phase 6: these controls now write canonical records. */
+  readonly onPrimary?: (() => void) | undefined;
+  readonly onSecondary?: ((label: string) => void) | undefined;
+  readonly busy?: boolean | undefined;
 }
 
 /**
@@ -118,17 +122,39 @@ export interface ActionsProps {
  *
  * At most one primary action ever renders. There is no shape here that could hold a
  * ranked list of competing recommendations (`PROD-005`).
+ *
+ * `busy` disables the whole set while a write is in flight, because a control that
+ * can be pressed twice would write the same episode twice — and an append-oriented
+ * store would keep both.
  */
-export function Actions({ primary, secondary }: ActionsProps): React.JSX.Element {
+export function Actions({
+  primary,
+  secondary,
+  onPrimary,
+  onSecondary,
+  busy = false,
+}: ActionsProps): React.JSX.Element {
   return (
     <div className="actions">
       {primary === undefined ? null : (
-        <button type="button" className="btn btn-primary">
+        <button type="button" className="btn btn-primary" disabled={busy} onClick={onPrimary}>
           {primary}
         </button>
       )}
       {secondary.map((action) => (
-        <button type="button" className="btn btn-secondary" key={action}>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          key={action}
+          disabled={busy}
+          onClick={
+            onSecondary === undefined
+              ? undefined
+              : () => {
+                  onSecondary(action);
+                }
+          }
+        >
           {action}
         </button>
       ))}

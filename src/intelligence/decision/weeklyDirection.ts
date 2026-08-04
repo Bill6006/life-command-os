@@ -64,7 +64,7 @@ export function proposeWeeklyDirection(
       basedOn: [...basedOn, 'No category has enough evidence to justify a focus'],
       confidence,
       lastWeek: 'No previous weekly direction recorded',
-      responses: ['Confirm', 'Set a direction instead'],
+      responses: ['Confirm', 'Set a direction instead', 'Snooze', 'Skip'],
     };
   }
 
@@ -77,7 +77,7 @@ export function proposeWeeklyDirection(
       basedOn: [...basedOn, `Capacity is ${capacity}, which is not the week to add load`],
       confidence,
       lastWeek: 'No previous weekly direction recorded',
-      responses: ['Confirm', 'Set a direction instead'],
+      responses: ['Confirm', 'Set a direction instead', 'Snooze', 'Skip'],
     };
   }
 
@@ -91,7 +91,7 @@ export function proposeWeeklyDirection(
       basedOn: [...basedOn, 'Nothing is declining, so there is nothing that needs a push'],
       confidence,
       lastWeek: 'No previous weekly direction recorded',
-      responses: ['Confirm', 'Set a direction instead'],
+      responses: ['Confirm', 'Set a direction instead', 'Snooze', 'Skip'],
     };
   }
 
@@ -103,6 +103,6 @@ export function proposeWeeklyDirection(
     basedOn: [...basedOn, `${focus.category} is declining with the most evidence behind it`],
     confidence,
     lastWeek: 'No previous weekly direction recorded',
-    responses: ['Confirm', 'Adjust', 'Quiet week instead'],
+    responses: ['Confirm', 'Adjust', 'Snooze', 'Skip'],
   };
 }

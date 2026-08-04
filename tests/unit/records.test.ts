@@ -24,8 +24,8 @@ beforeEach(() => {
  * Gate requirement: every active core record validates independently.
  */
 describe('core record families', () => {
-  it('registers twenty-one families: the first slice plus learned-belief', () => {
-    expect(RECORD_TYPES).toHaveLength(21);
+  it('registers twenty-two families: the first slice, learned-belief, and guide-session', () => {
+    expect(RECORD_TYPES).toHaveLength(22);
     expect(Object.keys(RECORD_SCHEMAS).sort()).toEqual([...RECORD_TYPES].sort());
   });
 
@@ -35,11 +35,24 @@ describe('core record families', () => {
     expect(RECORD_TYPES).toContain('learned-belief');
   });
 
+  it('registers GuideSessionRecord, activated in Phase 6', () => {
+    // A guide that legitimately asked nothing new leaves no observations behind, so
+    // "I checked in and nothing had changed" cannot be reconstructed from anything
+    // else. That is why it is canonical rather than derived.
+    expect(RECORD_TYPES).toContain('guide-session');
+  });
+
   it('still registers no domain-specific family', () => {
     // Phase 7 activates those, one domain at a time.
     for (const domainish of ['sleep', 'mood', 'expense', 'workout', 'medication']) {
       expect(RECORD_TYPES.some((type) => type.includes(domainish))).toBe(false);
     }
+  });
+
+  it('has a fixture for every registered family', () => {
+    // Without this, activating a family without a fixture goes silently untested —
+    // which is exactly what happened to `learned-belief` through Phase 5.
+    expect(Object.keys(oneOfEveryFamily()).sort()).toEqual([...RECORD_TYPES].sort());
   });
 
   it('validates a well-formed record of every family', () => {

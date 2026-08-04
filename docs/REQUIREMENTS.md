@@ -1,8 +1,15 @@
 # Core Requirements Registry
 
 **Status:** Controlling
-**Plan version:** 2.6 Lean Execution
-**Current phase:** Phase 5
+**Plan version:** 3.0 Final
+**Current phase:** Phase 6 (Prompt 7A complete, Prompt 7B outstanding)
+
+**Controlling artifacts from v3.0.** The Final Product Blueprint, Updated Requirements
+Register v2, Final Acceptance Test Matrix, and Final Legacy Decisions map now supply the
+requirement IDs used from Phase 6 onward (`OWN-*`, `OBS-*`, `CI-*`, `XDS-*`, `LEG-*`,
+`AT-*`). The `PROD`/`PRIV`/`ARCH`/… families below remain in force for everything they
+already govern; the two sets are complementary rather than competing, and Phase 6 records
+cite whichever is the nearer authority.
 
 This registry preserves the approved requirement IDs. It is the lean traceability spine:
 every implemented behavior carries an approved requirement ID in its implementation and its
@@ -355,6 +362,54 @@ outcome, so none of them has earned it.
 it never appears anywhere in any scenario. The top label requires prospective validation
 (`LEARN-003`), which does not exist until Phase 5. A baseline able to award itself the highest
 confidence on its first day would be exactly the false precision the Constitution forbids.
+
+---
+
+## 3d. Active requirement records — Phase 6, Prompt 7A
+
+| ID | Implementation | Test IDs | Notes |
+|---|---|---|---|
+| `OBS-001` `OBS-002` `OBS-003` | `domain/prompts/policy.ts` — `validatePromptDefinition` rejects cause, feeling, efficacy-judgement, and self-diagnosis questions | `prompts.test.ts` → `prohibited questions are rejected` (18) | The catalogue validates itself on import, so a prohibited prompt breaks the build |
+| `OBS-004` | `domain/prompts/definitions.ts` — nine observable outcome patterns | `covers every observable outcome pattern the phase requires` | Started, completed, duration, stopped early, returned, still interfering, symptom, interaction, decision |
+| `OBS-005` | `domain/records/scales.ts` — seven anchored scales | `the approved anchored scales` (3) | Present-state labels; nothing asks why |
+| `OBS-006` | `unsure` observed value; `UNSURE` answer; `PromptControl` "I cannot tell" | `writes something for a deliberate "I cannot tell"` (2); `records "I cannot tell" as unknown rather than as no effect` | Its own value kind, so nothing can read it as no, zero, or unchanged |
+| `OBS-011` | `optional-note` prompt kind, exempt from the question checks | `accepts an optional note that invites the owner's own explanation` | Volunteered interpretation is permitted; requiring it is not |
+| `OBS-012` | `assertPromptCatalogue(ALL_PROMPTS)` at module load | `the shipped catalogue` (4) | CI, the build, and the page load all fail together on a violation |
+| `OWN-016`–`OWN-021` | `intelligence/guides/planGuide.ts`; `domain/records/guides.ts`; `ui/features/guides/` | `guides` (9 unit, 5 browser) | Morning, catch-up, afternoon, evening, weekly, quick check-in; 15/30/45/Full |
+| `OWN-019` | `respondToWeeklyDirection`; `weeklyDirectionResponse` gains `snoozed` and `skipped` | `the weekly direction` (1 unit, 1 browser) | Snooze and Skip are their own branches, never flavours of rejection |
+| `OWN-020` | `CATCH_UP_DROPS` in `planGuide.ts` | `catch-up asks only questions that are still worth asking` | Bedtime and wake time survive; fine-grained night recall does not |
+| `OWN-023` | `MAX_STEPS`, `NORMAL_RESPONSE_BUDGET`, `DEFAULT_DEPTH` | `keeps a normal check-in within five responses`; `ask one question at a time and stay within the budget` | Only `45` and `full`, chosen deliberately, exceed five |
+| `OWN-024` | `observedValueFor` returns `undefined` for `not-answered`; no control is preselected | `writes nothing at all for an untouched control`; `nothing is preselected, and a skipped question stores nothing` | Absence of a record is the only safe representation of "not reported" |
+| `OWN-026`–`OWN-032` | `SCALES` with ordinal, label, scale id, and version stored together | `what an answer becomes` (5); `an answered scale survives a reload` | `AT-050`: the stress direction is data, not an assumption |
+| `OWN-033` | `declineRecommendation` + `DECLINE_REASONS` | `Can't Now creates a constraint and is never read as ineffectiveness` (3 unit, 1 browser) | Time-unclear makes free time unresolved rather than guessing it downwards |
+| `OWN-043` | `SLEEP_PROMPTS`; `sleepSpan` calculates time in bed | `prompts.test.ts` catalogue assertions | Duration is calculated and labelled an estimate; the app never claims measured sleep |
+| `OWN-044` | `FOOD_PROMPTS` — time, broad tags, energy after, digestive response | catalogue assertions | Five prompts, no checkbox wall, no macros |
+| `OWN-061` | `application/commands/{capture,decisionEpisode,guideSession}.ts`; UI cannot import storage | ESLint boundary rule; `interactions.test.ts` (22) | Every write is validated and atomic |
+| `OWN-063` | `quickCapture` writes exactly one observation | `writes exactly one canonical event`; browser `writes one canonical event that survives a reload` | The shell only — domain forms reuse it in Phase 7 |
+| `OWN-070` | `PRIVACY_CLASSES` on the envelope; `classificationOf` fails closed | `an answered scale survives a reload` (`privacy: 'general'`); `quick capture` (`privacy: 'note'`) | Unclassified resolves to the most private class |
+| `LEG-020` `LEG-021` | `guideSessionRecord` — completed, stopped, snoozed, skipped | `has no failure state to record` | There is no representable failure state, so none can start being counted |
+| `CI-006` | `startRecommendation` writes `unknown-execution`; `recordOutcome` supersedes it | `supersedes the execution rather than mutating it`; `leaves the outcome unresolved when nothing observable was reported` | Starting is not executing; completing is not an outcome |
+
+### Two separations Prompt 7A had to hold
+
+**Starting is not executing.** Pressing Start writes an execution in the
+`unknown-execution` state. That opens the outcome window so the evening guide can follow up,
+and claims nothing about what happened. The real state arrives later as a superseding record.
+
+**Completing is not an outcome.** "Did you finish it?" describes the execution. Whether
+anything changed is a separate observable question, and without an answer to one the outcome
+stays `unresolved`. Finishing an action is never promoted into evidence that it helped.
+
+### Resolved conflict: stored freshness
+
+Prompt 7A task 6 and Blueprint §4.4 list *freshness* among the fields an observation stores.
+Phase 2 established that freshness is **computed, never stored**, because a stored freshness
+label is wrong the moment time passes and correcting it would mean mutating history.
+
+Resolution: what is stored is everything freshness is computed **from** — `occurredAt` and
+`recordedAt` — and `assessFreshness` derives it against the decision at hand. Freshness is
+shown wherever a reading is shown, so the owner-visible requirement is met without a field
+that goes stale in storage.
 
 ---
 

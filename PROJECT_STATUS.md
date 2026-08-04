@@ -2,132 +2,216 @@
 
 ## Project identity
 - Repository: life-command-os (https://github.com/Bill6006/life-command-os)
-- Plan version: 2.6 Lean Execution
-- Current phase: Phase 5 — Outcome learning, trajectories, and useful graphs
-- Current prompt: PROMPT 6 (complete)
+- Plan version: 3.0 Final
+- Current phase: Phase 6 — Integrated private alpha, real interactions, and Guide foundation
+- Current prompt: PROMPT 7A (complete). **Phase 6 is incomplete until Prompt 7B.**
 
 ## Gate status
-- Status: **GREEN**
+- Status: **GREEN** for Prompt 7A. Phase 6 as a whole remains open.
 - Gate evidence:
-  - *Forecast accuracy and recommendation effectiveness remain separate* — separate functions, separate result types, separate fields, separate panels. No code path averages them, asserted against the engine data and at the interface.
-  - *Missing outcomes remain unresolved* — a closed window with no outcome, and an expired window, both produce `unresolved` with a reason saying it is not counted against the recommendation.
-  - *Strong personal claims require prospective evidence* — the top confidence label needs four clean episodes, each predicted before it was observed, none contradicted and none confounded. The record schema refuses it independently of the governor.
-  - *Graphs answer real questions* — eight graphs, each carrying its question, metric, window, evidence basis, missing-data treatment, uncertainty, and a visible text summary as **data**, so one cannot be rendered without them.
-  - *Beliefs update conservatively and retain reason traces* — form, strengthen, narrow, suspend, retire; every history entry carries why, and narrowing precedes weakening.
-  - *Return after absence is non-punitive* — no backlog, no missed-day count, no guilt vocabulary. Predictions expire rather than fail.
-  - *The first complete synthetic learning loop passes* — `learning-loop` runs observation → recommendation → execution → outcome → evaluation → belief, and reaches the top label legitimately.
+  - *All checks pass* — 212 unit tests, 266 browser tests, lint, typecheck, format, build.
+  - *No normal prompt asks why, what caused it, whether it worked, or how it felt* — the
+    policy rejects all four families, and the catalogue validates itself on import, so a
+    prohibited question cannot reach a person without breaking the build.
+  - *Real interactions survive reload* — Start, Can't Now, guide completion, outcome
+    capture, weekly response, and Quick Capture each write canonical records; every browser
+    assertion reloads the page before reading.
+  - *No default value becomes evidence* — nothing is preselected anywhere, and an untouched
+    control writes no record at all. Asserted in both the unit and browser suites.
+  - *Guides meet the interaction budget* — a normal check-in is capped at five responses;
+    only `45` and `full`, chosen deliberately, go beyond it.
+  - *No private data in repository evidence* — synthetic-only, scanned clean.
 
 ## GitHub Pages owner preview
 - URL: **https://bill6006.github.io/life-command-os/**
 - Deployment status: **LIVE**
 - Deployed commit: current head of `main`. Data & Privacy reports the exact commit.
-- Last phone-and-desktop verification: 2026-08-03 at 375 × 812 and desktop.
-- Hosted build contains synthetic content only: **YES**
+- Hosted build contains synthetic content only: **YES** — and the deployed app now starts
+  **empty**, because it reads real local records rather than a chosen scenario.
 
 > **Service-worker note.** A returning visitor may see the previous build once; reload again.
 
-## The confidence ceiling lifted — and only here
-Through Phase 4, `strong-personal-evidence` was unreachable by construction, because nothing
-had been validated against a later outcome.
+## What changed most: the app now reads what is stored
+Through Phase 5 the shell picked a set of synthetic records from a dropdown and asked the
+engine to reason over them. That dropdown is gone. The shell reads IndexedDB, the controls
+write back through the application layer, and the surfaces render what committed.
 
-Phase 5 makes it reachable **for beliefs only**, and only on four clean prospective episodes
-with zero contradictions and zero confounding. State, trajectory, forecast, decision, and
-weekly-direction confidence still cannot reach it — a test asserts that across every scenario.
-None of them is checked against a later outcome, so none has earned it.
+The synthetic scenarios still exist and every test still uses them — they are seeded through
+the test bridge, so the browser tests now drive **exactly the interface the owner uses**
+rather than a scenario the owner could also see.
 
 ## Work completed
-- **Activated `LearnedBeliefRecord`** — twenty-one canonical families now. Its schema enforces three things independently of the governor that writes it: a belief must cite its evaluations, its applicability is explicit, and the top label requires prospective validation.
-- **Outcome windows** — an execution opens one, it closes after seven days, and expires unresolved after twenty-one. Nothing is evaluated before its window closes.
-- **Two evaluations, permanently apart** — forecast accuracy and recommendation effectiveness, with the five verdicts preserved: supported, partially supported, contradicted, context-invalidated, unresolved.
-- **Confounding detection** — overlapping executions, context changes inside the window, and partial execution each add a factor. A high-risk episode **cannot** reach `supported`.
-- **Conservative learning governor** — two supporting episodes to state a belief, three to hold it, four clean prospective ones for the top label. Contradiction narrows before it weakens; a context change suspends rather than deletes.
-- **Eight graphs** — category trajectory, workload versus capacity, forecast accuracy, follow-through, actions and outcomes, expected versus actual, North Star progress, and confidence.
-- **Weekly-direction continuity** — carry forward, adjust, abandon, or go quiet, with why preserved and no moral scoring.
-- **Graceful return after absence** — a calm banner, expired predictions, summarised open loops, and honestly lower confidence.
-- **Nine new scenarios** covering executed, declined, partially executed, missing-outcome, confounded, context-change, forecast-accuracy, weekly-continuity, and return-after-absence.
+- **The behaviour-first question boundary** — `domain/prompts/policy.ts` rejects questions
+  requiring a cause, a feeling, an efficacy judgement, or self-diagnosis. Every prompt in the
+  product is a `CapturePrompt`; the catalogue calls `assertPromptCatalogue` at module load, so
+  a violation fails the build, the tests, and the page load together.
+- **The seven approved anchored scales** — energy, mood, stress, confidence, overwhelm,
+  sleep/recovery, readiness. Ordinal, visible label, scale id, and scale version are stored
+  together, and the direction of each scale is data rather than an assumption.
+- **Wired response controls** — Start, Can't Now, Done / Record outcome, Update state, Why
+  this. All write through `application/commands/`; the UI cannot reach IndexedDB and fails
+  lint if it tries.
+- **`GuideSessionRecord`** — the twenty-second canonical family. Morning, catch-up,
+  afternoon, evening, weekly, and quick check-in, at 15 / 30 / 45 / Full depth, one question
+  at a time.
+- **Lightweight sleep and food capture** — times, counts, and two existing scales. Sleep
+  duration is calculated and labelled an estimate. Five food prompts, no checkbox wall.
+- **Quick Capture shell** — one capture writes one canonical event.
+- **Real interface states** — loading, empty, and error are driven by real storage; recovery
+  by a real failed write.
 
 ### Decisions worth naming
-- **The failure mode the governor exists to prevent** is stated in its research card: a user protects one focus block, has a good week, and the system tells them it *works*. Every threshold, the confounding detection, and the vocabulary split between "is associated with" and "reliably" are aimed at that specific inference.
-- **Unresolved is always shown, never dropped.** A follow-through chart that quietly omitted pending outcomes would flatter the system.
-- **Suspension preserves evidence.** A context change pauses a belief and names the change; the evidence was real and may matter again.
-- **Beliefs are recomputed from evaluations every time**, never mutated in place, so a belief cannot drift away from what supports it.
+- **Starting is not executing.** Pressing Start writes an execution in the
+  `unknown-execution` state. It opens the outcome window so the evening guide can follow up,
+  and claims nothing about what happened. The real state is written later as a superseding
+  record. The evaluation layer already refuses to read `unknown-execution` as evidence, so an
+  un-followed-up start can never quietly become a success.
+- **Completing is not an outcome.** "Did you finish it?" describes the execution. Whether
+  anything changed is a separate observable question, and with no answer to one the outcome
+  stays `unresolved`. Finishing an action is never promoted into evidence that it helped.
+- **An untouched control writes nothing.** Not a zero, not a null, not a placeholder record.
+  Absence of a record is the only representation of "not reported" that cannot later be
+  misread. A deliberate "I cannot tell" *does* write — as its own value kind, so nothing can
+  read it as no, zero, or unchanged.
+- **Declining for lack of time makes free time `unresolved`, not smaller.** Guessing a number
+  downwards would be inventing evidence. Unresolved is true, and the engine's honest response
+  to it is to ask — which is the recomputation the owner wanted.
+- **The guide session record has no failure state, and cannot be given one.** Its outcomes are
+  completed, stopped, snoozed, and skipped. Nothing there can express missed, overdue, or
+  incomplete, so no later feature can start counting them.
+- **Guide entry and Quick Capture are bars, not panels.** The Blueprint wants both on Now;
+  ADR-0008 caps Now at five panels. Making them controls satisfies both rather than trading
+  one against the other.
 
 ## Files created or modified
-Created (11): `src/domain/records/learning.ts`; `src/intelligence/evaluation/{outcomeWindows,evaluate}.ts`; `src/intelligence/learning/{beliefs,insights}.ts`; `src/intelligence/decision/weeklyContinuity.ts`; `src/intelligence/state/absence.ts`; `src/ui/components/GraphFigure.tsx`; `tests/unit/learning.test.ts`; `docs/research/learning-governor.md`
+Created (14): `src/domain/records/{scales,guides}.ts`; `src/domain/prompts/{policy,definitions}.ts`;
+`src/intelligence/guides/planGuide.ts`;
+`src/application/commands/{capture,decisionEpisode,guideSession}.ts`;
+`src/ui/state/useLocalRecords.ts`; `src/ui/features/guides/{GuideSurface,PromptControl}.tsx`;
+`src/ui/features/respond/RespondSurfaces.tsx`; `tests/unit/{prompts,interactions}.test.ts`;
+`tests/e2e/interactions.spec.ts`; `tests/support/required.ts`
 
-Deleted (1): `src/ui/components/TrendChart.tsx`, superseded by `GraphFigure`
-
-Modified: `domain/records/index.ts` (21 families), `intelligence/{index,types}.ts`, `app/scenarios.ts`, the Learning and Direction surfaces, `AppShell`, `console.css`, `vite.config.ts`, `tests/unit/{records,engine}.test.ts`, `tests/e2e/{console-shell,shell}.spec.ts`, `docs/REQUIREMENTS.md`
+Modified: `domain/records/{index,envelope,evidence,direction}.ts`; `domain/policies/invariants.ts`;
+`intelligence/decision/{selectOutput,weeklyDirection}.ts`; `app/{scenarios,diagnostics}.ts`;
+`ui/features/{shell/AppShell,now/NowSurface}.tsx`; `ui/components/primitives.tsx`;
+`ui/design-system/console.css`; `vite.config.ts`; `tests/fixtures/records.ts`;
+`tests/unit/records.test.ts`; `tests/e2e/{console-shell,shell}.spec.ts`;
+`docs/{REQUIREMENTS.md,architecture/ARCHITECTURE_OVERVIEW.md}`
 
 ## Tests and evidence
-- **Unit: 143 passed**, up from 115. 28 new learning tests.
-- **Browser: 252 passed**, up from 186, across desktop and mobile viewports.
+- **Unit: 212 passed**, up from 143. 67 new across prompts and interactions.
+- **Browser: 266 passed**, up from 252, across desktop and mobile viewports.
+- Covers: every prohibited question family rejected; the shipped catalogue passing the policy;
+  Unknown writing nothing and Unsure writing something; Start, decline, guide completion,
+  outcome, weekly response and capture all surviving a reload; catch-up asking strictly less;
+  depth changing quantity but not meaning; snooze and skip never becoming failure; one
+  capture writing one event; every new control at 44 × 44 with no horizontal overflow.
 - **Three real defects found by these tests and fixed rather than tested around:**
-  1. The `weekly-continuity` scenario dated its outcomes in the future, so they were correctly `unresolved` and the engine said `adjust`. **The engine was right and the scenario was wrong** — the data was fixed, not the rule.
-  2. **Markdown asterisks were rendering literally** in the interface — `**Association, not causation.**` appeared with the asterisks visible.
-  3. A component was being defined during render in the Learning surface, which throws away its subtree on every update.
-- Two of my own test assertions were wrong and were corrected rather than worked around: a regex flagged the honest prose "not read as a success rate", and the chart assertions counted across all three Direction charts instead of the trajectory one.
+  1. **Cross-record invariant checking was quadratic.** It asked "is a cycle reachable from
+     here?" once per record, each search starting with a fresh visited set. That was tolerable
+     while only restore used the path — but Phase 6 wired it to *every user write*, so a few
+     thousand stored records would have made saving a check-in block for seconds. Replaced
+     with a single three-colour depth-first search. **5,000 records: 4,838 ms → 20,000
+     records: 332 ms.** The regression test now builds twenty thousand rather than five, so
+     the length is the assertion and there is no wall-clock threshold to go flaky.
+  2. **"I cannot tell" was being dropped.** The outcome command read `Unsure` only when it
+     arrived as a list choice, so pressing the dedicated *I cannot tell* button produced
+     `unresolved` (nothing reported) instead of `unknown` (looked, could not say). Those are
+     different claims about the evidence.
+  3. **The browser tests raced their own writes** — reloading before the transaction had
+     committed. It passed on desktop and failed on mobile, which is the signature of a timing
+     bug rather than a behavioural one. The tests now wait for the write to settle.
+- Two of my own assertions were wrong and were corrected: one required Quick Capture to offer
+  "Unsure" (the owner is writing something down unprompted — it is not a state they can be
+  in), and one asserted guide timing against UTC when the rule is deliberately the owner's
+  local wall clock.
+- One test file gained an assertion it should always have had: `oneOfEveryFamily()` must
+  cover every registered family. It did not cover `learned-belief`, which therefore went
+  unfixtured through the whole of Phase 5.
 
 ## Privacy status
-- Synthetic-only repository: **YES**
+- Synthetic-only repository: **YES** — scanned clean over all tracked files.
 - Real personal data detected in tracked content: **NO**
-- Runtime private-data readiness: **NOT YET** — requires the Phase 6 gate.
+- Commit identity: GitHub noreply address only.
+- Runtime private-data readiness: **NOT YET** — requires Prompt 7B. The empty state says so
+  in as many words, on screen, to the owner.
 
 ## Architecture decisions
-No new ADRs. Phase 5 implements ADR-0005 (append-oriented records — beliefs supersede rather
-than mutate) and completes the lifecycle ADR-0003 describes.
-
-`src/intelligence/` now has `evaluation/` and `learning/`, both documented in the architecture
-tree and both created only now that there is behaviour for them.
+No new ADRs. Two new directories, both created only now that there is behaviour for them:
+`domain/prompts/` (what may be asked is a product rule, not a rendering concern) and
+`intelligence/guides/` (planning is deterministic reasoning over records; the answers are
+written by the application layer, so intelligence still never touches storage).
 
 ## New dependencies
 **None.**
 
 ## New abstractions or infrastructure
 
-**1. `LearnedBeliefRecord`** — `src/domain/records/learning.ts`
-- Active requirement: `LEARN-003`, Prompt 6 task 6.
-- Why smaller was insufficient: the belief invariants — cited evidence, explicit applicability, prospective validation for the top label — need to hold regardless of which code writes the record.
+**1. `domain/prompts/` — the question boundary**
+- Active requirement: `OBS-001`, `OBS-002`, `OBS-003`, `OBS-012`; Prompt 7A task 8.
+- Why smaller was insufficient: a prohibited question is easy to add by accident and nearly
+  impossible to catch in review once there are a hundred prompts. Making every prompt a
+  validated definition turns it into a build failure instead of a conversation.
 
-**2. Evaluation modules** — `evaluation/{outcomeWindows,evaluate}.ts`
-- Active requirement: `LEARN-001`, `LEARN-002`, Prompt 6 tasks 1–5.
-- Why smaller was insufficient: keeping the two evaluations in separate functions with separate types is what makes "never combined" structural rather than a convention.
+**2. `GuideSessionRecord` — the twenty-second family**
+- Active requirement: `OWN-016`–`OWN-021`, LEG-020; Prompt 7A task 10.
+- Why smaller was insufficient: a guide that legitimately asked nothing new leaves no
+  observations, so "I checked in and nothing had changed" cannot be reconstructed from
+  anything else. And its closed set of outcomes is what makes "snooze is never failure"
+  structural rather than a copywriting rule.
 
-**3. Learning governor and insights** — `learning/{beliefs,insights}.ts`
-- Active requirement: Prompt 6 tasks 6–11.
-- Why smaller was insufficient: the graphs' obligations are enforced by the `GraphMeta` type, so a chart that cannot state its question cannot be constructed.
+**3. `anchored-scale` and `unsure` observed values**
+- Active requirement: `OWN-026`–`OWN-032`, `OBS-006`; tasks 5–7 and 9.
+- Why smaller was insufficient: a bare state string records what the owner picked while
+  losing what the choices meant, which makes the reading uncomparable the first time the
+  anchors are reworded. And "I cannot tell" needs a shape with no value field, so no reader
+  can mistake it for no, zero, or unchanged.
 
-**4. `GraphFigure`** — replaces `TrendChart`
-- Active requirement: `UX-003`.
-- Why smaller was insufficient: two chart kinds now exist and both must satisfy the same policy; one component enforcing it is smaller than two that each might drift.
+**4. `privacy` on the envelope**
+- Active requirement: `OWN-070`; task 6.
+- Why smaller was insufficient: the person entering a fact is the only one who reliably knows
+  how sensitive it is. Unclassified resolves to the most protective class, so forgetting to
+  classify fails closed. Prompt 7B's export consent consumes it.
 
-**Carried forward:** the scenario picker and the diagnostics bridge, both removed in Phase 6.
+**Removed:** the owner-facing scenario picker and its scaffolding styles.
+**Carried forward:** the diagnostics bridge, now the seeding path for browser tests, removed
+in Prompt 7B.
 
 ## Known limitations
-- **The governor's thresholds are conventions**, not measurements — two, three, four episodes. Defended in `docs/research/learning-governor.md`, and it cannot validate itself. Phase 8 can compare it against an alternative.
-- **Beliefs are derived, not yet persisted.** `LearnedBeliefRecord` is registered, validated, and schema-enforced, but the engine recomputes beliefs from evaluations each run rather than writing them. Persisting belief history is Phase 6 work, alongside real storage writes.
-- **Execution and outcome capture is modelled but not user-driven.** Start, Adjust, and Not now still do not write records; the loop is exercised through scenarios. Wiring the controls is Phase 6.
-- **Only one belief pattern is derived.** The governor is general but the single derivation rule is focus-block timing; more patterns arrive with more domains in Phase 7.
-- **Cached startup is still unmeasured.** Bundle is now ~137 kB gzipped.
-- Carried forward: `frame-ancestors` unenforceable on Pages; Chromium-only matrix; no router; service-worker staleness; deletion semantics undecided.
+- **`locked` is still only a design state.** There is no lock to be in until Prompt 7B builds
+  one. `error` and `recovery` are implemented and render from real signals, but reaching them
+  in a browser test needs fault injection, which arrives with 7B's corruption, quota, and
+  interrupted-write tests.
+- **Sleep and food are captured under `time-attention-capacity`**, not a Health domain, which
+  does not exist until Phase 7. They are classified `health` for privacy regardless — privacy
+  and category are deliberately orthogonal. Phase 7's Health slice projects them by attribute
+  rather than re-entering them.
+- **Beliefs are still derived, not persisted.** The record family is registered and
+  schema-enforced; the engine recomputes from evaluations each run.
+- **Follow-ups are the general observable set.** Action-specific follow-ups (`OBS-009`) belong
+  to the domains that declare them, in Phases 7–8.
+- **Manual Domain Focus, Minimum Wins, and the domain panels are not built.** Phase 7.
+- **Cached startup is still unmeasured.** Bundle is ~152 kB gzipped, up from ~137 kB.
+- Carried forward: `frame-ancestors` unenforceable on Pages; Chromium-only matrix; no router;
+  service-worker staleness; deletion semantics undecided.
 
 ## Deferred work
 | Deferred | Activates |
 |---|---|
-| Persisting beliefs and evaluations as canonical records; wiring Start/Adjust/Not now to writes; full selected-design states; encrypted backup; app lock; notifications; real Data & Privacy; scenario-picker and diagnostics-bridge removal | Phase 6 |
-| Domain schemas and further belief patterns | Phase 7 |
-| Model-candidate registry and tournament | Phase 8 |
-| Legacy importer | Phase 9A |
-| Full traceability generator, browser matrix, release artifacts | Phase 10 |
+| Encrypted backup, versioned crypto metadata, dry-run restore, safety snapshot, rollback, fresh-profile recovery, real Data & Privacy, AI exports, field-level export consent, app lock, notifications, diagnostics-bridge removal | Prompt 7B |
+| Domain framework, domain slices, action-specific follow-ups, Manual Domain Focus, Minimum Wins | Phase 7 |
+| Cross-domain synthesis, full Can't Now regeneration, strategic review, model comparison | Phase 8 |
+| Legacy importer | Phase 9 |
+| Traceability generator, browser matrix, release artifacts | Phase 10 |
 
 ## Blockers
-**None blocking Prompt 7.**
+**None blocking Prompt 7B.**
 
-One non-blocking owner action: **measure cached startup on the Samsung phone** and say if it
-exceeds three seconds.
+One non-blocking owner action carried forward: **measure cached startup on the Samsung phone**
+and say if it exceeds three seconds.
 
 ## Next permitted prompt
-**PROMPT 7 — Phase 6: Integrated private alpha and real-data hardening.**
+**PROMPT 7B — Phase 6: encryption, recovery, and private-alpha readiness.**
 
-Phase 6 is the gate that matters most: encrypted backup and fresh-profile recovery. Until it
-passes, entering meaningful private data is not safe, and the interface says so.
+Until 7B passes, entering meaningful private data is not safe. The empty state says exactly
+that, on screen, rather than leaving the owner to infer it.

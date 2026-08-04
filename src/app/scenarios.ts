@@ -658,3 +658,47 @@ export function scenarioById(scenarioId: string): Scenario {
   if (found === undefined) throw new Error(`Unknown scenario: ${scenarioId}`);
   return found;
 }
+
+/* -------------------------------------------------------------------------- */
+
+/** Matches the ISO-8601 instants the envelope accepts. Local wall-clock strings do not. */
+const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+function shiftValue(value: unknown, deltaMs: number): unknown {
+  if (typeof value === 'string') {
+    return ISO_INSTANT.test(value)
+      ? new Date(Date.parse(value) + deltaMs).toISOString()
+      : value;
+  }
+  if (Array.isArray(value)) return value.map((entry) => shiftValue(entry, deltaMs));
+  if (typeof value === 'object' && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [key, shiftValue(entry, deltaMs)]),
+    );
+  }
+  return value;
+}
+
+/**
+ * Moves a whole scenario along the timeline without changing its shape.
+ *
+ * A scenario is written against a fixed anchor so that unit tests are reproducible.
+ * Seeding one into a running app is a different job: the app reads the real clock, so
+ * a corpus anchored to January would look like a seven-month absence in August.
+ * Shifting every instant by the same delta preserves each record's meaning — the
+ * relative distances, the ordering, and `occurredAt <= recordedAt` are all invariant
+ * under a uniform translation — while placing it where the app is actually standing.
+ *
+ * Local wall-clock strings are deliberately left alone: they carry no offset, so they
+ * are context rather than instants, and nothing computes from them.
+ */
+export function shiftScenario(scenario: Scenario, targetNow: Date): Scenario {
+  const deltaMs = targetNow.getTime() - Date.parse(scenario.nowIso);
+  return {
+    ...scenario,
+    nowIso: targetNow.toISOString(),
+    records: scenario.records.map(
+      (record) => shiftValue(record, deltaMs) as (typeof scenario.records)[number],
+    ),
+  };
+}

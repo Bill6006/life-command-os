@@ -49,6 +49,7 @@ import {
   type RecommendationEffectEvaluationRecord,
 } from './evaluation';
 import { learnedBeliefRecord, type LearnedBeliefRecord } from './learning';
+import { guideSessionRecord, type GuideSessionRecord } from './guides';
 import {
   questionAnswerRecord,
   questionRecord,
@@ -67,13 +68,20 @@ export * from './execution';
 export * from './evaluation';
 export * from './questions';
 export * from './learning';
+export * from './scales';
+export * from './guides';
 
 /**
- * Twenty-one canonical record families.
+ * Twenty-two canonical record families.
  *
- * The twenty of the first vertical slice, plus `learned-belief`, **activated in
- * Phase 5** now that there is learning behaviour for it to describe. It was
- * deliberately absent until there was.
+ * The twenty of the first vertical slice, plus `learned-belief` (**Phase 5**) and
+ * `guide-session` (**Phase 6**). Each was deliberately absent until there was
+ * behaviour for it to describe.
+ *
+ * `guide-session` is canonical rather than derived because it cannot be
+ * reconstructed from the observations it produced: a guide that legitimately asked
+ * nothing new leaves no observations, and "I checked in and nothing had changed" is
+ * a different fact from "I never opened it".
  *
  * Domain-specific families arrive one at a time in Phase 7. Adding one early is a
  * stop condition (`LEAN-001`).
@@ -100,6 +108,7 @@ export const RECORD_TYPES = [
   'question',
   'question-answer',
   'learned-belief',
+  'guide-session',
 ] as const;
 
 export type RecordType = (typeof RECORD_TYPES)[number];
@@ -125,7 +134,8 @@ export type CanonicalRecord =
   | LifeContextChangeRecord
   | QuestionRecord
   | QuestionAnswerRecord
-  | LearnedBeliefRecord;
+  | LearnedBeliefRecord
+  | GuideSessionRecord;
 
 /**
  * Schema per family.
@@ -156,6 +166,7 @@ export const RECORD_SCHEMAS: Record<RecordType, z.ZodType> = {
   question: questionRecord,
   'question-answer': questionAnswerRecord,
   'learned-belief': learnedBeliefRecord,
+  'guide-session': guideSessionRecord,
 };
 
 /** Families that record first-hand fact rather than system interpretation. */
@@ -169,6 +180,7 @@ export const OBSERVED_RECORD_TYPES = [
   'execution',
   'outcome',
   'question-answer',
+  'guide-session',
 ] as const satisfies readonly RecordType[];
 
 export function isRecordType(value: unknown): value is RecordType {

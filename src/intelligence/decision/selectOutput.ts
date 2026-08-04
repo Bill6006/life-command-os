@@ -359,9 +359,10 @@ export function selectOutput(
           : 'Untreated path could not be projected',
       ],
       primaryAction: 'Start',
-      // Declining, adjusting, and "cannot now" are all first-class responses and
-      // none of them becomes evidence about whether the recommendation was good.
-      secondaryActions: ['Adjust', 'Not now'],
+      // The approved Console response set (Blueprint §7.4). Declining and updating
+      // state are first-class responses, and neither becomes evidence about whether
+      // the recommendation was any good.
+      secondaryActions: ['Can’t now', 'Update state', 'Why this'],
     },
     rejected,
   };

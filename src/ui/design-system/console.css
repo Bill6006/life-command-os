@@ -10,35 +10,11 @@
  * so accent means "this is the answer" and nothing else.
  */
 
-/* ========================================================================== */
-/* Prototype scaffolding — deliberately unlike the product                    */
-/* ========================================================================== */
-
-.proto {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: #000;
-  border-bottom: 1px solid #3a3a3a;
-  font-family: var(--font-mono);
-  font-size: var(--text-fine);
-  color: #8a8a8a;
-}
-
-.proto-select {
-  min-height: var(--tap-min);
-  flex: 1 1 12rem;
-  /* `max-width: 18rem` reads as 576px at 200% zoom, which is wider than the phone. */
-  max-width: 100%;
-  padding: 0 var(--space-2);
-  background: #141414;
-  color: #e8e8e8;
-  border: 1px solid #4a4a4a;
-  border-radius: var(--radius-sm);
-  font: inherit;
-}
+/*
+ * The prototype scaffolding bar is gone. It styled the scenario picker, which Phase 6
+ * removed from the owner experience — the app reads real records now, and the
+ * synthetic corpora are reachable only from the test bridge.
+ */
 
 /* ========================================================================== */
 /* Shell                                                                       */
@@ -857,5 +833,171 @@
 
   .chart-plot svg {
     height: 11rem;
+  }
+}
+
+/* ========================================================================== */
+/* Capture controls (Phase 6)                                                  */
+/* ========================================================================== */
+
+/*
+ * Anchored scales and choice sets.
+ *
+ * Every step is a real button at the full tap target, and nothing is pressed until
+ * the owner presses it — there is no `:checked` default and no midpoint styling,
+ * because an untouched control must not look like an answer.
+ */
+.scale {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
+}
+
+.scale-step {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--tap-comfortable);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--text-fine);
+  cursor: pointer;
+  text-align: center;
+}
+
+/* Selection survives without colour: the border thickens and the weight changes. */
+.scale-step-on {
+  border-color: var(--accent-primary);
+  border-width: 2px;
+  background: var(--surface-panel-raised);
+  font-weight: 700;
+}
+
+.scale-label {
+  overflow-wrap: break-word;
+}
+
+.scale-choices .scale-step {
+  flex: 0 1 auto;
+}
+
+.depth {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+}
+
+.depth-step {
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--text-fine);
+  cursor: pointer;
+}
+
+.depth-step-on {
+  border-color: var(--accent-secondary);
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
+}
+
+.field-input {
+  flex: 1 1 8rem;
+  min-width: 0;
+  min-height: var(--tap-comfortable);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-panel-raised);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--text-body);
+}
+
+.field-text {
+  flex-basis: 100%;
+  padding: var(--space-2);
+  line-height: var(--leading-body);
+  resize: vertical;
+}
+
+.follow-up {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border-default);
+}
+
+.guide-controls {
+  margin-top: var(--space-3);
+}
+
+/*
+ * Guide entry and Quick Capture are bars, not panels.
+ *
+ * Blueprint §5.3 wants both on Now; ADR-0008 rule 2 caps Now at five panels. Rendering
+ * them as controls keeps both true rather than trading one against the other.
+ */
+.guide-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  margin: 0;
+  padding: var(--space-3);
+  background: var(--surface-panel-raised);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--accent-secondary);
+  border-radius: var(--radius-md);
+  font-size: var(--text-fine);
+  color: var(--text-secondary);
+}
+
+.guide-bar .banner-label {
+  color: var(--accent-secondary);
+}
+
+.guide-bar button {
+  margin-left: auto;
+}
+
+.capture-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-default);
+}
+
+.capture-bar .panel-label {
+  margin: 0;
+}
+
+.btn:disabled,
+.scale-step:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+@media (min-width: 60rem) {
+  .guide-bar,
+  .capture-bar {
+    grid-column: 1 / -1;
   }
 }

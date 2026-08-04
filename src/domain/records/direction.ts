@@ -104,12 +104,23 @@ export const weeklyDirectionProposal = z.discriminatedUnion('kind', [
   }),
 ]);
 
+/**
+ * The four responses the Sunday Weekly Guide offers, plus outright rejection.
+ *
+ * `snoozed` and `skipped` were added in Phase 6 (`OWN-019`). They are deliberately
+ * **their own branches rather than flavours of `rejected`**: deferring a proposal and
+ * declining one are different facts, and neither is a failure. Nothing downstream may
+ * read either as evidence about the owner or about the proposal's quality — a snooze
+ * carries only when to ask again, and a skip carries only an optional reason.
+ */
 export const weeklyDirectionResponse = z.discriminatedUnion('response', [
   z.strictObject({ response: z.literal('confirmed') }),
   z.strictObject({
     response: z.literal('adjusted'),
     adjustedStatement: z.string().min(1).max(400),
   }),
+  z.strictObject({ response: z.literal('snoozed'), remindAt: isoInstant }),
+  z.strictObject({ response: z.literal('skipped'), reason: z.string().max(400).optional() }),
   z.strictObject({ response: z.literal('rejected'), reason: z.string().max(400).optional() }),
 ]);
 

@@ -58,6 +58,7 @@ life-command-os/
       records/
       schemas/
       policies/
+      prompts/          # Phase 6 — the behaviour-first question boundary
     application/
       commands/
       queries/
@@ -69,6 +70,7 @@ life-command-os/
       decision/
       evaluation/
       learning/
+      guides/           # Phase 6 — deterministic guide planning
       change-detection/
       questioning/
     infrastructure/
@@ -110,7 +112,16 @@ requires (`ARCH-001`).
   change together. Record families live in `domain/records/`, each exporting its schema and
   its inferred type.
 - **`src/intelligence/` does not exist yet.** Phase 4 creates it. Its boundary rules are
-  documented here and activate with its code.
+  documented here and activate with its code. *(Created in Phase 4; `evaluation/` and
+  `learning/` added in Phase 5, `guides/` in Phase 6.)*
+- **`domain/prompts/` is domain, not UI.** What the app may ask the owner is a rule about
+  the product, not a rendering concern — so the policy and the catalogue sit beside the
+  record schemas, and the catalogue validates itself on import. A component cannot define a
+  question: a string typed into JSX is not a `CapturePrompt`, carries no attribute to write
+  to, and therefore has nowhere to store an answer.
+- **`intelligence/guides/` plans, it does not capture.** `planGuide` decides what is worth
+  asking from the records and returns a plan. The answers are written by
+  `application/commands/`, preserving the rule that intelligence never touches storage.
 
 ### 2.2 The importer boundary is a rule, not a directory
 

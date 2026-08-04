@@ -57,26 +57,68 @@ function asLinked(record: CanonicalRecord): LinkedRecord {
 }
 
 /**
- * Detects a cycle reachable from `start` by following `edges`.
+ * Every node that lies on a cycle, found in a single pass.
  *
  * Iterative rather than recursive: a corrupted or hostile backup could contain a
  * chain long enough to blow the stack, and a crash during import is a worse failure
  * than a rejection.
+ *
+ * **One pass, not one per record.** The original implementation asked "is a cycle
+ * reachable from here?" separately for every node, each search starting with a fresh
+ * visited set — quadratic in the number of records. That was tolerable while nothing
+ * but restore went through this path. Phase 6 wired it to every user interaction, at
+ * which point a few thousand stored records would have made saving a check-in take
+ * seconds. A three-colour depth-first search visits each edge once instead.
+ *
+ * A node is on a cycle when the search finds a back edge to something still on the
+ * current path; everything from that node to the top of the path is part of it. That
+ * is the same claim the per-node version made — cycle *members*, not everything that
+ * can reach one.
  */
-function findsCycle(start: string, edges: ReadonlyMap<string, readonly string[]>): boolean {
-  const seen = new Set<string>([start]);
-  const stack = [...(edges.get(start) ?? [])];
+function nodesOnCycles(edges: ReadonlyMap<string, readonly string[]>): Set<string> {
+  /** 1 = on the current path, 2 = fully explored and known cycle-free from here. */
+  const state = new Map<string, 1 | 2>();
+  const onCycle = new Set<string>();
 
-  while (stack.length > 0) {
-    const next = stack.pop();
-    if (next === undefined) break;
-    if (next === start) return true;
-    if (seen.has(next)) continue;
-    seen.add(next);
-    stack.push(...(edges.get(next) ?? []));
+  for (const start of edges.keys()) {
+    if (state.has(start)) continue;
+
+    const path: string[] = [start];
+    const frames: { node: string; next: number }[] = [{ node: start, next: 0 }];
+    state.set(start, 1);
+
+    while (frames.length > 0) {
+      const frame = frames[frames.length - 1];
+      if (frame === undefined) break;
+
+      const neighbours = edges.get(frame.node) ?? [];
+      if (frame.next >= neighbours.length) {
+        state.set(frame.node, 2);
+        frames.pop();
+        path.pop();
+        continue;
+      }
+
+      const next = neighbours[frame.next];
+      frame.next += 1;
+      if (next === undefined) continue;
+
+      const seen = state.get(next);
+      if (seen === 1) {
+        // Back edge: everything from `next` up to the top of the path is on the cycle.
+        for (let index = Math.max(0, path.lastIndexOf(next)); index < path.length; index += 1) {
+          const node = path[index];
+          if (node !== undefined) onCycle.add(node);
+        }
+      } else if (seen === undefined) {
+        state.set(next, 1);
+        path.push(next);
+        frames.push({ node: next, next: 0 });
+      }
+    }
   }
 
-  return false;
+  return onCycle;
 }
 
 /**
@@ -136,18 +178,18 @@ export function checkCrossRecordInvariants(
     }
   }
 
+  const supersessionCycles = nodesOnCycles(supersessionEdges);
+  const derivationCycles = nodesOnCycles(derivationEdges);
+
   for (const record of linked) {
-    if (
-      supersessionEdges.has(record.recordId) &&
-      findsCycle(record.recordId, supersessionEdges)
-    ) {
+    if (supersessionCycles.has(record.recordId)) {
       violations.push({
         code: 'supersession-cycle',
         recordId: record.recordId,
         detail: 'Supersession links form a cycle',
       });
     }
-    if (derivationEdges.has(record.recordId) && findsCycle(record.recordId, derivationEdges)) {
+    if (derivationCycles.has(record.recordId)) {
       violations.push({
         code: 'derivation-cycle',
         recordId: record.recordId,

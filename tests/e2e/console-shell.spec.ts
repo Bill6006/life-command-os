@@ -1,22 +1,24 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Phase 3 gate evidence, kept green — now against real engine output.
+ * Phase 3 gate evidence, kept green — now against real stored records.
  *
- * Every constraint the Console was selected under still holds, but nothing on screen
- * is hand-written any more: the picker chooses synthetic *records* and the engine
- * computes the rest. Where Phase 3 asserted that a prototype rendered a state, these
- * assert that the engine produced it.
+ * **The scenario picker is gone.** Through Phase 5 these tests chose a scenario from a
+ * dropdown the owner could also see. From Phase 6 the app reads IndexedDB, so a test
+ * writes a synthetic corpus through the test bridge, reloads, and drives exactly the
+ * interface the owner uses. Nothing is selected on screen and nothing is hand-written.
  *
  * The owner's constraint on the selected variant is what most of these guard:
  * *preserve the compact high-information style, but do not drift into a crowded
  * generic dashboard.* That failure is gradual, so it is checked mechanically.
  */
 
-/** Every scenario the picker offers. The engine computes each one. */
+/** Every synthetic corpus available to seed. The engine computes each one. */
 const SCENARIOS = [
   'action',
-  'cold-start',
+  // `cold-start` is deliberately absent: it seeds zero records, which is now the real
+  // empty state rather than an engine result. The engine's zero-record behaviour is
+  // asserted in `engine.test.ts`; the interface for it is asserted below.
   'sparse-evidence',
   'stale-evidence',
   'contradictory-evidence',
@@ -43,18 +45,36 @@ const SCENARIOS = [
   'return-after-absence',
 ] as const;
 
-/** Presentation modes the engine cannot produce. Lock and recovery become real in Phase 6. */
-const INTERFACE_STATES = ['loading', 'error', 'locked', 'recovery'] as const;
-
 const DESTINATIONS = ['Now', 'Timeline', 'Direction', 'Commitments'];
 
-async function select(page: Page, value: string): Promise<void> {
-  await page.selectOption('#scenario', value);
+/**
+ * Replaces local storage with one synthetic corpus, then reloads.
+ *
+ * The reload matters: it proves the surface is rendering what is *stored*, not what
+ * happened to be in memory when the records were written.
+ */
+async function select(page: Page, scenario: string): Promise<void> {
+  const failures = await page.evaluate(async (scenarioId) => {
+    const bridge = globalThis.__lifeCommandOsDiagnostics;
+    if (bridge === undefined) throw new Error('Test bridge is not installed');
+    await bridge.resetLocalData();
+    if (scenarioId === '') return [];
+    const result = await bridge.seedScenario(scenarioId);
+    return result.issues;
+  }, scenario);
+  expect(failures, `seeding ${scenario}`).toEqual([]);
+
+  await page.reload();
+  await expect(page.locator('.shell')).toBeVisible();
+  // Wait for the real read to finish; until then the surface is honestly "loading".
+  await expect(page.locator('.grid, .standalone')).toBeVisible();
 }
 
-async function open(page: Page): Promise<void> {
+/** Opens the app on a known corpus. Pass `''` for a genuinely empty profile. */
+async function open(page: Page, scenario = 'action'): Promise<void> {
   await page.goto('./');
   await expect(page.locator('.shell')).toBeVisible();
+  await select(page, scenario);
 }
 
 async function goTo(page: Page, destination: string): Promise<void> {
@@ -89,15 +109,27 @@ test.describe('every scenario and interface state renders', () => {
     });
   }
 
-  for (const state of INTERFACE_STATES) {
-    test(`renders the ${state} interface state`, async ({ page }) => {
-      await open(page);
-      await select(page, state);
-      expect(
-        ((await page.getByRole('main').textContent()) ?? '').trim().length,
-      ).toBeGreaterThan(40);
-    });
-  }
+  /**
+   * The empty state is now real rather than simulated: a profile with no records at
+   * all. It is what a new owner actually sees, and it must invite one action without
+   * demanding a setup questionnaire (`OWN-006`).
+   */
+  test('a genuinely empty profile asks for nothing and ranks no domains', async ({ page }) => {
+    await open(page, '');
+
+    const main = page.getByRole('main');
+    await expect(main).toContainText(/There is nothing here, and that is fine/i);
+    await expect(main).toContainText(/no questionnaire/i);
+    // It says plainly that private data is not yet safe here. That is true until 7B.
+    await expect(main).toContainText(/encrypted backup and verified recovery/i);
+    await expect(page.getByRole('button', { name: 'Start a check-in' })).toBeVisible();
+
+    // No onboarding, and no request to declare what matters most (`OWN-006`).
+    const text = ((await main.textContent()) ?? '').toLowerCase();
+    expect(text).not.toMatch(/what matters most/);
+    expect(text).not.toMatch(/most important (area|domain)/);
+    expect(text).not.toMatch(/set up|get started by|tell us about/);
+  });
 });
 
 test.describe('the decision always leads (ADR-0008 rule 1)', () => {
@@ -178,9 +210,10 @@ test.describe('the engine, not the interface, produces the content', () => {
     await expect(main).toContainText(/Insufficient evidence/i);
   });
 
-  test('cold start asks for nothing and ranks no domains', async ({ page }) => {
-    await open(page);
-    await select(page, 'cold-start');
+  test('one observation is not enough, and the engine says so rather than guessing', async ({
+    page,
+  }) => {
+    await open(page, 'sparse-evidence');
 
     const text = ((await page.getByRole('main').textContent()) ?? '').toLowerCase();
     expect(text).not.toMatch(/what matters most/);
@@ -575,14 +608,18 @@ test.describe('interaction budgets at 375 x 812 (UX-005)', () => {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 
-  test('respond, adjust, or decline is reachable in two taps from Now', async ({ page }) => {
+  test('respond, decline, or update state is reachable in one tap from Now', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await open(page);
 
     const actions = page.locator('.panel-decision .actions').first().getByRole('button');
-    await expect(actions).toHaveCount(3);
+    await expect(actions).toHaveCount(4);
     await expect(actions.nth(0)).toContainText('Start');
-    await expect(actions.nth(2)).toContainText('Not now');
+    await expect(actions.nth(1)).toContainText('Can’t now');
+    await expect(actions.nth(2)).toContainText('Update state');
+    await expect(actions.nth(3)).toContainText('Why this');
   });
 });
 

@@ -11,7 +11,9 @@ import {
   rebuildAllProjections,
   type ProjectionName,
 } from '../application/projections';
-import { SCHEMA_VERSION } from '../infrastructure/database/connection';
+import { SCHEMA_VERSION, openDatabase } from '../infrastructure/database/connection';
+import { replaceAllRecords } from '../infrastructure/database/recordRepository';
+import { SCENARIOS, scenarioById, shiftScenario } from './scenarios';
 
 /**
  * Browser diagnostics bridge — **temporary, and scheduled for removal in Phase 3.**
@@ -31,16 +33,17 @@ import { SCHEMA_VERSION } from '../infrastructure/database/connection';
  * already have. Any code able to call these functions could read and write the same
  * IndexedDB database directly. There is no server, no account, and no secret here.
  *
- * **Removal trigger — revised in Phase 3.** The original trigger said "when Phase 3
- * delivers the Data & Privacy surface". That turned out to be wrong: Phase 3's
- * Data & Privacy is a static synthetic view, because the whole phase renders explicit
- * view models and implements no production behaviour. It cannot exercise real
- * storage, so removing the bridge now would delete the Phase 2 persistence evidence
- * and replace it with nothing.
+ * **Removal trigger — revised twice.** The original said "when Phase 3 delivers the
+ * Data & Privacy surface", which was wrong: Phase 3's Data & Privacy was a static
+ * synthetic view and could not exercise real storage. The corrected trigger was
+ * Phase 6. Prompt 7A narrows it once more, to **Prompt 7B**, which builds the real
+ * Data & Privacy surface and explicitly requires removing owner-facing diagnostics
+ * bridges from the normal flow.
  *
- * The corrected trigger is **Phase 6**, when Data & Privacy is wired to real storage
- * health, backup, and restore. At that point the browser tests drive the real
- * interface and this module is deleted.
+ * **Scenario seeding lives here from Phase 6.** The owner-facing scenario picker is
+ * gone — the shell reads real records now. The synthetic scenarios remain, because
+ * they are how the browser tests get a known corpus into IndexedDB before driving the
+ * real interface, and they are reached only through this bridge.
  */
 
 export interface DiagnosticsBridge {
@@ -55,6 +58,16 @@ export interface DiagnosticsBridge {
   getProjection: (name: ProjectionName) => Promise<unknown>;
   rebuildAllProjections: () => Promise<void>;
   dropAllProjections: typeof dropAllProjections;
+  /** Scenario ids available to the browser tests. Not offered to the owner anywhere. */
+  readonly scenarioIds: readonly string[];
+  /** Writes one synthetic scenario into local storage. Test-only. */
+  seedScenario: (scenarioId: string) => Promise<{ ok: boolean; issues: readonly string[] }>;
+  /**
+   * Empties local storage so a test can start from a known corpus. Test-only, and
+   * deliberately **not** a delete control: it is unreachable from the interface, and
+   * deletion semantics for owner data remain undecided.
+   */
+  resetLocalData: () => Promise<void>;
 }
 
 declare global {
@@ -74,5 +87,19 @@ export function installDiagnosticsBridge(): void {
     getProjection: (name) => getProjection(name, new Date()),
     rebuildAllProjections: () => rebuildAllProjections(new Date()),
     dropAllProjections,
+    scenarioIds: SCENARIOS.map((scenario) => scenario.id),
+    seedScenario: async (scenarioId) => {
+      // Shifted onto the current clock: the app reads the real time now, so a corpus
+      // frozen at its authoring anchor would read as a months-long absence.
+      const scenario = shiftScenario(scenarioById(scenarioId), new Date());
+      const results = await writeRecords(scenario.records);
+      const failed = results.filter((result) => !result.ok);
+      return { ok: failed.length === 0, issues: failed.flatMap((result) => result.issues) };
+    },
+    resetLocalData: async () => {
+      const database = await openDatabase();
+      await replaceAllRecords(database, []);
+      await dropAllProjections();
+    },
   };
 }

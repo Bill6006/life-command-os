@@ -118,6 +118,51 @@ export const mixedProvenance = z
 
 export type EvidenceBasis = 'observed' | 'derived' | 'mixed';
 
+/* -------------------------------------------------------------------------- */
+
+/**
+ * How sensitive a record's content is (`OWN-070`, Blueprint §15).
+ *
+ * Recorded at capture time rather than inferred later, because the person entering
+ * a fact is the only one who reliably knows how sensitive it is, and a classifier
+ * that guessed would guess wrong in the direction that matters.
+ *
+ * **Absence is not "public".** A record with no `privacy` field is unclassified, and
+ * unclassified is treated as sensitive wherever the distinction has consequences —
+ * see `classificationOf`. Phase 6 Prompt 7B builds the export consent controls that
+ * consume this; Phase 7 extends it to field level. Nothing reads it as permission.
+ */
+export const PRIVACY_CLASSES = [
+  'general',
+  'health',
+  'child',
+  'money',
+  'workplace',
+  'relationship',
+  'faith',
+  'note',
+  'location',
+  'private-pattern',
+] as const;
+export type PrivacyClass = (typeof PRIVACY_CLASSES)[number];
+
+/** The only class that is not treated as sensitive by default. */
+export const NON_SENSITIVE_PRIVACY_CLASSES: readonly PrivacyClass[] = ['general'];
+
+/**
+ * The effective classification of a record.
+ *
+ * Unclassified resolves to `private-pattern` — the most protective class — so that
+ * forgetting to classify fails closed rather than leaking.
+ */
+export function classificationOf(record: { privacy?: PrivacyClass | undefined }): PrivacyClass {
+  return record.privacy ?? 'private-pattern';
+}
+
+export function isSensitive(record: { privacy?: PrivacyClass | undefined }): boolean {
+  return !NON_SENSITIVE_PRIVACY_CLASSES.includes(classificationOf(record));
+}
+
 /**
  * Builds the envelope fields for one record family.
  *
@@ -140,6 +185,11 @@ export function envelopeShape<T extends string>(recordType: T, basis: EvidenceBa
         : basis === 'derived'
           ? derivedProvenance
           : mixedProvenance,
+    /**
+     * How sensitive this record's content is. Optional for compatibility with
+     * records written before Phase 6; unclassified is treated as most-private.
+     */
+    privacy: z.enum(PRIVACY_CLASSES).optional(),
     /** The record this one replaces. Backwards-pointing only, never mutated in. */
     supersedesRecordId: z.uuid().optional(),
     /** Links the full chain of one decision episode together. */

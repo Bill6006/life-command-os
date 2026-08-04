@@ -62,8 +62,8 @@ export default defineConfig({
     }),
   ],
   define: {
-    __BUILD_PLAN_VERSION__: JSON.stringify('2.6 Lean Execution'),
-    __BUILD_PHASE__: JSON.stringify('Phase 5'),
+    __BUILD_PLAN_VERSION__: JSON.stringify('3.0 Final'),
+    __BUILD_PHASE__: JSON.stringify('Phase 6 (Prompt 7A)'),
     __BUILD_COMMIT__: JSON.stringify(resolveCommit()),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },

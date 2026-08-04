@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { lifeCategory, protectedContext } from './categories';
 import { envelopeShape, isoInstant, timeWindow, withEnvelopeInvariants } from './envelope';
+import { anchoredScaleShape, anchorsAgree } from './scales';
 import { evidenceValue } from './semantics';
 
 /**
@@ -13,18 +14,45 @@ import { evidenceValue } from './semantics';
  * both are rejected outright by these schemas.
  */
 
-/** What was actually observed. Deliberately shape-agnostic — not a domain schema. */
-export const observedValue = z.discriminatedUnion('kind', [
-  z.strictObject({
-    kind: z.literal('quantity'),
-    amount: z.number(),
-    unit: z.string().min(1).max(40),
-  }),
-  z.strictObject({ kind: z.literal('duration'), minutes: z.number().min(0) }),
-  z.strictObject({ kind: z.literal('count'), count: z.int().min(0) }),
-  z.strictObject({ kind: z.literal('state'), state: z.string().min(1).max(80) }),
-  z.strictObject({ kind: z.literal('note'), text: z.string().min(1).max(2000) }),
-]);
+/**
+ * What was actually observed. Deliberately shape-agnostic — not a domain schema.
+ *
+ * `anchored-scale` was added in Phase 6 so that the approved state scales
+ * (`OWN-026`–`OWN-032`) keep their ordinal, visible label, scale identity, and scale
+ * version together in one value. A bare `state` string would record what the owner
+ * picked while losing what the choices meant, which makes the reading uncomparable
+ * the first time the anchors are reworded.
+ */
+export const observedValue = z
+  .discriminatedUnion('kind', [
+    z.strictObject({
+      kind: z.literal('quantity'),
+      amount: z.number(),
+      unit: z.string().min(1).max(40),
+    }),
+    z.strictObject({ kind: z.literal('duration'), minutes: z.number().min(0) }),
+    z.strictObject({ kind: z.literal('count'), count: z.int().min(0) }),
+    z.strictObject({ kind: z.literal('state'), state: z.string().min(1).max(80) }),
+    z.strictObject({ kind: z.literal('note'), text: z.string().min(1).max(2000) }),
+    anchoredScaleShape,
+    /**
+     * "I cannot tell" (`OBS-006`).
+     *
+     * This is a real first-hand report, not missing data: the owner looked and could
+     * not say. It is deliberately its own variant with no value field, so no reader
+     * can mistake it for zero, no, or unchanged — the union simply offers nothing to
+     * misread. An *untouched* control writes no record at all, which is the separate
+     * fact that nothing was reported.
+     */
+    z.strictObject({
+      kind: z.literal('unsure'),
+      about: z.string().min(1).max(160),
+    }),
+  ])
+  .refine((value) => value.kind !== 'anchored-scale' || anchorsAgree(value), {
+    message: 'Ordinal and label must match the named scale version',
+    path: ['label'],
+  });
 export type ObservedValue = z.infer<typeof observedValue>;
 
 /* -------------------------------------------------------------------------- */

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 /**
  * Platform evidence — carried forward from Phase 1 and kept green.
@@ -7,6 +7,24 @@ import { expect, test } from '@playwright/test';
  * the base path, the manifest, offline startup, and the secure context IndexedDB
  * needs. Phase 3's own gate evidence lives in `console-shell.spec.ts`.
  */
+
+/**
+ * Puts a known corpus in local storage and reloads.
+ *
+ * From Phase 6 the app reads what is stored rather than a chosen scenario, so a test
+ * that wants a decision on screen has to write the records that produce one.
+ */
+async function seed(page: Page, scenario = 'action'): Promise<void> {
+  const issues = await page.evaluate(async (scenarioId) => {
+    const bridge = globalThis.__lifeCommandOsDiagnostics;
+    if (bridge === undefined) throw new Error('Test bridge is not installed');
+    await bridge.resetLocalData();
+    return (await bridge.seedScenario(scenarioId)).issues;
+  }, scenario);
+  expect(issues).toEqual([]);
+  await page.reload();
+  await expect(page.locator('.grid, .standalone')).toBeVisible();
+}
 
 test.describe('application shell', () => {
   test('renders under the repository base path', async ({ page }) => {
@@ -59,8 +77,8 @@ test.describe('application shell', () => {
     // OPS-002: the four fields needed to verify a deployed preview.
     const main = page.getByRole('main');
     await expect(main).toContainText('Plan version');
-    await expect(main).toContainText('2.6 Lean Execution');
-    await expect(main).toContainText('Phase 5');
+    await expect(main).toContainText('3.0 Final');
+    await expect(main).toContainText('Phase 6 (Prompt 7A)');
     await expect(main).toContainText('Built');
   });
 });
@@ -98,6 +116,7 @@ test.describe('installability and offline startup', () => {
 
   test('starts from the cached build with the network offline', async ({ page, context }) => {
     await page.goto('./');
+    await seed(page);
 
     await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, {
       timeout: 30_000,
@@ -136,6 +155,7 @@ test.describe('installability and offline startup', () => {
     context,
   }) => {
     await page.goto('./');
+    await seed(page);
     await expect(page.locator('.banner')).toHaveCount(0);
 
     await context.setOffline(true);

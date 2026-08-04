@@ -29,8 +29,16 @@ import {
 
 export type NowView = 'decision' | 'what-changed' | 'weekly-direction';
 
-/** Presentation modes the engine cannot produce. Phase 6 makes lock and recovery real. */
-export type InterfaceState = 'engine' | 'loading' | 'error' | 'locked' | 'recovery';
+/**
+ * Presentation modes that are not an engine result.
+ *
+ * `loading`, `empty`, and `error` are now driven by real storage: reading IndexedDB,
+ * finding it genuinely empty, and failing to read it. `recovery` is driven by a real
+ * failed write. `locked` is the one that is still only a design state — there is no
+ * lock to be in until Prompt 7B builds one, and pretending otherwise would be the
+ * kind of claim this product is not allowed to make.
+ */
+export type InterfaceState = 'engine' | 'loading' | 'empty' | 'error' | 'locked' | 'recovery';
 
 interface NowProps {
   readonly episode: EpisodeResult;
@@ -41,6 +49,17 @@ interface NowProps {
   readonly onOpenWeekly: () => void;
   readonly onOpenDirection: () => void;
   readonly onBack: () => void;
+  /** Phase 6: the response controls now write canonical records. */
+  readonly onRespond: (label: string) => void;
+  readonly onWeeklyRespond: (label: string) => void;
+  readonly onOpenGuide: () => void;
+  readonly onQuickCapture: () => void;
+  readonly onRecordOutcome: () => void;
+  readonly guideEntry: string;
+  readonly openEpisodeCount: number;
+  readonly busy: boolean;
+  readonly errorDetail?: string | undefined;
+  readonly onRetry?: (() => void) | undefined;
 }
 
 function SituationPanels({
@@ -168,12 +187,47 @@ export function NowSurface({
   onOpenWeekly,
   onOpenDirection,
   onBack,
+  onRespond,
+  onWeeklyRespond,
+  onOpenGuide,
+  onQuickCapture,
+  onRecordOutcome,
+  guideEntry,
+  openEpisodeCount,
+  busy,
+  errorDetail,
+  onRetry,
 }: NowProps): React.JSX.Element {
-  /* --- Presentation modes the engine cannot produce ----------------------- */
+  /* --- States that are not an engine result -------------------------------- */
   if (interfaceState === 'loading') {
     return (
       <Standalone label="Loading" headline="Reading local records…">
         <p className="fine">Nothing is being fetched from a network. This is on-device only.</p>
+      </Standalone>
+    );
+  }
+
+  if (interfaceState === 'empty') {
+    return (
+      <Standalone
+        label="Nothing recorded yet"
+        headline="There is nothing here, and that is fine"
+      >
+        <p className="body">
+          This app starts empty on purpose. There is no questionnaire and no setup — it will ask
+          you one thing at a time, and only when the answer could change something.
+        </p>
+        <p className="fine">
+          Everything you enter stays on this device. Encrypted backup and verified recovery
+          arrive in the next step, so do not put anything here you could not bear to lose yet.
+        </p>
+        <Actions
+          primary="Start a check-in"
+          secondary={['Note something down']}
+          busy={busy}
+          onPrimary={onOpenGuide}
+          onSecondary={onQuickCapture}
+        />
       </Standalone>
     );
   }
@@ -185,7 +239,8 @@ export function NowSurface({
           The local database did not respond. Nothing was written, and nothing has been lost.
           Retrying is safe.
         </p>
-        <Actions primary="Retry" secondary={['Open Data & Privacy']} />
+        {errorDetail === undefined ? null : <p className="fine why">{errorDetail}</p>}
+        <Actions primary="Retry" secondary={[]} busy={busy} onPrimary={onRetry} />
       </Standalone>
     );
   }
@@ -198,19 +253,21 @@ export function NowSurface({
           not encrypt the local database, and it cannot protect against someone with access to
           the device itself.
         </p>
-        <Actions primary="Unlock" secondary={[]} />
+        <Actions primary="Unlock" secondary={[]} busy={busy} onPrimary={onRetry} />
       </Standalone>
     );
   }
 
   if (interfaceState === 'recovery') {
     return (
-      <Standalone label="Recovery" headline="A write was interrupted">
+      <Standalone label="Recovery" headline="A write did not complete">
         <p className="fine">
           The last change did not finish committing, so it was not applied. Your existing
-          records are intact and unchanged.
+          records are intact and unchanged — the write was rejected as a whole rather than
+          half-applied.
         </p>
-        <Actions primary="Retry the change" secondary={['Discard it', 'Open Data & Privacy']} />
+        {errorDetail === undefined ? null : <p className="fine why">{errorDetail}</p>}
+        <Actions primary="Back to Now" secondary={[]} busy={busy} onPrimary={onRetry} />
       </Standalone>
     );
   }
@@ -289,7 +346,19 @@ export function NowSurface({
               <dd>{weekly.lastWeek}</dd>
             </div>
           </dl>
-          <Actions primary={weekly.responses[0]} secondary={weekly.responses.slice(1)} />
+          <Actions
+            primary={weekly.responses[0]}
+            secondary={weekly.responses.slice(1)}
+            busy={busy}
+            onPrimary={() => {
+              onWeeklyRespond(weekly.responses[0] ?? 'Confirm');
+            }}
+            onSecondary={onWeeklyRespond}
+          />
+          <p className="fine">
+            Snoozing asks again later. Skipping records only that you skipped it. Neither is
+            counted against you anywhere.
+          </p>
           <div className="actions">
             <button type="button" className="btn btn-link" onClick={onBack}>
               Back to Now
@@ -336,11 +405,51 @@ export function NowSurface({
     />
   );
 
+  /*
+   * Guide entry and Quick Capture are bars, not panels, deliberately. Blueprint §5.3
+   * wants both on Now; ADR-0008 rule 2 caps Now at five panels. Making them controls
+   * satisfies both instead of trading one off against the other.
+   */
+  const guideBar = (
+    <p className="guide-bar" role="status">
+      <span className="banner-label">Check in</span>
+      <span>{guideEntry}</span>
+      <button type="button" className="btn btn-link" onClick={onOpenGuide} disabled={busy}>
+        Open
+      </button>
+    </p>
+  );
+
+  const captureBar = (
+    <div className="capture-bar">
+      <span className="panel-label">Record something</span>
+      <button
+        type="button"
+        className="btn btn-secondary"
+        onClick={onQuickCapture}
+        disabled={busy}
+      >
+        Note it down
+      </button>
+      {openEpisodeCount > 0 ? (
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={onRecordOutcome}
+          disabled={busy}
+        >
+          {`Record outcome (${String(openEpisodeCount)})`}
+        </button>
+      ) : null}
+    </div>
+  );
+
   if (output.kind === 'action') {
     return (
       <div className="grid">
         {banner}
         {returnBanner}
+        {guideBar}
         <Panel label="Best move" tone="decision" wide>
           <p className="decision-statement">
             {output.candidate.statement}{' '}
@@ -380,12 +489,25 @@ export function NowSurface({
             </div>
           </dl>
 
-          <Actions primary={output.primaryAction} secondary={output.secondaryActions} />
+          <Actions
+            primary={output.primaryAction}
+            secondary={output.secondaryActions}
+            busy={busy}
+            onPrimary={() => {
+              onRespond(output.primaryAction);
+            }}
+            onSecondary={onRespond}
+          />
+          <p className="fine">
+            Starting records that you began. Declining records why you could not — it changes
+            what is suggested next and is never read as evidence about the suggestion.
+          </p>
           <button type="button" className="btn btn-link" onClick={onOpenWeekly}>
             This week’s direction
           </button>
         </Panel>
         {situation}
+        {captureBar}
       </div>
     );
   }
@@ -395,16 +517,26 @@ export function NowSurface({
       <div className="grid">
         {banner}
         {returnBanner}
+        {guideBar}
         <Panel label="One question" tone="decision" wide>
           <p className="decision-statement">{output.prompt}</p>
           <p className="body">{output.whyItMatters}</p>
           <p className="fine">Could change: {output.couldChange.join(' · ')}</p>
-          <Actions primary={output.answers[0]} secondary={output.answers.slice(1)} />
+          <Actions
+            primary="Answer it"
+            secondary={['Not now']}
+            busy={busy}
+            onPrimary={onOpenGuide}
+            onSecondary={() => {
+              onBack();
+            }}
+          />
           <button type="button" className="btn btn-link" onClick={onOpenWeekly}>
             This week’s direction
           </button>
         </Panel>
         {situation}
+        {captureBar}
       </div>
     );
   }
@@ -414,6 +546,7 @@ export function NowSurface({
       <div className="grid">
         {banner}
         {returnBanner}
+        {guideBar}
         <Panel label="Call" tone="quiet" wide>
           <p className="decision-statement">{output.statement}</p>
           <p className="fine">
@@ -428,12 +561,19 @@ export function NowSurface({
             ))}
           </ul>
           <p className="body">{output.wouldHelp}</p>
-          <Actions primary="Record something" secondary={['Not now']} />
+          <Actions
+            primary="Start a check-in"
+            secondary={['Note something down']}
+            busy={busy}
+            onPrimary={onOpenGuide}
+            onSecondary={onQuickCapture}
+          />
           <button type="button" className="btn btn-link" onClick={onOpenWeekly}>
             This week’s direction
           </button>
         </Panel>
         {situation}
+        {captureBar}
       </div>
     );
   }
@@ -442,6 +582,7 @@ export function NowSurface({
     <div className="grid">
       {banner}
       {returnBanner}
+      {guideBar}
       <Panel label="Call" tone="quiet" wide>
         <p className="decision-statement">{output.statement}</p>
         <p className="body">{output.rationale}</p>
@@ -463,12 +604,20 @@ export function NowSurface({
             <dd>{output.nextCheck}</dd>
           </div>
         </dl>
-        <Actions secondary={output.secondaryActions} />
+        <Actions
+          secondary={output.secondaryActions}
+          busy={busy}
+          onSecondary={(label) => {
+            if (label === 'Something changed') onOpenGuide();
+            else onOpenChanges();
+          }}
+        />
         <button type="button" className="btn btn-link" onClick={onOpenWeekly}>
           This week’s direction
         </button>
       </Panel>
       {situation}
+      {captureBar}
     </div>
   );
 }

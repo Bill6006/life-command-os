@@ -6,7 +6,9 @@ import type {
   ExecutionRecord,
   ForecastEvaluationRecord,
   GoalRecord,
+  GuideSessionRecord,
   InferredStateRecord,
+  LearnedBeliefRecord,
   InterventionEffectPredictionRecord,
   LifeContextChangeRecord,
   NorthStarRecord,
@@ -441,7 +443,65 @@ export function aQuestionAnswer(
   } as QuestionAnswerRecord;
 }
 
-/** One valid record of every family, for coverage-style assertions. */
+/**
+ * A learned belief (Phase 5).
+ *
+ * Deliberately `forming` with `early-signal`: the schema refuses the top label
+ * without prospective validation, and a fixture that quietly satisfied that would be
+ * modelling the exception rather than the ordinary case.
+ */
+export function aLearnedBelief(
+  supportingEvaluationId: string,
+  overrides: Partial<LearnedBeliefRecord> = {},
+): LearnedBeliefRecord {
+  return {
+    ...envelope('learned-belief', 30),
+    ...derived([supportingEvaluationId]),
+    statement: 'Focused blocks earlier in the day are followed by longer sessions',
+    status: 'forming',
+    categories: ['career-work-learning'],
+    applicability: { contexts: [], note: 'Weekdays only' },
+    confidence: fixtureConfidence({ label: 'early-signal' }),
+    supportingEvaluationIds: [supportingEvaluationId],
+    contradictingEvaluationIds: [],
+    prospectivelyValidated: false,
+    history: [
+      {
+        change: 'formed',
+        at: syntheticInstant(30),
+        because: 'Two comparable episodes pointed the same way',
+        evaluationRecordIds: [supportingEvaluationId],
+      },
+    ],
+    ...overrides,
+  } as LearnedBeliefRecord;
+}
+
+/** A guide session (Phase 6). Completed with nothing skipped. */
+export function aGuideSession(
+  producedRecordIds: readonly string[] = [],
+  overrides: Partial<GuideSessionRecord> = {},
+): GuideSessionRecord {
+  return {
+    ...envelope('guide-session', 32),
+    ...OBSERVED,
+    kind: 'morning',
+    depth: '30',
+    outcome: 'completed',
+    promptIdsAnswered: ['state:energy'],
+    promptIdsSkipped: [],
+    producedRecordIds: [...producedRecordIds],
+    ...overrides,
+  } as GuideSessionRecord;
+}
+
+/**
+ * One valid record of every family, for coverage-style assertions.
+ *
+ * `records.test.ts` asserts that this covers every registered family, so activating a
+ * family without a fixture fails rather than quietly going untested — which is how
+ * `learned-belief` went unfixtured through Phase 5.
+ */
 export function oneOfEveryFamily(): Record<string, unknown> {
   const observation = anObservation();
   const candidate = aCandidateAction();
@@ -449,6 +509,10 @@ export function oneOfEveryFamily(): Record<string, unknown> {
   const execution = anExecution(recommendation.recordId);
   const forecast = anUntreatedForecast();
   const question = aQuestion();
+  const effectEvaluation = aRecommendationEffectEvaluation(
+    recommendation.recordId,
+    execution.recordId,
+  );
 
   return {
     observation,
@@ -467,12 +531,11 @@ export function oneOfEveryFamily(): Record<string, unknown> {
     execution,
     outcome: anOutcome(),
     'forecast-evaluation': aForecastEvaluation(forecast.recordId),
-    'recommendation-effect-evaluation': aRecommendationEffectEvaluation(
-      recommendation.recordId,
-      execution.recordId,
-    ),
+    'recommendation-effect-evaluation': effectEvaluation,
     'life-context-change': aLifeContextChange(),
     question,
     'question-answer': aQuestionAnswer(question.recordId),
+    'learned-belief': aLearnedBelief(effectEvaluation.recordId),
+    'guide-session': aGuideSession([observation.recordId]),
   };
 }

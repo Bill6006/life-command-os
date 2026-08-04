@@ -5,27 +5,63 @@ import { DirectionSurface } from '../direction/DirectionSurface';
 import { CommitmentsSurface } from '../commitments/CommitmentsSurface';
 import { LearningSurface } from '../learning/LearningSurface';
 import { DataPrivacySurface } from '../data-privacy/DataPrivacySurface';
-import { SCENARIOS, scenarioById } from '../../../app/scenarios';
-import { runEpisode } from '../../../intelligence';
+import { GuideSurface } from '../guides/GuideSurface';
+import {
+  DeclineSurface,
+  OutcomeSurface,
+  QuickCaptureSurface,
+  type OpenEpisode,
+} from '../respond/RespondSurfaces';
+import { useLocalRecords } from '../../state/useLocalRecords';
+import type { GuideDepth, GuideKind, GuideOutcome } from '../../../domain/records';
+import type { AnsweredPrompt } from '../../../application/commands/capture';
+import {
+  declineRecommendation,
+  openEpisodes,
+  recordOutcome,
+  startRecommendation,
+  type DeclineReason,
+} from '../../../application/commands/decisionEpisode';
+import {
+  completeGuideSession,
+  quickCapture,
+  respondToWeeklyDirection,
+  type WeeklyResponse,
+} from '../../../application/commands/guideSession';
+import {
+  DEFAULT_DEPTH,
+  isLateMorning,
+  planGuide,
+  suggestedGuide,
+} from '../../../intelligence/guides/planGuide';
 import '../../design-system/console.css';
 
 /**
- * The Console shell (ADR-0008), now driven by the intelligence engine.
+ * The Console shell (ADR-0008), now driven by real local records.
+ *
+ * **The scenario picker is gone.** Through Phase 5 this shell chose a set of synthetic
+ * records and asked the engine to reason over them; from Phase 6 it reads what is
+ * actually stored in IndexedDB, and the controls write back. The synthetic scenarios
+ * still exist and the tests still use them — they are seeded through the test bridge
+ * rather than offered to the owner as a menu.
  *
  * Six logical destinations. **Five persistent on mobile** — Learning and Data &
  * Privacy live under More, per `UX-010` — and all six on the desktop rail.
  *
- * **The Phase 3 prototype state switcher is gone.** It has been replaced by a
- * scenario picker, which is a materially different thing: it selects a set of
- * synthetic *records*, and the engine computes the state, forecast, effects,
- * recommendation, and confidence from them. Nothing on screen is hand-written any
- * more. Four interface states the engine cannot produce — loading, error, locked,
- * recovery — remain selectable and are grouped separately and labelled as such;
- * lock and recovery become real in Phase 6.
+ * Every write here goes through the application layer. This component knows nothing
+ * about IndexedDB, cannot import it, and would fail lint if it tried.
  */
 
 type Destination =
   'now' | 'timeline' | 'direction' | 'commitments' | 'learning' | 'data-privacy';
+
+/** What the owner is doing right now. Only one flow is ever open. */
+type Mode =
+  | { readonly kind: 'console' }
+  | { readonly kind: 'guide'; readonly guide: GuideKind; readonly depth: GuideDepth }
+  | { readonly kind: 'decline' }
+  | { readonly kind: 'outcome'; readonly episode: OpenEpisode }
+  | { readonly kind: 'capture' };
 
 const PRIMARY: readonly { id: Destination; label: string }[] = [
   { id: 'now', label: 'Now' },
@@ -39,12 +75,14 @@ const UNDER_MORE: readonly { id: Destination; label: string }[] = [
   { id: 'data-privacy', label: 'Data & Privacy' },
 ];
 
-const INTERFACE_STATES: readonly { id: InterfaceState; label: string }[] = [
-  { id: 'loading', label: 'Loading' },
-  { id: 'error', label: 'Error' },
-  { id: 'locked', label: 'Locked (Phase 6)' },
-  { id: 'recovery', label: 'Recovery (Phase 6)' },
-];
+const GUIDE_ENTRY: Record<GuideKind, string> = {
+  morning: 'Morning check-in — sleep, energy, and what today allows.',
+  'morning-catch-up': 'Starting late is fine. A shorter check-in, only what still matters.',
+  afternoon: 'Afternoon check-in — only what has changed since this morning.',
+  evening: 'Evening — close any loops that are open.',
+  weekly: 'Sunday — one direction proposed for the week.',
+  'quick-check-in': 'A quick update on where things stand.',
+};
 
 function useIsOffline(): boolean {
   const [offline, setOffline] = useState(() => !navigator.onLine);
@@ -67,77 +105,222 @@ function useIsOffline(): boolean {
 
 export function AppShell(): React.JSX.Element {
   const [destination, setDestination] = useState<Destination>('now');
-  const [scenarioId, setScenarioId] = useState<string>('action');
-  const [interfaceState, setInterfaceState] = useState<InterfaceState>('engine');
   const [nowView, setNowView] = useState<NowView>('decision');
+  const [mode, setMode] = useState<Mode>({ kind: 'console' });
   const [moreOpen, setMoreOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
   const offline = useIsOffline();
 
-  const scenario = useMemo(() => scenarioById(scenarioId), [scenarioId]);
+  const { status, records, episode, error, writeFailure, now, refresh, reportWriteFailure } =
+    useLocalRecords();
 
-  // Deterministic: the same scenario at the same instant always yields the same episode.
-  const episode = useMemo(
-    () => runEpisode(scenario.records, new Date(scenario.nowIso)),
-    [scenario],
-  );
+  const open = useMemo(() => openEpisodes(records), [records]);
+  const suggested = useMemo<GuideKind>(() => {
+    const base = suggestedGuide(now);
+    return base === 'morning' && isLateMorning(now) ? 'morning-catch-up' : base;
+  }, [now]);
+
+  const interfaceState: InterfaceState =
+    writeFailure !== undefined
+      ? 'recovery'
+      : status === 'loading'
+        ? 'loading'
+        : status === 'error'
+          ? 'error'
+          : status === 'empty'
+            ? 'empty'
+            : 'engine';
 
   const go = (next: Destination): void => {
     setDestination(next);
     setNowView('decision');
+    setMode({ kind: 'console' });
     setMoreOpen(false);
+  };
+
+  /**
+   * Every write follows the same shape: run it, surface a failure honestly, reload the
+   * truth from storage. Nothing renders optimistically — the interface shows what
+   * committed, not what was attempted.
+   */
+  const run = async (work: () => Promise<{ ok: boolean; issues?: readonly string[] }>) => {
+    setBusy(true);
+    try {
+      const result = await work();
+      if (!result.ok) {
+        reportWriteFailure((result.issues ?? []).join('; ') || 'The change was not saved.');
+        return;
+      }
+      reportWriteFailure(undefined);
+      await refresh();
+      setMode({ kind: 'console' });
+      setNowView('decision');
+    } catch (caught) {
+      reportWriteFailure(
+        caught instanceof Error ? caught.message : 'The change did not reach storage.',
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const respond = (label: string): void => {
+    if (episode === undefined) return;
+    if (label === 'Start') {
+      void run(() => startRecommendation(episode, new Date()));
+      return;
+    }
+    if (label === 'Can’t now') {
+      setMode({ kind: 'decline' });
+      return;
+    }
+    if (label === 'Update state') {
+      setMode({ kind: 'guide', guide: 'quick-check-in', depth: '15' });
+      return;
+    }
+    if (label === 'Why this') {
+      setNowView('what-changed');
+    }
+  };
+
+  const weeklyRespond = (label: string): void => {
+    if (episode === undefined) return;
+    const week = 7 * 24 * 60 * 60 * 1000;
+    const response: WeeklyResponse =
+      label === 'Confirm'
+        ? { response: 'confirmed' }
+        : label === 'Snooze'
+          ? { response: 'snoozed', remindAt: new Date(Date.now() + week).toISOString() }
+          : label === 'Skip'
+            ? { response: 'skipped' }
+            : { response: 'adjusted', adjustedStatement: episode.weeklyDirection.proposal };
+    void run(() => respondToWeeklyDirection(episode, response, new Date()));
+  };
+
+  const finishGuide = (
+    guide: GuideKind,
+    depth: GuideDepth,
+    outcome: GuideOutcome,
+    answers: readonly AnsweredPrompt[],
+    skippedPromptIds: readonly string[],
+  ): void => {
+    void run(() =>
+      completeGuideSession(
+        {
+          kind: guide,
+          depth,
+          outcome,
+          answers,
+          skippedPromptIds,
+          ...(outcome === 'snoozed'
+            ? { remindAt: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString() }
+            : {}),
+        },
+        new Date(),
+      ),
+    );
+  };
+
+  const decline = (reason: DeclineReason): void => {
+    if (episode === undefined) return;
+    void run(() => declineRecommendation(episode, reason, new Date()));
+  };
+
+  const submitOutcome = (target: OpenEpisode, answers: readonly AnsweredPrompt[]): void => {
+    void run(() =>
+      recordOutcome(
+        {
+          executionRecordId: target.executionRecordId,
+          recommendationRecordId: target.recommendationRecordId,
+          decisionEpisodeId: target.decisionEpisodeId,
+          category: 'career-work-learning',
+          target: target.statement,
+          openedAt: target.openedAt,
+          answers,
+        },
+        new Date(),
+      ),
+    );
   };
 
   const activeLabel =
     [...PRIMARY, ...UNDER_MORE].find((entry) => entry.id === destination)?.label ?? 'Now';
+
+  /* --- Flows that take over the main region -------------------------------- */
+  const flow = ((): React.JSX.Element | undefined => {
+    if (mode.kind === 'guide') {
+      const plan = planGuide(mode.guide, mode.depth, records, now);
+      return (
+        <GuideSurface
+          plan={plan}
+          depth={mode.depth}
+          onDepthChange={(depth) => {
+            setMode({ kind: 'guide', guide: mode.guide, depth });
+          }}
+          onFinish={(outcome, answers, skippedPromptIds) => {
+            finishGuide(mode.guide, mode.depth, outcome, answers, skippedPromptIds);
+          }}
+          onWeeklyStep={() => {
+            setMode({ kind: 'console' });
+            setNowView('weekly-direction');
+          }}
+          onCancel={() => {
+            setMode({ kind: 'console' });
+          }}
+        />
+      );
+    }
+
+    if (mode.kind === 'decline' && episode?.output.kind === 'action') {
+      return (
+        <DeclineSurface
+          statement={episode.output.candidate.statement}
+          busy={busy}
+          onDecline={decline}
+          onCancel={() => {
+            setMode({ kind: 'console' });
+          }}
+        />
+      );
+    }
+
+    if (mode.kind === 'outcome') {
+      return (
+        <OutcomeSurface
+          episode={mode.episode}
+          busy={busy}
+          onSubmit={(answers) => {
+            submitOutcome(mode.episode, answers);
+          }}
+          onCancel={() => {
+            setMode({ kind: 'console' });
+          }}
+        />
+      );
+    }
+
+    if (mode.kind === 'capture') {
+      return (
+        <QuickCaptureSurface
+          busy={busy}
+          onCapture={(input) => {
+            void run(() => quickCapture(input, new Date()));
+          }}
+          onCancel={() => {
+            setMode({ kind: 'console' });
+          }}
+        />
+      );
+    }
+
+    return undefined;
+  })();
 
   return (
     <>
       <a className="skip-link" href="#main">
         Skip to main content
       </a>
-
-      {/*
-        Scenario scaffolding, not state scaffolding. It chooses which synthetic
-        records the engine reasons over. Removed when the owner is entering real
-        records in Phase 6.
-      */}
-      <div className="proto">
-        <label className="proto-label" htmlFor="scenario">
-          scenario
-        </label>
-        <select
-          id="scenario"
-          className="proto-select"
-          value={interfaceState === 'engine' ? scenarioId : interfaceState}
-          onChange={(event) => {
-            const value = event.target.value;
-            const uiState = INTERFACE_STATES.find((entry) => entry.id === value);
-            if (uiState === undefined) {
-              setScenarioId(value);
-              setInterfaceState('engine');
-            } else {
-              setInterfaceState(uiState.id);
-            }
-            setDestination('now');
-            setNowView('decision');
-          }}
-        >
-          <optgroup label="Evidence — the engine computes these">
-            {SCENARIOS.map((entry) => (
-              <option value={entry.id} key={entry.id}>
-                {entry.name}
-              </option>
-            ))}
-          </optgroup>
-          <optgroup label="Interface states — not engine output">
-            {INTERFACE_STATES.map((entry) => (
-              <option value={entry.id} key={entry.id}>
-                {entry.label}
-              </option>
-            ))}
-          </optgroup>
-        </select>
-      </div>
 
       <div className="shell">
         <nav className="rail" aria-label="Main">
@@ -161,7 +344,7 @@ export function AppShell(): React.JSX.Element {
             className="rail-item rail-more"
             aria-expanded={moreOpen}
             onClick={() => {
-              setMoreOpen((open) => !open);
+              setMoreOpen((isOpen) => !isOpen);
             }}
             {...(UNDER_MORE.some((entry) => entry.id === destination)
               ? { 'aria-current': 'page' as const }
@@ -205,46 +388,94 @@ export function AppShell(): React.JSX.Element {
         <main className="body" id="main" tabIndex={-1}>
           <header className="head">
             <span className="clock">
-              {destination === 'now' && interfaceState === 'engine'
-                ? episode.clock
-                : activeLabel}
+              {destination === 'now' && episode !== undefined ? episode.clock : activeLabel}
             </span>
             <h1 className="headline">{destination === 'now' ? 'Now' : activeLabel}</h1>
           </header>
 
-          {destination === 'now' ? (
-            <NowSurface
-              episode={episode}
-              view={nowView}
-              interfaceState={interfaceState}
-              offline={offline}
-              onOpenChanges={() => {
-                setNowView('what-changed');
-              }}
-              onOpenWeekly={() => {
-                setNowView('weekly-direction');
-              }}
-              onOpenDirection={() => {
-                go('direction');
-              }}
-              onBack={() => {
-                setNowView('decision');
-              }}
-            />
+          {flow ??
+            (destination === 'now' ? (
+              <NowSurface
+                episode={episode ?? EMPTY_EPISODE}
+                view={nowView}
+                interfaceState={episode === undefined ? interfaceState : 'engine'}
+                offline={offline}
+                busy={busy}
+                guideEntry={GUIDE_ENTRY[suggested]}
+                openEpisodeCount={open.length}
+                errorDetail={writeFailure ?? error}
+                onRetry={() => {
+                  reportWriteFailure(undefined);
+                  void refresh();
+                }}
+                onRespond={respond}
+                onWeeklyRespond={weeklyRespond}
+                onOpenGuide={() => {
+                  setMode({ kind: 'guide', guide: suggested, depth: DEFAULT_DEPTH });
+                }}
+                onQuickCapture={() => {
+                  setMode({ kind: 'capture' });
+                }}
+                onRecordOutcome={() => {
+                  const target = open[0];
+                  if (target !== undefined) setMode({ kind: 'outcome', episode: target });
+                }}
+                onOpenChanges={() => {
+                  setNowView('what-changed');
+                }}
+                onOpenWeekly={() => {
+                  setNowView('weekly-direction');
+                }}
+                onOpenDirection={() => {
+                  go('direction');
+                }}
+                onBack={() => {
+                  setNowView('decision');
+                }}
+              />
+            ) : null)}
+
+          {flow === undefined && destination === 'timeline' ? (
+            <TimelineSurface records={records} />
           ) : null}
-          {destination === 'timeline' ? <TimelineSurface records={scenario.records} /> : null}
-          {destination === 'direction' ? (
-            <DirectionSurface episode={episode} records={scenario.records} />
+          {flow === undefined && destination === 'direction' && episode !== undefined ? (
+            <DirectionSurface episode={episode} records={records} />
           ) : null}
-          {destination === 'commitments' ? (
-            <CommitmentsSurface records={scenario.records} />
+          {flow === undefined && destination === 'commitments' ? (
+            <CommitmentsSurface records={records} />
           ) : null}
-          {destination === 'learning' ? <LearningSurface episode={episode} /> : null}
-          {destination === 'data-privacy' ? (
-            <DataPrivacySurface records={scenario.records} />
+          {flow === undefined && destination === 'learning' && episode !== undefined ? (
+            <LearningSurface episode={episode} />
+          ) : null}
+          {flow === undefined && destination === 'data-privacy' ? (
+            <DataPrivacySurface records={records} />
           ) : null}
         </main>
       </div>
     </>
   );
 }
+
+/**
+ * A placeholder for the surfaces that need an episode shape before one exists.
+ *
+ * Never rendered as content: whenever it is passed, `interfaceState` is loading,
+ * empty, error, or recovery, and `NowSurface` returns before touching it. It exists so
+ * the empty and error states can be reached without making every field optional.
+ */
+const EMPTY_EPISODE = {
+  episodeId: '',
+  at: '',
+  clock: '',
+  state: {
+    readings: [],
+    availableMinutes: { status: 'unknown' as const },
+    capacity: { status: 'unknown' as const },
+    protectedContexts: [],
+    contradictions: [],
+    unknowns: [],
+    staleAttributes: [],
+    basisRecordIds: [],
+    confidence: { label: 'insufficient-evidence' as const, why: '', dimensions: [] },
+  },
+} as unknown as Parameters<typeof NowSurface>[0]['episode'];

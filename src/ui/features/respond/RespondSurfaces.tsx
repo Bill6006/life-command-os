@@ -1,0 +1,257 @@
+import { useState } from 'react';
+import { Panel } from '../../components/primitives';
+import { PromptControl } from '../guides/PromptControl';
+import {
+  OUTCOME_PROMPTS,
+  QUICK_CAPTURE_KINDS,
+  type CapturePrompt,
+} from '../../../domain/prompts/definitions';
+import type { Answer, AnsweredPrompt } from '../../../application/commands/capture';
+import {
+  DECLINE_REASONS,
+  type DeclineReason,
+} from '../../../application/commands/decisionEpisode';
+
+/**
+ * The three short flows that hang off the decision: declining, closing a loop, and
+ * writing something down.
+ *
+ * All three are one panel with one job. None of them is a form, and none of them can
+ * be reached by accident — each is opened by a control the owner pressed.
+ */
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Can’t Now (`OWN-033`, LEG-049).
+ *
+ * Every reason on this list is a **circumstance**, not a character judgement. There is
+ * no "didn't feel like it", no "procrastinated", no "other (be honest)". Choosing one
+ * records a constraint that changes what the app may suggest next, and the copy says
+ * so plainly, because the fear this screen has to defuse is that saying no will be
+ * held against you.
+ */
+export function DeclineSurface({
+  statement,
+  busy,
+  onDecline,
+  onCancel,
+}: {
+  readonly statement: string;
+  readonly busy: boolean;
+  readonly onDecline: (reason: DeclineReason) => void;
+  readonly onCancel: () => void;
+}): React.JSX.Element {
+  return (
+    <div className="grid">
+      <Panel label="Can’t now" tone="decision" wide>
+        <p className="decision-statement">{statement}</p>
+        <p className="body">
+          What is in the way? This becomes a constraint on what gets suggested next.
+        </p>
+        <div className="scale scale-choices" role="group" aria-label="What is in the way">
+          {DECLINE_REASONS.map((reason) => (
+            <button
+              type="button"
+              key={reason.id}
+              className="scale-step"
+              disabled={busy}
+              onClick={() => {
+                onDecline(reason);
+              }}
+            >
+              <span className="scale-label">{reason.label}</span>
+            </button>
+          ))}
+        </div>
+        <p className="fine">
+          Declining is not recorded as evidence that the suggestion was wrong, and not as
+          anything about you. It records what was true at the time.
+        </p>
+        <div className="actions">
+          <button type="button" className="btn btn-link" onClick={onCancel}>
+            Back
+          </button>
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+export interface OpenEpisode {
+  readonly executionRecordId: string;
+  readonly recommendationRecordId: string;
+  readonly decisionEpisodeId: string | undefined;
+  readonly openedAt: string;
+  readonly statement: string;
+}
+
+/** The observable follow-ups asked for a general action, in order (`OBS-004`). */
+const FOLLOW_UPS: readonly CapturePrompt[] = [
+  OUTCOME_PROMPTS.completed,
+  OUTCOME_PROMPTS.duration,
+  OUTCOME_PROMPTS['still-interfering'],
+];
+
+/**
+ * Closing a loop.
+ *
+ * Note what is not asked: whether it worked, whether it helped, or how it felt. The
+ * questions are "did you finish", "how long", and "is the problem still in the way" —
+ * three things the owner can answer by remembering. What any of it means is the
+ * engine's job, and it will say `unresolved` rather than guess.
+ */
+export function OutcomeSurface({
+  episode,
+  busy,
+  onSubmit,
+  onCancel,
+}: {
+  readonly episode: OpenEpisode;
+  readonly busy: boolean;
+  readonly onSubmit: (answers: readonly AnsweredPrompt[]) => void;
+  readonly onCancel: () => void;
+}): React.JSX.Element {
+  const [answers, setAnswers] = useState<Record<string, Answer>>({});
+
+  const collected: readonly AnsweredPrompt[] = FOLLOW_UPS.map((prompt) => ({
+    prompt,
+    answer: answers[prompt.promptId] ?? { kind: 'not-answered' as const },
+    aboutRecordId: episode.executionRecordId,
+  }));
+
+  return (
+    <div className="grid">
+      <Panel label="What happened" tone="decision" wide>
+        <p className="decision-statement">{episode.statement}</p>
+        <p className="fine">Started {new Date(episode.openedAt).toLocaleString('en-GB')}</p>
+
+        {FOLLOW_UPS.map((prompt) => (
+          <div className="follow-up" key={prompt.promptId}>
+            <p className="body">{prompt.text}</p>
+            <PromptControl
+              prompt={prompt}
+              answer={answers[prompt.promptId]}
+              onAnswer={(next) => {
+                setAnswers({ ...answers, [prompt.promptId]: next });
+              }}
+            />
+            <button
+              type="button"
+              className="btn btn-link"
+              onClick={() => {
+                setAnswers({ ...answers, [prompt.promptId]: { kind: 'unsure' } });
+              }}
+            >
+              I cannot tell
+            </button>
+          </div>
+        ))}
+
+        <p className="fine">
+          Anything you leave blank stays unresolved. It is never counted as “no effect”.
+        </p>
+
+        <div className="actions">
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={busy}
+            onClick={() => {
+              onSubmit(collected);
+            }}
+          >
+            Save
+          </button>
+          <button type="button" className="btn btn-link" onClick={onCancel}>
+            Back
+          </button>
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Quick Capture — one event, written once (`OWN-063`).
+ *
+ * The shell only. Domain-specific captures reuse this write path in Phase 7 rather
+ * than adding parallel ones, which is what stops the same fact being entered in three
+ * places.
+ */
+export function QuickCaptureSurface({
+  busy,
+  onCapture,
+  onCancel,
+}: {
+  readonly busy: boolean;
+  readonly onCapture: (input: { readonly kind: string; readonly what: string }) => void;
+  readonly onCancel: () => void;
+}): React.JSX.Element {
+  const [kind, setKind] = useState<string | undefined>(undefined);
+  const [what, setWhat] = useState('');
+
+  return (
+    <div className="grid">
+      <Panel label="Note it down" tone="decision" wide>
+        <p className="body">What kind of thing was it?</p>
+        <div className="scale scale-choices" role="group" aria-label="Kind of event">
+          {QUICK_CAPTURE_KINDS.map((option) => (
+            <button
+              type="button"
+              key={option}
+              className={`scale-step${kind === option ? ' scale-step-on' : ''}`}
+              aria-pressed={kind === option}
+              onClick={() => {
+                setKind(option);
+              }}
+            >
+              <span className="scale-label">{option}</span>
+            </button>
+          ))}
+        </div>
+
+        <p className="body">What happened?</p>
+        <p className="field">
+          <label className="fine" htmlFor="capture-what">
+            in your own words
+          </label>
+          <textarea
+            id="capture-what"
+            className="field-input field-text"
+            rows={3}
+            maxLength={500}
+            value={what}
+            onChange={(event) => {
+              setWhat(event.target.value);
+            }}
+          />
+        </p>
+        <p className="fine">
+          Stored on this device and classified as a private note. One entry, used everywhere it
+          is relevant — you will not be asked for it again.
+        </p>
+
+        <div className="actions">
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={busy || kind === undefined || what.trim() === ''}
+            onClick={() => {
+              if (kind !== undefined) onCapture({ kind, what });
+            }}
+          >
+            Save
+          </button>
+          <button type="button" className="btn btn-link" onClick={onCancel}>
+            Back
+          </button>
+        </div>
+      </Panel>
+    </div>
+  );
+}
