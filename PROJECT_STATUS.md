@@ -4,161 +4,140 @@
 
 - Repository: life-command-os (https://github.com/Bill6006/life-command-os)
 - Plan version: 3.0 Final
-- Current phase: **Phase 6 — complete.** Prompts 7A and 7B both delivered.
-- Current prompt: PROMPT 7B (complete)
+- Current phase: **Phase 7 — shared domain framework complete.** Domain slices 8B–8H
+  outstanding.
+- Current prompt: PROMPT 8A (complete)
 
 ## Gate status
 
-- Status: **GREEN.** Every Prompt 7B gate requirement is met.
-- **Private local use: READY.**
+- Status: **GREEN.** Every Prompt 8A gate requirement is met.
+- Private local use: **READY** (unchanged from Prompt 7B).
 - Gate evidence:
-  - *Encrypted backup round-trip passes* — AES-256-GCM with a PBKDF2-SHA-256 key at
-    600,000 iterations. Standard Web Crypto primitives, no dependency, no invention.
-  - *Fresh-profile restore reproduces exact canonical history* — proved on the
-    **production build**, through the real interface, in a browser context with no
-    shared storage. No test bridge exists in that build to help it.
-  - *Corruption stops before mutation* — six damage cases, each leaving canonical state
-    byte-identical and taking no snapshot, because nothing was about to be replaced.
-  - *Rollback is tested* — including the refusal to roll back to a snapshot that fails
-    its own checksum.
-  - *Unknown fields and privacy metadata survive* — a field written by a newer version
-    is quarantined, stored, and put back on the next export.
-  - *AI export is not confused with backup* — it says it cannot restore anything in its
-    own opening lines, and withholds every sensitive class by default.
-  - *No private payload appears in repository evidence* — scanned clean; and a browser
-    test records every network request during a full session on the production build.
-  - *Accessibility, offline, reload, update, and recovery checks pass.*
+  - *No parallel database exists* — seven domains, one `records` store. The only domain
+    record family is `domain-preference`, which holds a preference and no content.
+  - *No domain content is duplicated across canonical records* — a capture writes one
+    event and `projectionsFor` returns **surfaces**, never records, so duplication is
+    unrepresentable rather than merely discouraged.
+  - *No domain can emit more than one candidate* — the limit is applied before
+    comparison, and a rejected second candidate is reported rather than dropped.
+  - *Now remains compact* — five panels maximum, decision first, and nothing about a
+    domain reaches Now at all. Asserted with a domain switched on.
+  - *No category score wall appears* — `DomainPanel` has no numeric field, and a test
+    walks every field of a live panel asserting none is a number.
+  - *Shared framework can be removed without breaking core records* — every domain
+    defaults to off, `originDomainId` is optional everywhere, and the global decision is
+    identical with a domain enabled.
 
 ## GitHub Pages owner preview
 
 - URL: **https://bill6006.github.io/life-command-os/**
 - Deployment status: **LIVE**
 - Deployed commit: current head of `main`. Data & Privacy reports the exact commit.
-- Hosted build contains synthetic content only: **YES** — in fact it now contains no
-  data at all. The app starts empty and the scenario corpus is not in the bundle.
+- Hosted build contains synthetic content only: **YES** — and no data at all; the app
+  starts empty and the scenario corpus is not in the production bundle.
 
 > **Service-worker note.** A returning visitor may see the previous build once; reload again.
 
-## What Phase 6 changed, in one paragraph
+## What Prompt 8A changed, and what it deliberately did not
 
-Through Phase 5 this was a demonstration: a scenario picker, synthetic records, and an
-engine reasoning over them. Prompt 7A replaced that with real local interactions — the
-controls write canonical records and the app reads what is stored. Prompt 7B made it
-safe to actually use: encrypted portable backup, verified restore with a dry run and an
-automatic safety snapshot, tested rollback, a real Data & Privacy surface, readable
-exports that withhold by default, and an application lock that is honest about being a
-curtain rather than a vault.
+It built the architecture seven areas of life will share, and switched none of them on.
 
-## Work completed — Prompt 7B
+**Nothing visible changed.** `Direction` shows exactly what it showed before, `Now` is
+untouched, and the deployed app behaves identically. That is the correct outcome: a
+definition is not an implementation, and enabling a domain before its slice exists would
+put an empty panel in front of the owner and call it a feature. Each slice from Prompt 8B
+switches on its own domain when it has something to say.
 
-- **Encrypted portable backup** — `infrastructure/crypto/backupCrypto.ts`. AES-256-GCM,
-  PBKDF2-HMAC-SHA-256 at 600,000 iterations, fresh salt and IV per export, and the
-  crypto metadata passed as additional authenticated data so editing it breaks
-  decryption rather than weakening the key. ADR-0009 records what was rejected.
-- **Versioned format** — `formatVersion` for the envelope and `cryptoVersion` for the
-  parameters, both plaintext, so a file from a newer version is *identified* rather
-  than misreported as a wrong password.
-- **The full recovery sequence** — validate everything, dry run, durable safety
-  snapshot, replace, verify against storage, roll back automatically on mismatch.
-- **Schema v3** — a `snapshots` store, so the way back is in the database rather than
-  in memory and survives the tab dying mid-restore.
-- **Unknown-field quarantine** — `unknownFields` on the envelope. A backup from a newer
-  build restores here without losing what this build cannot read.
-- **Field-level privacy** — `fieldPrivacy`, where an override may narrow a record's
-  class but never widen it.
-- **Real Data & Privacy** — health, backup, restore with preview and dry run, restore
-  points, application lock, readable export, storage, and build.
-- **Readable AI exports** — 7 / 30 / 90 days, all time, and custom, with every
-  sensitive class excluded until explicitly included, and withheld fields shown as
-  `[withheld: health]` rather than silently dropped.
-- **Storage failure handling** — quota and transaction failures typed separately from
-  invalid data; a stale tab yields its connection and says so instead of writing
-  through an old schema.
-- **The test bridge is gone from production** — compile-time stripped, and a test reads
-  the built artifact off disk to prove no trace of it survives.
-- **`docs/PRIVATE_ALPHA.md`** — what to do on day one, and every limit stated plainly.
+## Work completed
+
+- **Domain metadata for the seven approved areas** — `domain/domains/definitions.ts`.
+  What each reads, how it classifies its content, which capability channels it touches,
+  which legacy capabilities it inherits, and what it must never build. No candidate
+  generator, no panel content, no record family.
+- **`DomainPreferenceRecord`** — the twenty-third canonical family. Whether an area is
+  on is the owner's decision with a date and a reason, so it belongs in a backup. It
+  carries no domain content, and it has no destructive state: turning a domain off
+  appends a record and deletes nothing.
+- **The shared panel contract** — twelve fields, one component, every domain. North Star
+  contribution, condition, trajectory, confidence, freshness, drivers, bottleneck, what
+  changed, strongest evidence, one optional move, Update This Area, and visuals.
+- **The final candidate contract** — `intendedOutcome` and `observableFollowUp` are now
+  **required** on `candidateActionRecord`, plus origin domain, bottleneck, North Star
+  link, and capability effects.
+- **One candidate per domain**, enforced before comparison and reported when exceeded.
+- **Capability channels** — ten channels, six words, and no numeric field anywhere.
+- **Prompt ownership** — exactly one surface owns each question, derived from the prompt
+  id and checked.
+- **Manual Domain Focus shell** — the owner's constraint, labelled as theirs.
+- **Quick Capture plumbing** — one event, many projections, with duplicate detection.
+- **Visual eligibility** — meter, line, bar, stage, timeline, evidence summary, each
+  with a rule that can refuse, and eight declarations every visual must carry.
+- **Legacy provenance** on the envelope, whose `evidenceClass` is the literal
+  `legacy-heuristic` with no branch that promotes it.
 
 ### Decisions worth naming
 
-- **Verification asks the database, not the code.** After a restore, records are re-read
-  from IndexedDB and hashed. Comparing what was just written would prove only that the
-  code remembers what it did a moment ago. This ordering is also what makes "an
-  interrupted restore cannot report success" structural: an interruption means the
-  verification step never runs, so nothing reports success — and the snapshot taken
-  before the replacement survives, because it is durable.
-- **A wrong passphrase and a damaged file are one failure.** Separating them would tell
-  an attacker holding the file when a guess was structurally close, and tells the owner
-  nothing they would act on differently.
-- **The local database is not encrypted, and every surface that touches the subject
-  says so.** A browser page cannot encrypt its own storage at rest and still open
-  without a passphrase every time — the key would have to live where the page can read
-  it, which is where an attacker with the device can read it. Implementing it would
-  produce the appearance of encryption and none of the substance.
-- **No passphrase recovery, deliberately.** Any recovery path is a second way into the
-  file. The interface says "nobody can recover this passphrase — not you, not me, not
-  Anthropic, not GitHub" before the owner types one.
-- **Notifications are deferred with reasons, not half-built.** Push needs a server, in
-  an app whose central claim is that there is no server; local notifications need the
-  page open, in which case they tell you nothing. There is no honest third option, and
-  `docs/PRIVATE_ALPHA.md` §6 says so rather than shipping a stub.
-- **Two builds are served in CI, not one.** The regression suite needs to seed a corpus,
-  which needs the bridge; the private alpha must not contain one. Rather than weaken
-  either requirement, both builds are served and recovery is proved against production.
+- **A domain is a reading, not a store.** Every fact a domain shows comes from the same
+  canonical records everything else uses, filtered by category. That is the single
+  decision this whole prompt exists to make, and it is what stops the rebuild
+  reproducing the twelve-tab app it replaced.
+- **The capability effect type has nowhere to put a number.** Strict object, closed word
+  sets, and no function anywhere that totals them. The moment such a function exists
+  something will render it, and a wall of seven numbers is the score wall the gate
+  forbids.
+- **Routing returns surfaces, never records.** A function that returned records would be
+  one refactor away from returning copies of them, which is exactly how the legacy app
+  ended up with a work win stored in three places.
+- **A rejected second candidate is loud.** A domain quietly losing half its output looks
+  like a domain with nothing to say — the hardest kind of bug to notice.
+- **Manual focus is labelled as the owner's choice.** Without the label, choosing a
+  domain and receiving a recommendation is indistinguishable from the system
+  recommending it — except the system judged it best *within a constraint the owner
+  imposed*. The label is the feature.
+- **A meter that cannot refuse is a meter that will render "Fatherhood 68%".** The
+  eligibility rules exist for what they reject, not for what they allow.
+- **`intendedOutcome` is required rather than optional.** An optional intended outcome is
+  one most candidates eventually get written without, and an engine full of those learns
+  nothing while appearing to.
 
-## Files created or modified — Prompt 7B
+## Files created or modified
 
-Created (10): `src/infrastructure/crypto/backupCrypto.ts`;
-`src/infrastructure/backup/portableBackup.ts`;
-`src/infrastructure/database/snapshotStore.ts`;
-`src/application/commands/{recoveryCommands,appLock}.ts`;
-`src/application/queries/{aiExport,storageHealth}.ts`;
-`src/ui/features/data-privacy/LockScreen.tsx`; `scripts/build-e2e.mjs`;
-`tests/unit/{recovery,export}.test.ts`;
-`tests/e2e/{production-recovery,privacy-audit}.spec.ts`;
-`docs/PRIVATE_ALPHA.md`; `docs/decisions/ADR-0009-backup-encryption.md`
+Created (10): `src/domain/capabilities.ts`; `src/domain/domains/definitions.ts`;
+`src/domain/records/domains.ts`; `src/domain/prompts/ownership.ts`;
+`src/intelligence/domains/{registry,domainPanel,candidateLimit,manualFocus,captureRouting}.ts`;
+`src/intelligence/visuals/eligibility.ts`; `src/ui/components/visuals.tsx`;
+`src/ui/features/direction/{DomainPanelView,ManualFocusView}.tsx`;
+`tests/unit/domains.test.ts`; `tests/e2e/domains.spec.ts`
 
-Deleted (3): `src/infrastructure/backup/developmentBackup.ts`,
-`src/application/commands/backupCommands.ts`, `tests/unit/backup.test.ts` — the
-unencrypted development format, superseded rather than kept alongside.
-
-Modified: `domain/records/{envelope,index}.ts`;
-`infrastructure/database/{connection,migrations}.ts`;
-`application/commands/writeRecord.ts`; `application/queries/storageInfo.ts`;
-`app/{diagnostics,main}.tsx`; `ui/features/{shell/AppShell,now/NowSurface,data-privacy/DataPrivacySurface}.tsx`;
-`ui/design-system/console.css`; `vite.config.ts`; `playwright.config.ts`;
-`eslint.config.js`; `package.json`; `.gitignore`; three e2e specs; three unit tests;
+Modified: `domain/records/{index,envelope,decision}.ts`;
+`intelligence/{index,types}.ts`; `intelligence/intervention/candidateActions.ts`;
+`application/commands/{decisionEpisode,guideSession}.ts`; `app/scenarios.ts`;
+`ui/features/direction/DirectionSurface.tsx`; `ui/design-system/console.css`;
+`tests/fixtures/records.ts`; `tests/unit/records.test.ts`;
 `docs/{REQUIREMENTS,architecture/ARCHITECTURE_OVERVIEW}.md`
 
 ## Tests and evidence
 
-- **Unit: 259 passed**, up from 212. 54 new across recovery and export.
-- **Browser: 284 passed**, up from 268 — including **14 against the production build**
-  with no test bridge present.
-- Covers: AES-GCM round trip; salt and IV never reused; tampered ciphertext and tampered
-  crypto metadata both rejected; six corruption cases each leaving state untouched; the
-  dry run writing nothing; snapshot before replacement; rollback to exactly the previous
-  state; refusal to roll back a damaged snapshot; superseded records surviving a round
-  trip so history cannot silently shrink; unknown fields quarantined and restored;
-  every sensitive class withheld by default; field-level withholding; the four export
-  ranges; a v2→v3 migration that leaves canonical records alone; every network request
-  in a full production session being same-origin; nothing reaching the console;
-  `localStorage` holding no life data.
-- **Three real defects found by these tests and fixed rather than tested around:**
-  1. **Two failure messages did not say that nothing had changed.** The ones for a file
-     that is not a backup at all — which is exactly the case where someone picked the
-     wrong file and is most likely to panic. Found by a browser test asserting the
-     reassurance; the whole message set now carries it.
-  2. **`schemaVersion` and the store list were asserted as constants** in two older
-     tests, so the v3 migration failed them. Correct failures: the assertions were
-     updated, and a new test was added for the upgrade that actually carries risk —
-     v2 to v3 with canonical records present, which is what would catch a migration
-     written as a drop-and-rebuild.
-  3. **The e2e build script failed silently on Windows.** `spawnSync('npx.cmd')` without
-     a shell exits non-zero with no output, which surfaced as "webServer was not able to
-     start". Resolving the Vite binary through Node removed the shell from the problem.
-- One of my own assertions was wrong: an export test searched for a rendered timestamp
-  in the wrong format. Corrected to slice the document by heading, which tests the thing
-  it meant to test — that a record lands in the right section.
+- **Unit: 306 passed**, up from 259. 46 new for the framework.
+- **Browser: 298 passed**, up from 284. 14 new across desktop and mobile.
+- Covers: the seven domains registering no content family; every domain starting off; a
+  newer preference superseding an older one with both records kept; no destructive
+  preference state; deprioritised being readable and silent; a second domain candidate
+  rejected and reported; a candidate record with no intended outcome failing validation;
+  a numeric field on a capability effect failing to parse; benefits and costs partitioned
+  without netting; the full twelve-field panel with no numeric field anywhere; a domain
+  that reads nothing abstaining instead of inventing a condition; every domain move
+  marked subordinate; manual focus labelled as the owner's; one capture routed to five
+  surfaces as one record; duplicate captures detected; a meter refused over a construct
+  with no denominator; the evidence summary never refusing; and the global decision being
+  identical with a domain switched on.
+- **One real defect found and fixed rather than tested around:** the candidate contract
+  change made `intendedOutcome` and `observableFollowUp` required, which correctly broke
+  the fixture and the persisted-decision path. Both were updated to supply real values
+  rather than the requirement being softened to optional.
+- Two older assertions were correct failures and were updated: the family count moved to
+  23, and the "no domain-specific family" test was tightened to say *content* family and
+  given an extra probe, since `domain-preference` is deliberately not one.
 
 ## Privacy status
 
@@ -166,90 +145,89 @@ Modified: `domain/records/{envelope,index}.ts`;
 - Real personal data detected in tracked content: **NO**
 - Commit identity: GitHub noreply address only.
 - Dependency audit: `npm audit` — **0 vulnerabilities**.
-- Secret scan: clean. XSS surface: no `dangerouslySetInnerHTML`, `innerHTML`, `eval`, or
-  `new Function` anywhere in `src/`.
-- Network: no `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`, or `sendBeacon` in
-  `src/` — and verified at runtime, on the production build, across a full session.
-- **Runtime private-data readiness: READY.** See `docs/PRIVATE_ALPHA.md` before starting.
+- Domain-level privacy: every domain declares a default class, and captures inherit it —
+  a fatherhood capture is `child` data whatever else it is.
+- Runtime private-data readiness: **READY.** See `docs/PRIVATE_ALPHA.md`.
 
 ## Architecture decisions
 
-**ADR-0009 — Backup encryption: standard primitives, no invented cryptography.** Records
-the choice of AES-256-GCM and PBKDF2 at 600,000 iterations, and what was rejected:
-Argon2id (not in Web Crypto — would mean shipping a cryptographic dependency), a lower
-iteration count, encrypting the local database (dishonest rather than undesirable), any
-passphrase recovery mechanism, and distinguishing a wrong passphrase from a damaged file.
+No new ADRs. Prompt 8A is an application of decisions already recorded: ADR-0004
+(boundaries), ADR-0005 (append-oriented records), ADR-0008 (the Console's five-panel cap,
+which is why nothing about a domain reaches Now).
 
 ## New dependencies
 
-**None.** The cryptography is Web Crypto only.
+**None.**
 
 ## New abstractions or infrastructure
 
-**1. `infrastructure/crypto/`** — one file, two primitives, no dependency.
-- Active requirement: `OWN-066`, LEG-139; tasks 1–2.
-- Why smaller was insufficient: the parameters must travel with the file and be
-  authenticated, or a future change orphans old backups and an edited file gets a
-  weaker key.
+**1. `domain/domains/` and `intelligence/domains/`** — the framework.
+- Active requirement: `OWN-013`, `XDS-073`, Prompt 8A tasks 1–8.
+- Why smaller was insufficient: seven areas either share one architecture or grow seven,
+  and the second happens by default. The framework is the thing that has to exist before
+  the first slice, not after the third.
 
-**2. `infrastructure/backup/portableBackup.ts`** — replaces the unencrypted format.
-- Active requirement: `OWN-066`, `OWN-067`, LEG-128; tasks 4–5.
-- Why smaller was insufficient: eight distinct failure modes need eight distinct
-  messages, because "that did not work" on a recovery screen is the point at which
-  people start doing damage.
+**2. `domain/capabilities.ts`** — ten channels, no scores.
+- Active requirement: `OWN-014`, `CI-015`, task 5.
+- Why smaller was insufficient: cross-domain comparison needs shared vocabulary, and
+  shared vocabulary without a structural ban on numbers becomes a score within a phase.
 
-**3. `snapshots` store (schema v3)** — durable pre-restore safety snapshots.
-- Active requirement: `OWN-067`, LEG-134; task 4.
-- Why smaller was insufficient: the failure it guards against is the tab dying mid
-  restore, and an in-memory snapshot dies with it.
+**3. `intelligence/visuals/eligibility.ts`** — what a representation has earned.
+- Active requirement: `OWN-051`–`OWN-054`, `UX-003`, tasks 9–10.
+- Why smaller was insufficient: the rules exist to *refuse*. A helper that only rendered
+  charts would not have prevented a single one of the failures it is there to prevent.
 
-**4. `application/queries/aiExport.ts`** — readable export, separate product.
-- Active requirement: `OWN-068`–`OWN-070`; tasks 9–13.
-- Why smaller was insufficient: withholding has to be the default and has to be
-  *visible*, because an invisible omission reads as an absence of evidence.
-
-**Removed:** the unencrypted development backup format, and the test bridge from every
-production build.
+**4. `DomainPreferenceRecord`** — the twenty-third family.
+- Active requirement: task 1, Phase 7 gate ("one domain may be disabled without
+  corrupting history").
+- Why smaller was insufficient: enablement in a settings blob is data a restore drops.
 
 ## Known limitations
 
-- **The local database is not encrypted at rest.** Documented at length in
-  `docs/PRIVATE_ALPHA.md` §3 and stated on the Data & Privacy surface itself.
-- **The application lock hides the screen and nothing more.** It cannot protect a
-  compromised device, and it says so where the owner turns it on.
-- **Notifications do not exist.** Deferred with reasons rather than stubbed.
-- **The end-to-end regression suite runs against a build containing the test bridge.**
-  The production build is exercised by 14 tests covering recovery, the privacy audit,
-  and the bridge's absence — but the broader suite is not run twice. Phase 10's release
-  matrix is the place to widen that if it proves worth the CI time.
-- **Only three life areas are active.** Health, fatherhood, relationships, faith, home,
-  and money arrive in Phase 7; sleep and food are captured under time-and-capacity and
-  classified `health` for privacy until then.
-- **Beliefs are still derived, not persisted.**
-- **Cached startup is still unmeasured.** Bundle is ~158 kB gzipped, up from ~152 kB.
-- Carried forward: `frame-ancestors` unenforceable on Pages; Chromium-only matrix; no
-  router; service-worker staleness; deletion semantics undecided.
+- **No domain is implemented.** Seven definitions, zero slices — by design, and the app
+  looks identical because of it. Prompt 8B onwards.
+- **The default panel contribution is deliberately thin.** With no slice, a switched-on
+  domain summarises the shared category evidence it reads. That is honest and it is not
+  domain intelligence; a slice replaces it.
+- **`update-area:*` prompts do not exist yet.** Each arrives with its slice, and a test
+  reports any enabled domain that lacks one — so a slice cannot ship an area the owner
+  can read and cannot correct.
+- **`legacyProvenance` is defined and unwritten.** Phase 9 writes it.
+- **Fatherhood reads no category yet**, because no fatherhood category exists. It
+  abstains rather than borrowing another area's records.
+- **Cached startup is still unmeasured.** Bundle is ~160 kB gzipped, up from ~158 kB.
+- Carried forward: the local database is not encrypted at rest; the app lock hides the
+  screen only; notifications do not exist; the regression suite runs against a
+  bridge-enabled build with production covered by 14 dedicated tests;
+  `frame-ancestors` unenforceable on Pages; Chromium-only matrix; no router;
+  service-worker staleness; deletion semantics undecided.
 
 ## Deferred work
 
 | Deferred | Activates |
 | --- | --- |
-| Shared domain framework, all domain slices, action-specific follow-ups, Manual Domain Focus, Minimum Wins | Phase 7 |
+| Health, recovery, and energy | Prompt 8B |
+| Career, Azure, and learning | Prompt 8C |
+| Fatherhood and Adaya | Prompt 8D |
+| Emotional state, social, and relationships | Prompt 8E |
+| Faith and meaning | Prompt 8F |
+| Home and environment | Prompt 8G |
+| Money | Prompt 8H |
 | Cross-domain synthesis, full Can't Now regeneration, strategic review, optional model comparison | Phase 8 |
 | Quarantined legacy importer | Phase 9 |
-| Traceability generator, full browser matrix, startup measurement, release artifacts, notifications if ever justified | Phase 10 |
+| Traceability generator, full browser matrix, startup measurement, release artifacts | Phase 10 |
 
 ## Blockers
 
-**None blocking Prompt 8A.**
+**None blocking Prompt 8B.**
 
 One non-blocking owner action carried forward: **measure cached startup on the Samsung
 phone** and say if it exceeds three seconds.
 
 ## Next permitted prompt
 
-**PROMPT 8A — Phase 7: shared domain framework.**
+**PROMPT 8B — Phase 7 domain slice: Health, recovery, and energy.**
 
-Before that, one thing worth doing yourself: open the deployed app, put something real
-in it, take a backup, and **restore it into a fresh browser profile**. The tests prove
-that path works. Doing it once yourself is what turns that into trust.
+It is the right one to go first: sleep, food, and readiness are already being captured
+under time-and-capacity and classified as health data, so 8B gives evidence that already
+exists a proper home rather than starting from nothing.

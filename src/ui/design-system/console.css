@@ -1026,3 +1026,65 @@
 .changes button {
   margin-top: var(--space-2);
 }
+
+/* ========================================================================== */
+/* Domain visuals (Phase 7 Prompt 8A)                                         */
+/* ========================================================================== */
+
+/*
+ * A meter renders only where a valid target and denominator exist. The bar is
+ * decorative *support* for the number beside it, never the number itself — the
+ * percentage is always written out, so the meaning survives at any width.
+ */
+.meter-track {
+  height: 0.6rem;
+  margin: var(--space-2) 0;
+  background: var(--surface-panel-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  background: var(--accent-secondary);
+}
+
+/*
+ * A stage path. Position is marked by weight and a left border as well as by the
+ * word "current", so it survives without colour (UX-002).
+ */
+.stages {
+  list-style: none;
+  margin: var(--space-2) 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.stage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  padding: var(--space-1) var(--space-2);
+  border-left: 2px solid var(--border-default);
+  color: var(--text-secondary);
+  font-size: var(--text-fine);
+}
+
+.stage-current {
+  border-left-color: var(--accent-primary);
+  border-left-width: 4px;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.stage-name {
+  overflow-wrap: anywhere;
+}
+
+.figure {
+  margin: var(--space-3) 0 0;
+}

@@ -50,6 +50,7 @@ import {
 } from './evaluation';
 import { learnedBeliefRecord, type LearnedBeliefRecord } from './learning';
 import { guideSessionRecord, type GuideSessionRecord } from './guides';
+import { domainPreferenceRecord, type DomainPreferenceRecord } from './domains';
 import {
   questionAnswerRecord,
   questionRecord,
@@ -70,21 +71,27 @@ export * from './questions';
 export * from './learning';
 export * from './scales';
 export * from './guides';
+export * from './domains';
 
 /**
- * Twenty-two canonical record families.
+ * Twenty-three canonical record families.
  *
- * The twenty of the first vertical slice, plus `learned-belief` (**Phase 5**) and
- * `guide-session` (**Phase 6**). Each was deliberately absent until there was
- * behaviour for it to describe.
+ * The twenty of the first vertical slice, plus `learned-belief` (**Phase 5**),
+ * `guide-session` (**Phase 6**), and `domain-preference` (**Phase 7 Prompt 8A**).
+ * Each was deliberately absent until there was behaviour for it to describe.
  *
  * `guide-session` is canonical rather than derived because it cannot be
  * reconstructed from the observations it produced: a guide that legitimately asked
  * nothing new leaves no observations, and "I checked in and nothing had changed" is
  * a different fact from "I never opened it".
  *
- * Domain-specific families arrive one at a time in Phase 7. Adding one early is a
- * stop condition (`LEAN-001`).
+ * `domain-preference` is canonical because switching an area of life on or off is the
+ * owner's decision with a date and a reason, and it belongs in a backup. It carries
+ * **no domain content** — every fact a domain shows still comes from the shared
+ * records, which is what stops seven domains becoming seven databases.
+ *
+ * Domain-specific *content* families arrive one at a time from Prompt 8B. Adding one
+ * early is a stop condition (`LEAN-001`), and none exists yet.
  */
 export const RECORD_TYPES = [
   'observation',
@@ -109,6 +116,7 @@ export const RECORD_TYPES = [
   'question-answer',
   'learned-belief',
   'guide-session',
+  'domain-preference',
 ] as const;
 
 export type RecordType = (typeof RECORD_TYPES)[number];
@@ -135,7 +143,8 @@ export type CanonicalRecord =
   | QuestionRecord
   | QuestionAnswerRecord
   | LearnedBeliefRecord
-  | GuideSessionRecord;
+  | GuideSessionRecord
+  | DomainPreferenceRecord;
 
 /**
  * Schema per family.
@@ -167,6 +176,7 @@ export const RECORD_SCHEMAS: Record<RecordType, z.ZodType> = {
   'question-answer': questionAnswerRecord,
   'learned-belief': learnedBeliefRecord,
   'guide-session': guideSessionRecord,
+  'domain-preference': domainPreferenceRecord,
 };
 
 /** Families that record first-hand fact rather than system interpretation. */
@@ -181,6 +191,7 @@ export const OBSERVED_RECORD_TYPES = [
   'outcome',
   'question-answer',
   'guide-session',
+  'domain-preference',
 ] as const satisfies readonly RecordType[];
 
 export function isRecordType(value: unknown): value is RecordType {

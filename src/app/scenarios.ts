@@ -114,6 +114,26 @@ function commitment(
   } as unknown as CanonicalRecord;
 }
 
+/**
+ * An owner decision to switch an area of life on, off, or down.
+ *
+ * A preference, never content: it says which areas are readable, and every fact those
+ * areas display still comes from the shared records above.
+ */
+function domainPreference(
+  domainId: string,
+  state: 'enabled' | 'deprioritised' | 'disabled',
+  reason?: string,
+): CanonicalRecord {
+  return {
+    ...envelope('domain-preference', -2 * DAY),
+    ...OBSERVED,
+    domainId,
+    state,
+    ...(reason === undefined ? {} : { reason }),
+  } as unknown as CanonicalRecord;
+}
+
 function star(): CanonicalRecord {
   return {
     ...envelope('north-star', -30 * DAY),
@@ -637,6 +657,22 @@ export const SCENARIOS: readonly Scenario[] = [
       commitment('Commitment Two', 'career-work-learning', 'blocked', false),
       forecastRecord('declining', -35 * DAY, -28 * DAY),
       context({ minutes: 40, capacity: 'moderate', occurredMs: -30 * DAY }),
+    ],
+  ),
+
+  /* --- Phase 7 Prompt 8A: the shared domain framework --------------------- */
+
+  build(
+    'domain-enabled',
+    'One area switched on',
+    'Career and learning turned on by the owner, and money deprioritised. Expect one full panel, one readable-and-silent panel, and a Now that has not changed at all.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 11),
+      ...decliningWeeks(),
+      domainPreference('career-and-learning', 'enabled'),
+      domainPreference('money', 'deprioritised', 'Not this season'),
+      context({ minutes: 40, capacity: 'moderate' }),
     ],
   ),
 

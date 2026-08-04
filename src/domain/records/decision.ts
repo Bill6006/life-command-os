@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { capabilityEffect } from '../capabilities';
+import { DOMAIN_IDS } from '../domains/definitions';
 import { lifeCategory, protectedContext } from './categories';
 import { envelopeShape, isoInstant, timeWindow, withEnvelopeInvariants } from './envelope';
 import { confidence, evidenceValue } from './semantics';
@@ -28,12 +30,54 @@ export const REVERSIBILITY = ['reversible', 'partially-reversible', 'irreversibl
  *
  * Candidates are generated and compared internally; only the selected one is ever
  * surfaced (`INTEL-006`). Nothing in this schema is designed for display as a list.
+ *
+ * ## The final contract (Prompt 8A task 3, Blueprint §7.1)
+ *
+ * Two fields are **required**, and their absence is the definition of an invalid
+ * candidate (`XDS-016`, `AT-017`):
+ *
+ *   - `intendedOutcome` — what this action is *for*, stated as something that could be
+ *     observed. Without it there is nothing to evaluate against later, and the whole
+ *     learning loop degenerates into "we did things and time passed".
+ *   - `observableFollowUp` — which observable question closes it, and within what
+ *     window. A candidate that cannot say how anyone would know whether it worked is
+ *     not a proposal, it is a suggestion.
+ *
+ * Making these required rather than optional is deliberate: an optional intended
+ * outcome is one that most candidates will eventually be written without.
  */
 export const candidateActionRecord = withEnvelopeInvariants(
   z.strictObject({
     ...envelopeShape('candidate-action', 'derived'),
     statement: z.string().min(1).max(400),
     category: lifeCategory,
+    /**
+     * The domain that produced it, when a domain did. Core candidates have none —
+     * which is also what lets the domain framework be removed without invalidating
+     * a single existing record.
+     */
+    originDomainId: z.enum(DOMAIN_IDS).optional(),
+    /** Required. What this is for, in terms something could later be observed against. */
+    intendedOutcome: z.string().min(1).max(300),
+    /** Required. How the result gets observed, and by when. */
+    observableFollowUp: z.strictObject({
+      /** A prompt id from the behaviour-first catalogue. Never a "did it work?". */
+      promptId: z.string().min(1).max(120),
+      /** How long after execution the effect is considered observable. */
+      windowHours: z
+        .number()
+        .min(1)
+        .max(24 * 90),
+    }),
+    /** The verified bottleneck this addresses, when it addresses one. */
+    bottleneckAddressed: z.string().max(300).optional(),
+    /** How it relates to enduring direction (`OWN-002`). */
+    northStarLink: z.string().max(300).optional(),
+    /**
+     * Expected effects on capability channels. Qualitative, never netted, and
+     * structurally incapable of becoming a score — see `domain/capabilities.ts`.
+     */
+    capabilityEffects: z.array(capabilityEffect).default([]),
     timing: z.strictObject({
       earliestAt: isoInstant.optional(),
       latestAt: isoInstant.optional(),

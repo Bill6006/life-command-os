@@ -5,6 +5,8 @@ import {
   type GuideKind,
   type GuideOutcome,
 } from '../../domain/records';
+import { domainDefinition, type DomainId } from '../../domain/domains/definitions';
+import { captureAttribute } from '../../intelligence/domains/captureRouting';
 import type { EpisodeResult } from '../../intelligence';
 import { localTimeContextFor, observationDrafts, type AnsweredPrompt } from './capture';
 import { writeRecord, writeRecords, type WriteResult } from './writeRecord';
@@ -176,7 +178,7 @@ export async function respondToWeeklyDirection(
  * three places, which is the duplication the whole rebuild exists to end.
  */
 export async function quickCapture(
-  input: { readonly kind: string; readonly what: string },
+  input: { readonly kind: string; readonly what: string; readonly domainId?: DomainId },
   now: Date,
 ): Promise<WriteResult> {
   const text = input.what.trim();
@@ -185,10 +187,8 @@ export async function quickCapture(
   }
 
   const instant = now.toISOString();
-  const slug = input.kind
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+  const definition =
+    input.domainId === undefined ? undefined : domainDefinition(input.domainId);
 
   return writeRecord({
     recordId: newRecordId(),
@@ -199,10 +199,14 @@ export async function quickCapture(
     localTime: localTimeContextFor(now),
     source: 'user-entry',
     provenance: { method: 'direct-report' },
-    // Free text about the owner's life. Sensitive until they say otherwise.
-    privacy: 'note',
-    category: 'career-work-learning',
-    attribute: `capture:${slug === '' ? 'event' : slug}`,
+    /*
+     * A domain capture inherits its domain's classification — a fatherhood moment is
+     * `child` data whatever else it is. Without one, free text about the owner's life
+     * is a private note until they say otherwise.
+     */
+    privacy: definition?.privacy ?? 'note',
+    category: definition?.reads[0] ?? 'career-work-learning',
+    attribute: captureAttribute(input.kind, input.domainId),
     value: { kind: 'note', text },
   });
 }

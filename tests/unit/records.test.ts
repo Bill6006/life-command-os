@@ -24,9 +24,16 @@ beforeEach(() => {
  * Gate requirement: every active core record validates independently.
  */
 describe('core record families', () => {
-  it('registers twenty-two families: the first slice, learned-belief, and guide-session', () => {
-    expect(RECORD_TYPES).toHaveLength(22);
+  it('registers twenty-three families, none of them domain content', () => {
+    expect(RECORD_TYPES).toHaveLength(23);
     expect(Object.keys(RECORD_SCHEMAS).sort()).toEqual([...RECORD_TYPES].sort());
+  });
+
+  it('registers DomainPreferenceRecord, activated in Phase 7 Prompt 8A', () => {
+    // A preference, not a truth store. Whether an area is switched on is the owner's
+    // decision with a date; every fact a domain shows still comes from the shared
+    // records, which is what stops seven domains becoming seven databases.
+    expect(RECORD_TYPES).toContain('domain-preference');
   });
 
   it('registers LearnedBeliefRecord, activated in Phase 5', () => {
@@ -42,9 +49,17 @@ describe('core record families', () => {
     expect(RECORD_TYPES).toContain('guide-session');
   });
 
-  it('still registers no domain-specific family', () => {
-    // Phase 7 activates those, one domain at a time.
-    for (const domainish of ['sleep', 'mood', 'expense', 'workout', 'medication']) {
+  it('still registers no domain-specific content family', () => {
+    // Prompt 8B onwards activates those, one domain at a time. `domain-preference`
+    // is not one of them: it holds a preference, never domain content.
+    for (const domainish of [
+      'sleep',
+      'mood',
+      'expense',
+      'workout',
+      'medication',
+      'milestone',
+    ]) {
       expect(RECORD_TYPES.some((type) => type.includes(domainish))).toBe(false);
     }
   });

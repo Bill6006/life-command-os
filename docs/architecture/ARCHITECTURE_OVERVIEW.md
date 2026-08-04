@@ -59,6 +59,7 @@ life-command-os/
       schemas/
       policies/
       prompts/          # Phase 6 — the behaviour-first question boundary
+      domains/          # Phase 7 — domain metadata, no domain content
     application/
       commands/
       queries/
@@ -71,6 +72,8 @@ life-command-os/
       evaluation/
       learning/
       guides/           # Phase 6 — deterministic guide planning
+      domains/          # Phase 7 — the shared domain framework
+      visuals/          # Phase 7 — which representation evidence has earned
       change-detection/
       questioning/
     infrastructure/
@@ -128,6 +131,15 @@ requires (`ARCH-001`).
 - **`logging/` is still empty, and that is the design.** There is no payload logging
   anywhere; a browser test drives a full session on the production build and fails if
   anything reaches the console at all.
+- **A domain is a reading, not a store.** `domain/domains/` holds metadata and
+  `intelligence/domains/` holds the framework that turns shared canonical records into
+  a panel. Neither creates a table, a query, or a record family for domain content —
+  the only domain family is `domain-preference`, which holds a preference and nothing
+  else. That is what stops seven domains becoming seven databases (`XDS-073`).
+- **The framework is removable.** `originDomainId` is optional on every record that
+  could carry it, and every domain defaults to disabled, so deleting both directories
+  leaves the canonical records valid, the engine running, and every surface working. A
+  test asserts the global decision is identical with a domain switched on.
 
 ### 2.2 The importer boundary is a rule, not a directory
 

@@ -5,6 +5,7 @@ import type {
   ContextSnapshotRecord,
   ExecutionRecord,
   ForecastEvaluationRecord,
+  DomainPreferenceRecord,
   GoalRecord,
   GuideSessionRecord,
   InferredStateRecord,
@@ -253,6 +254,11 @@ export function aCandidateAction(
     ...derived([fixtureId(9006)]),
     statement: 'Activity One for 25 minutes',
     category: 'career-work-learning',
+    // Required by the final candidate contract: a candidate that cannot say what it is
+    // for, or how the result would be observed, is invalid (`XDS-016`).
+    intendedOutcome: 'The block is started and Goal One moves',
+    observableFollowUp: { promptId: 'outcome:completed', windowHours: 24 },
+    capabilityEffects: [],
     timing: {},
     durationMinutes: 25,
     friction: 'low',
@@ -477,6 +483,19 @@ export function aLearnedBelief(
   } as LearnedBeliefRecord;
 }
 
+/** A domain preference (Phase 7 Prompt 8A). */
+export function aDomainPreference(
+  overrides: Partial<DomainPreferenceRecord> = {},
+): DomainPreferenceRecord {
+  return {
+    ...envelope('domain-preference', 34),
+    ...OBSERVED,
+    domainId: 'career-and-learning',
+    state: 'enabled',
+    ...overrides,
+  } as DomainPreferenceRecord;
+}
+
 /** A guide session (Phase 6). Completed with nothing skipped. */
 export function aGuideSession(
   producedRecordIds: readonly string[] = [],
@@ -537,5 +556,6 @@ export function oneOfEveryFamily(): Record<string, unknown> {
     'question-answer': aQuestionAnswer(question.recordId),
     'learned-belief': aLearnedBelief(effectEvaluation.recordId),
     'guide-session': aGuideSession([observation.recordId]),
+    'domain-preference': aDomainPreference(),
   };
 }

@@ -1,5 +1,7 @@
 import { KeyValues, Panel } from '../../components/primitives';
 import { GraphFigure } from '../../components/GraphFigure';
+import { DomainPanelView } from './DomainPanelView';
+import { ManualFocusView } from './ManualFocusView';
 import type { EpisodeResult } from '../../../intelligence';
 import type { CanonicalRecord } from '../../../domain/records';
 import {
@@ -53,6 +55,25 @@ export function DirectionSurface({
           </ul>
         )}
       </Panel>
+
+      {/*
+        Domains, when any are switched on. Every one uses the shared panel contract, so
+        an area of life cannot acquire its own layout or its own standard of evidence.
+        Nothing renders here today: no slice exists yet, and a domain is off until the
+        owner turns it on.
+      */}
+      {episode.domains.length > 0 ? (
+        <Panel label="Areas of life" tone="quiet" wide>
+          <p className="fine">
+            Switched on by you, and readable here. Each shows the same twelve things, and each
+            of its moves is subordinate to the single answer on Now.
+          </p>
+        </Panel>
+      ) : null}
+      <ManualFocusView panels={episode.domains} />
+      {episode.domains.map((panel) => (
+        <DomainPanelView panel={panel} key={panel.domainId} />
+      ))}
 
       {episode.categories.map((category) => (
         <Panel label={categoryLabel(category.category)} key={category.category}>

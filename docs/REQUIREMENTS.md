@@ -2,7 +2,7 @@
 
 **Status:** Controlling
 **Plan version:** 3.0 Final
-**Current phase:** Phase 6 — complete (Prompts 7A and 7B)
+**Current phase:** Phase 7 — Prompt 8A complete; domain slices 8B–8H outstanding
 
 **Controlling artifacts from v3.0.** The Final Product Blueprint, Updated Requirements
 Register v2, Final Acceptance Test Matrix, and Final Legacy Decisions map now supply the
@@ -447,6 +447,57 @@ rather than hoped for: an interruption at any point means the verification step 
 runs, so nothing reports success — and the safety snapshot, written before the
 replacement began, survives the interruption because it is in the database rather than
 in memory.
+
+---
+
+## 3f. Active requirement records — Phase 7, Prompt 8A
+
+| ID | Implementation | Test IDs | Notes |
+|---|---|---|---|
+| Domain metadata | `domain/domains/definitions.ts` — seven approved domains | `domains.test.ts` → `domain metadata describes without implementing` (5) | Metadata only. No candidate generator, no panel content, no record family |
+| `XDS-073` | `domain-preference` is the only domain family; every fact comes from shared records | `creates no domain-specific record family` | Seven domains, one store. No parallel database |
+| `OWN-013` | `intelligence/domains/domainPanel.ts` — the twelve-field contract | `the panel contract is the same for every domain` (5); `domains.spec.ts` → `shows the full panel contract` | One component renders every domain, so an area cannot acquire its own standard of evidence |
+| `XDS-015` `AT-016` | `enforceOneCandidatePerDomain`, applied before comparison in `runEpisode` | `a domain may offer one candidate, and no more` (4) | A second candidate is rejected **and reported**, never silently dropped |
+| `XDS-016` `AT-017` | `intendedOutcome` and `observableFollowUp` required on `candidateActionRecord` | `rejects a candidate record with no intended outcome or follow-up` | A candidate that cannot say what it is for has nothing to be evaluated against |
+| `OWN-014` `CI-015` | `domain/capabilities.ts` — ten channels, six words, no numeric field | `capability channels cannot become a score` (4) | A numeric field is a parse error. There is no function anywhere that totals them |
+| `XDS-014` | `domain/prompts/ownership.ts` | `exactly one surface owns each question` (5) | Ownership is derived from the prompt id, so two lists cannot drift apart |
+| `OWN-004` `XDS-033` | `intelligence/domains/manualFocus.ts`; `ManualFocusView` | `manual focus is the owner's constraint, labelled as such` (3); browser (1) | `chosenByOwner` is on the result and rendered — the label is the feature |
+| `OWN-003` `XDS-032` | `DomainMove.subordinate` is `true` with no way to unset it | `marks every domain move subordinate` | A domain move is never the answer to "what now" |
+| `OWN-063` `AT-065` | `intelligence/domains/captureRouting.ts` | `one capture, one canonical event` (4) | Routing returns *surfaces*, never records, so duplication is unrepresentable |
+| `OWN-051` `AT-081` | `intelligence/visuals/eligibility.ts` — `meterEligibility` | `a visual has to earn its place` (8) | Refuses a percentage over a construct with no denominator |
+| `OWN-052`–`OWN-054` | Line, bar, stage, timeline, and evidence-summary eligibility | same | The evidence summary never refuses, so there is always something honest to render |
+| `UX-003` (task 10) | `VisualSpec` — eight required declarations | `visuals.tsx` renders all eight | A visual that cannot state its decision question cannot be constructed |
+| `XDS-009` `AT-118` | `legacyProvenance` on the envelope | Schema; written from Phase 9 | `evidenceClass` is the literal `legacy-heuristic`. There is no branch that promotes a legacy rule to research |
+| `OWN-070` (domain level) | `DomainDefinition.privacy`; captures inherit it | `classifies sensitive areas as sensitive by default` | A fatherhood capture is `child` data whatever else it is |
+| Gate: framework removable | `originDomainId` optional everywhere; domains default to `disabled` | `the framework can be removed without breaking core records` (2) | The global decision is byte-identical with a domain switched on |
+
+### Why every domain ships switched off
+
+A definition is not an implementation. Enabling a domain before its slice exists would
+put an empty panel in front of the owner and call it a feature — and it would make the
+compactness and score-wall gates pass on a screen nobody had really built.
+
+So Prompt 8A ships the framework silent. `Direction` shows exactly what it showed
+before, `Now` is untouched, and the browser suite proves both. Each slice from Prompt
+8B enables its own domain when it has something to say.
+
+### Prompt ownership
+
+Exactly one surface owns each question, checked rather than assumed:
+
+| Owner | Asks about |
+|---|---|
+| `guide` | Present state and available capacity |
+| `update-this-area` | One domain's own state, on demand |
+| `decision-episode` | What happened after a specific action |
+| `review` | Strategic conflicts, weekly and seasonal |
+| `data-privacy` | Storage, backup, export, and consent |
+
+Seven domains, five guides, and a weekly review all have a legitimate interest in "how
+is your energy". Without an ownership rule each adds it, and the owner is asked four
+times in a morning by four features that each believe they asked once. That is how the
+legacy app became a wall of checkboxes — not by decision, but by nobody owning the
+question.
 
 ---
 

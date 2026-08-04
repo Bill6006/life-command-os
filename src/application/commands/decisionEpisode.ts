@@ -188,6 +188,16 @@ function decisionDrafts(episode: EpisodeResult, now: Date): PersistedDecision | 
     provenance: { method: 'derived', derivedFromRecordIds: [...basis] },
     statement: action.candidate.statement,
     category: action.candidate.category,
+    intendedOutcome: action.candidate.intendedOutcome,
+    observableFollowUp: {
+      promptId: action.candidate.followUp.promptId,
+      windowHours: action.candidate.followUp.windowHours,
+    },
+    capabilityEffects: [...action.candidate.capabilityEffects],
+    ...(action.candidate.originDomainId === undefined
+      ? {}
+      : { originDomainId: action.candidate.originDomainId }),
+    ...(action.northStar === undefined ? {} : { northStarLink: action.northStar.relevance }),
     timing: {},
     durationMinutes: action.candidate.durationMinutes,
     friction: action.candidate.friction,

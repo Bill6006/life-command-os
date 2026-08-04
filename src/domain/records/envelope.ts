@@ -228,6 +228,29 @@ export function envelopeShape<T extends string>(recordType: T, basis: EvidenceBa
      * Restored to the top level on export.
      */
     unknownFields: z.record(z.string(), z.unknown()).optional(),
+    /**
+     * Where this came from if it came from the old application (`XDS-009`, LEG-150).
+     *
+     * Present only on imported content. Its purpose is to stop a legacy heuristic from
+     * quietly acquiring the authority of research or of personal evidence: whatever
+     * the old app believed, an imported rule stays labelled `legacy-heuristic` for as
+     * long as it exists, and the interface renders that label rather than hiding it.
+     *
+     * Phase 9 writes these. Nothing in Phases 0–8 does, which is why it is optional.
+     */
+    legacyProvenance: z
+      .strictObject({
+        sourceSystem: z.string().min(1).max(80),
+        /** The identifier the old system used. Kept so an import stays idempotent. */
+        legacyId: z.string().min(1).max(200),
+        /** Its disposition in the legacy decisions map. */
+        disposition: z.enum(['keep', 'improve', 'replace', 'retire', 'deferred']),
+        /** Always this. There is no branch that promotes a legacy rule to research. */
+        evidenceClass: z.literal('legacy-heuristic'),
+        importedAt: isoInstant,
+        note: z.string().max(300).optional(),
+      })
+      .optional(),
     /** The record this one replaces. Backwards-pointing only, never mutated in. */
     supersedesRecordId: z.uuid().optional(),
     /** Links the full chain of one decision episode together. */

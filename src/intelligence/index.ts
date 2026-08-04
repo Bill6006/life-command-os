@@ -24,8 +24,13 @@ import { summariseCategories } from './state/categorySummaries';
 import { focusedHoursTrajectory } from './state/trajectories';
 import type { EpisodeCore } from './types';
 
+import { buildDomainPanels, type DomainPanel } from './domains/domainPanel';
+import { enforceOneCandidatePerDomain } from './domains/candidateLimit';
+
 export * from './types';
 export * from './contracts';
+export type { DomainPanel, DomainContribution, DomainMove } from './domains/domainPanel';
+export type { ResolvedDomain } from './domains/registry';
 export type { ForecastEvaluation, EffectivenessEvaluation } from './evaluation/evaluate';
 export type { BeliefState } from './learning/beliefs';
 export type { Graph, TrendGraph, ComparisonGraph } from './learning/insights';
@@ -50,6 +55,13 @@ export interface LearningResult {
 
 export interface EpisodeResult extends EpisodeCore {
   readonly learning: LearningResult;
+  /**
+   * One panel per domain the owner can see (Prompt 8A).
+   *
+   * Empty until a domain is switched on, which is the current state: no slice exists
+   * yet, so nothing new reaches any surface. The framework is wired and silent.
+   */
+  readonly domains: readonly DomainPanel[];
 }
 
 /**
@@ -70,7 +82,14 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
   const categories = summariseCategories(records, state, trajectory, now);
   const forecast = untreatedForecast(records, trajectory, now);
 
-  const candidates = generateCandidates(records, state, now);
+  /*
+   * The one-candidate-per-domain limit is applied before comparison, not after. A
+   * domain that offers two gets one compared and one reported — so a slice's mistake
+   * shows up as a rejection rather than as a menu reaching the surface (`XDS-015`).
+   */
+  const candidates = enforceOneCandidatePerDomain(
+    generateCandidates(records, state, now),
+  ).accepted;
   const effects = candidates.map((candidate) => predictEffects(candidate, state));
 
   const { output, rejected } = selectOutput(records, state, candidates, effects, forecast);
@@ -141,6 +160,7 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
     output,
     weeklyDirection,
     learning: { forecastEvaluations, effectiveness, beliefs, graphs, continuity, absence },
+    domains: buildDomainPanels(records, categories, whatChanged.changes),
     internal: { candidates, effects, rejected },
   };
 }

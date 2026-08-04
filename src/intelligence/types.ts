@@ -6,6 +6,8 @@ import type {
   ProtectedContext,
   TrajectoryDirection,
 } from '../domain/records';
+import type { CapabilityEffect } from '../domain/capabilities';
+import type { DomainId } from '../domain/domains/definitions';
 
 /**
  * Structured results emitted by the intelligence layer.
@@ -126,6 +128,20 @@ export interface CandidateAction {
   readonly id: string;
   readonly statement: string;
   readonly category: LifeCategory;
+  /**
+   * The final candidate contract (Prompt 8A task 3, `XDS-016`).
+   *
+   * `intendedOutcome` and `followUp` are **required**, here and in the record schema.
+   * A candidate that cannot say what it is for, or how anyone would know whether it
+   * happened, has nothing to be evaluated against — and an engine full of those learns
+   * nothing while appearing to.
+   */
+  readonly intendedOutcome: string;
+  readonly followUp: { readonly promptId: string; readonly windowHours: number };
+  /** Set when a domain produced it. The core engine's own candidates have none. */
+  readonly originDomainId?: DomainId | undefined;
+  /** Qualitative, never netted, structurally unable to become a score. */
+  readonly capabilityEffects: readonly CapabilityEffect[];
   readonly durationMinutes: number;
   readonly minimumMinutes: number;
   readonly minimumVersion: string;
