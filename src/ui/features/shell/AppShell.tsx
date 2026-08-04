@@ -36,6 +36,7 @@ import {
 } from '../../../intelligence/guides/planGuide';
 import { isLockEnabled, unlock } from '../../../application/commands/appLock';
 import { setDomainState } from '../../../application/commands/domainPreference';
+import { quickCaptureOptions } from '../../../domain/capture/registry';
 import type { DomainId } from '../../../domain/domains/definitions';
 import { onDatabaseSuperseded } from '../../../application/queries/storageInfo';
 import { LockScreen } from '../data-privacy/LockScreen';
@@ -331,6 +332,11 @@ export function AppShell(): React.JSX.Element {
       return (
         <QuickCaptureSurface
           busy={busy}
+          domainOptions={quickCaptureOptions(
+            episode.domains
+              .filter((panel) => panel.state === 'enabled')
+              .map((panel) => panel.domainId),
+          )}
           onCapture={(input) => {
             void run(() => quickCapture(input, new Date()));
           }}

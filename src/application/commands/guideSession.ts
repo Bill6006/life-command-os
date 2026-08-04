@@ -178,7 +178,11 @@ export async function respondToWeeklyDirection(
  * three places, which is the duplication the whole rebuild exists to end.
  */
 export async function quickCapture(
-  input: { readonly kind: string; readonly what: string; readonly domainId?: DomainId },
+  input: {
+    readonly kind: string;
+    readonly what: string;
+    readonly domainId?: DomainId | undefined;
+  },
   now: Date,
 ): Promise<WriteResult> {
   const text = input.what.trim();

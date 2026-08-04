@@ -24,8 +24,8 @@ beforeEach(() => {
  * Gate requirement: every active core record validates independently.
  */
 describe('core record families', () => {
-  it('registers twenty-four families, one of them domain content', () => {
-    expect(RECORD_TYPES).toHaveLength(24);
+  it('registers twenty-five families, two of them domain content', () => {
+    expect(RECORD_TYPES).toHaveLength(25);
     expect(Object.keys(RECORD_SCHEMAS).sort()).toEqual([...RECORD_TYPES].sort());
   });
 
@@ -56,11 +56,18 @@ describe('core record families', () => {
     expect(RECORD_TYPES).toContain('guide-session');
   });
 
+  it('registers MilestoneObservationRecord, added with the Fatherhood slice (Prompt 8D)', () => {
+    // Irreducible for its own reason: an answer against a developmental checklist is
+    // meaningless without which list and which revision it was answered against, and
+    // checklists get revised.
+    expect(RECORD_TYPES).toContain('milestone-observation');
+  });
+
   it('adds domain content families only with their slice', () => {
     // One per slice at most, and only where the content is irreducible. Health needed
     // none — everything it reads is an ordinary observation. These belong to slices
     // that have not run.
-    for (const notYet of ['milestone', 'expense', 'workout', 'medication', 'faith-practice']) {
+    for (const notYet of ['expense', 'workout', 'medication', 'faith-practice', 'boundary']) {
       expect(
         RECORD_TYPES.some((type) => type.includes(notYet)),
         notYet,

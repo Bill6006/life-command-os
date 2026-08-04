@@ -1,6 +1,8 @@
 import type { LifeCategory } from '../records/categories';
 import type { PrivacyClass } from '../records/envelope';
 import { STUDY_BARRIERS } from '../career/ladder';
+import { SKILL_LEVELS, SKILL_LEVEL_LABELS } from '../fatherhood/development';
+import { MILESTONE_STATUS_LABELS, REPORTABLE_MILESTONE_STATUSES } from '../records/fatherhood';
 import { MEDITATION_PURPOSE_LABELS, MEDITATION_PURPOSES } from '../health/actions';
 import { SCALE_LIST, scaleAttribute, type ScaleId } from '../records/scales';
 import { assertPromptCatalogue, type PromptDefinition } from './policy';
@@ -702,6 +704,159 @@ export const CAREER_PROMPTS: readonly CapturePrompt[] = [
 ];
 
 /* -------------------------------------------------------------------------- */
+/* Fatherhood and child development (Prompt 8D)                                */
+/* -------------------------------------------------------------------------- */
+
+const SUPPORT_LEVELS = SKILL_LEVELS.map((level) => SKILL_LEVEL_LABELS[level]);
+
+/**
+ * Every question this domain asks is about **what happened**, never about why.
+ *
+ * The ones that would be easiest to write and worst to ask are absent: why she reacted
+ * that way, why you reacted that way, whether the lesson "worked", how the evening made
+ * you feel. A father cannot answer those reliably about himself and certainly cannot
+ * answer them about a two-year-old, and an answer that is a guess becomes evidence the
+ * moment it is stored.
+ */
+export const FATHERHOOD_PROMPTS: readonly CapturePrompt[] = [
+  {
+    promptId: 'update-area:fatherhood',
+    text: 'Did you spend time together since last time?',
+    kind: 'observable',
+    answers: ['Yes', 'No', UNSURE],
+    allowsUnknown: true,
+    whatItCouldChange: ['state-interpretation', 'recommendation'],
+    input: choice(['Yes', 'No', UNSURE]),
+    attribute: 'father:together',
+    category: 'fatherhood-and-child',
+    privacy: 'child',
+  },
+  {
+    /**
+     * The skill ladder, asked as support rather than as achievement.
+     *
+     * "How much help did she need" is something a father watched. "What level is she
+     * at" is a rating he would have to invent, about his own child, which is exactly
+     * the question this domain refuses to ask.
+     */
+    promptId: 'father:skill-level',
+    text: 'How much help did she need with it?',
+    kind: 'observable',
+    answers: [...SUPPORT_LEVELS, UNSURE],
+    allowsUnknown: true,
+    whatItCouldChange: ['state-interpretation', 'candidate-eligibility'],
+    input: choice([...SUPPORT_LEVELS, UNSURE]),
+    attribute: 'father:skill-level',
+    category: 'fatherhood-and-child',
+    privacy: 'child',
+  },
+  {
+    promptId: 'father:lesson-happened',
+    text: 'Did the activity happen?',
+    kind: 'observable',
+    answers: ['Yes', 'Started but stopped', 'No', UNSURE],
+    allowsUnknown: true,
+    whatItCouldChange: ['recommendation', 'confidence'],
+    input: choice(['Yes', 'Started but stopped', 'No', UNSURE]),
+    attribute: 'father:lesson-happened',
+    category: 'fatherhood-and-child',
+    privacy: 'child',
+  },
+  {
+    promptId: 'father:child-tried',
+    text: 'Did she try it?',
+    kind: 'observable',
+    answers: ['Yes', 'No', UNSURE],
+    allowsUnknown: true,
+    whatItCouldChange: ['state-interpretation', 'confidence'],
+    input: choice(['Yes', 'No', UNSURE]),
+    attribute: 'father:child-tried',
+    category: 'fatherhood-and-child',
+    privacy: 'child',
+  },
+  {
+    promptId: 'father:together-happened',
+    text: 'Did it happen?',
+    kind: 'observable',
+    answers: ['Yes', 'Partly', 'No', UNSURE],
+    allowsUnknown: true,
+    whatItCouldChange: ['recommendation', 'confidence'],
+    input: choice(['Yes', 'Partly', 'No', UNSURE]),
+    attribute: 'father:together-happened',
+    category: 'fatherhood-and-child',
+    privacy: 'child',
+  },
+  {
+    promptId: 'father:wind-down-happened',
+    text: 'Did the wind-down run in its usual order?',
+    kind: 'observable',
+    answers: ['Yes', 'Partly', 'No', UNSURE],
+    allowsUnknown: true,
+    whatItCouldChange: ['recommendation', 'confidence'],
+    input: choice(['Yes', 'Partly', 'No', UNSURE]),
+    attribute: 'father:wind-down-happened',
+    category: 'fatherhood-and-child',
+    privacy: 'child',
+  },
+  {
+    /**
+     * The only question in this domain that asks about something ongoing.
+     *
+     * "Is it still present" is observable — the owner either still sees it or does
+     * not. It is deliberately not "is it getting worse", which asks for a judgement
+     * about severity that belongs to someone qualified.
+     */
+    promptId: 'father:concern-still-present',
+    text: 'Is the thing you noticed still there?',
+    kind: 'observable',
+    answers: ['Yes', 'No', UNSURE],
+    allowsUnknown: true,
+    whatItCouldChange: ['recommendation', 'confidence'],
+    input: choice(['Yes', 'No', UNSURE]),
+    attribute: 'father:concern-still-present',
+    category: 'fatherhood-and-child',
+    privacy: 'child',
+  },
+  {
+    promptId: 'father:milestone-status',
+    text: 'Have you seen her do this?',
+    kind: 'observable',
+    answers: [
+      ...REPORTABLE_MILESTONE_STATUSES.map((status) => MILESTONE_STATUS_LABELS[status]),
+      UNSURE,
+    ],
+    allowsUnknown: true,
+    whatItCouldChange: ['state-interpretation', 'recommendation'],
+    input: choice([
+      ...REPORTABLE_MILESTONE_STATUSES.map((status) => MILESTONE_STATUS_LABELS[status]),
+      UNSURE,
+    ]),
+    attribute: 'father:milestone-status',
+    category: 'fatherhood-and-child',
+    privacy: 'child',
+  },
+  {
+    /**
+     * The private local display name (`OWN-070`, Prompt 8D privacy rule).
+     *
+     * Stored as ordinary `child`-classified canonical data on this device. It is never
+     * in source, fixtures, tests, or build evidence — the repository knows only that
+     * the field exists, and every test uses a placeholder.
+     */
+    promptId: 'father:display-name',
+    text: 'What would you like this area to call her?',
+    kind: 'preference',
+    answers: [],
+    allowsUnknown: true,
+    whatItCouldChange: ['state-interpretation'],
+    input: { kind: 'text', maxLength: 40 },
+    attribute: 'father:display-name',
+    category: 'fatherhood-and-child',
+    privacy: 'child',
+  },
+];
+
+/* -------------------------------------------------------------------------- */
 /* Quick Capture shell (task 15)                                               */
 /* -------------------------------------------------------------------------- */
 
@@ -757,6 +912,7 @@ export const ALL_PROMPTS: readonly CapturePrompt[] = [
   ...FOOD_PROMPTS,
   ...HEALTH_PROMPTS,
   ...CAREER_PROMPTS,
+  ...FATHERHOOD_PROMPTS,
   ...QUICK_CAPTURE_PROMPTS,
 ];
 

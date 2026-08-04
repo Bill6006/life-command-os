@@ -25,6 +25,16 @@ export const ENABLED_CATEGORIES = [
    * domain reads **both** categories so nothing recorded before today is stranded.
    */
   'health-recovery-energy',
+  /**
+   * Activated by Prompt 8D, through the Fatherhood slice's own domain contract.
+   *
+   * The first category whose records are about **someone else**. Everything filed here
+   * is classified `child`, which is why it needed its own home rather than sitting
+   * alongside the owner's own state: a category is what an export offers to include,
+   * and "my daughter's development" must never be swept up by a filter that meant
+   * "my week".
+   */
+  'fatherhood-and-child',
 ] as const;
 export type LifeCategory = (typeof ENABLED_CATEGORIES)[number];
 

@@ -118,14 +118,24 @@ test.describe('one area switched on', () => {
     await open(page, 'domain-enabled');
     await goTo(page, 'Direction');
 
-    // The five unbuilt areas are named honestly — and only inside Manage areas.
+    // Every area is named in Manage areas — built or not.
     const manage = page.getByRole('region', { name: 'Manage areas' });
-    await expect(manage).toContainText('Fatherhood');
+    await expect(manage).toContainText('Fatherhood and child development');
     await expect(manage).toContainText('Faith and meaning');
 
-    await expect(page.getByRole('region', { name: 'Fatherhood' })).toHaveCount(0);
-    await expect(page.getByRole('region', { name: 'Faith and meaning' })).toHaveCount(0);
-    await expect(page.getByRole('region', { name: 'Home and environment' })).toHaveCount(0);
+    /*
+     * None of them has a panel here. Matched exactly, because a switched-off *domain*
+     * and its *category* overview are different things with similar names: the
+     * fatherhood category is active and shows its shared summary, while the domain
+     * panel appears only once the owner switches the area on.
+     */
+    for (const label of [
+      'Fatherhood and child development',
+      'Faith and meaning',
+      'Home and environment',
+    ]) {
+      await expect(page.getByRole('region', { name: label, exact: true })).toHaveCount(0);
+    }
   });
 
   test('manual focus is labelled as the owner’s choice', async ({ page }) => {

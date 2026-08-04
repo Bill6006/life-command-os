@@ -241,6 +241,65 @@ function claim(
   } as unknown as CanonicalRecord;
 }
 
+/* --- Prompt 8D: fatherhood ------------------------------------------------ */
+
+/**
+ * A fatherhood observation.
+ *
+ * Every one of these is about the **father** — what he did, what he saw. Her recorded
+ * status is a separate family entirely, built by `milestone()` below, and no helper
+ * here can write both.
+ */
+function fatherState(attribute: string, state: string, occurredMs = -1 * DAY): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'child',
+    category: 'fatherhood-and-child',
+    attribute,
+    value: { kind: 'state', state },
+  } as unknown as CanonicalRecord;
+}
+
+/** One skill reading, on the support ladder. */
+function skill(skillId: string, levelLabel: string, occurredMs = -1 * DAY): CanonicalRecord {
+  return fatherState(`father:skill:${skillId}`, levelLabel, occurredMs);
+}
+
+/**
+ * One milestone answer, against a named list at a named version.
+ *
+ * Never superseded: an answer of "not yet" in one month and "yes" in the next are both
+ * true, and the change between them is the only developmental information in the pair.
+ */
+function milestone(
+  milestoneId: string,
+  status: string,
+  occurredMs = -10 * DAY,
+): CanonicalRecord {
+  return {
+    ...envelope('milestone-observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'child',
+    milestoneId,
+    checklistSource: 'General guidance (built in)',
+    checklistVersion: '2026-08',
+    status,
+  } as unknown as CanonicalRecord;
+}
+
+/** A moment the owner chose to keep, through Quick Capture. */
+function moment(text: string, occurredMs = -2 * DAY): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'child',
+    category: 'fatherhood-and-child',
+    attribute: 'capture:fatherhood:a-moment-with-my-daughter',
+    value: { kind: 'note', text },
+  } as unknown as CanonicalRecord;
+}
+
 function star(): CanonicalRecord {
   return {
     ...envelope('north-star', -30 * DAY),
@@ -990,6 +1049,57 @@ export const SCENARIOS: readonly Scenario[] = [
       careerState('career:barrier', 'Getting set up takes too long', -6 * DAY),
       careerState('career:barrier', 'Getting set up takes too long', -9 * DAY),
       careerState('career:barrier', 'I was interrupted', -12 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  /* --- Prompt 8D: fatherhood and child development ------------------------ */
+
+  build(
+    'fatherhood-enabled',
+    'Fatherhood switched on',
+    'Skills practised, a moment kept, and milestones answered. Expect a stage path for one skill, a refused percentage, and the two ladders shown separately.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('fatherhood', 'enabled'),
+      skill('taking-turns', 'Doing sometimes', -1 * DAY),
+      skill('taking-turns', 'Needs support', -8 * DAY),
+      skill('putting-things-away', 'Practising with daddy', -3 * DAY),
+      milestone('points-to-show', 'yes', -20 * DAY),
+      milestone('two-word-phrases', 'not-yet', -20 * DAY),
+      moment('She handed me the book and said the word for it', -2 * DAY),
+      fatherState('father:together', 'Yes', -1 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'fatherhood-concern',
+    'Something noticed weeks ago',
+    'A concern recorded a month back and still on record. Expect the app to stop having a view and name who should.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('fatherhood', 'enabled'),
+      milestone('two-word-phrases', 'concern', -30 * DAY),
+      skill('naming-feelings', 'Practising with daddy', -4 * DAY),
+      fatherState('father:together', 'Yes', -1 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'fatherhood-quiet',
+    'Nothing to interrupt for',
+    'Time together recorded yesterday and no skill mid-practice. Expect silence — the normal case in this area.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('fatherhood', 'enabled'),
+      skill('taking-turns', 'Uses on her own', -2 * DAY),
+      fatherState('father:together', 'Yes', -1 * DAY),
+      moment('Danced to the washing machine finishing', -1 * DAY),
       context({ minutes: 40, capacity: 'moderate' }),
     ],
   ),

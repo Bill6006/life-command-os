@@ -11,6 +11,8 @@ import {
   DECLINE_REASONS,
   type DeclineReason,
 } from '../../../application/commands/decisionEpisode';
+import type { QuickCaptureOption } from '../../../domain/capture/registry';
+import type { DomainId } from '../../../domain/domains/definitions';
 
 /**
  * The three short flows that hang off the decision: declining, closing a loop, and
@@ -185,32 +187,53 @@ export function OutcomeSurface({
  */
 export function QuickCaptureSurface({
   busy,
+  domainOptions = [],
   onCapture,
   onCancel,
 }: {
+  readonly domainOptions?: readonly QuickCaptureOption[];
   readonly busy: boolean;
-  readonly onCapture: (input: { readonly kind: string; readonly what: string }) => void;
+  readonly onCapture: (input: {
+    readonly kind: string;
+    readonly what: string;
+    readonly domainId?: DomainId | undefined;
+  }) => void;
   readonly onCancel: () => void;
 }): React.JSX.Element {
   const [kind, setKind] = useState<string | undefined>(undefined);
   const [what, setWhat] = useState('');
+
+  /*
+   * The shared kinds, plus one per switched-on area that declared a Quick Capture
+   * route. This component knows nothing about which areas exist — an area that is off
+   * offers nothing, so the list stays as short as the owner's life rather than as long
+   * as the roadmap.
+   */
+  const options: readonly {
+    readonly kind: string;
+    readonly domainId: DomainId | undefined;
+  }[] = [
+    ...QUICK_CAPTURE_KINDS.map((label) => ({ kind: label, domainId: undefined })),
+    ...domainOptions,
+  ];
+  const chosen = options.find((option) => option.kind === kind);
 
   return (
     <div className="grid">
       <Panel label="Note it down" tone="decision" wide>
         <p className="body">What kind of thing was it?</p>
         <div className="scale scale-choices" role="group" aria-label="Kind of event">
-          {QUICK_CAPTURE_KINDS.map((option) => (
+          {options.map((option) => (
             <button
               type="button"
-              key={option}
-              className={`scale-step${kind === option ? ' scale-step-on' : ''}`}
-              aria-pressed={kind === option}
+              key={option.kind}
+              className={`scale-step${kind === option.kind ? ' scale-step-on' : ''}`}
+              aria-pressed={kind === option.kind}
               onClick={() => {
-                setKind(option);
+                setKind(option.kind);
               }}
             >
-              <span className="scale-label">{option}</span>
+              <span className="scale-label">{option.kind}</span>
             </button>
           ))}
         </div>
@@ -242,7 +265,9 @@ export function QuickCaptureSurface({
             className="btn btn-primary"
             disabled={busy || kind === undefined || what.trim() === ''}
             onClick={() => {
-              if (kind !== undefined) onCapture({ kind, what });
+              if (kind !== undefined) {
+                onCapture({ kind, what, domainId: chosen?.domainId });
+              }
             }}
           >
             Save

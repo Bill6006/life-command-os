@@ -21,6 +21,7 @@ import type {
   RecommendationEffectEvaluationRecord,
   RecommendationRecord,
   SkillClaimRecord,
+  MilestoneObservationRecord,
   TrajectoryRecord,
   UntreatedForecastRecord,
   WeeklyDirectionRecord,
@@ -516,6 +517,28 @@ export function aSkillClaim(overrides: Partial<SkillClaimRecord> = {}): SkillCla
   } as SkillClaimRecord;
 }
 
+/**
+ * One milestone answer (Prompt 8D).
+ *
+ * The milestone text lives in the catalogue, not here, and no fixture anywhere in this
+ * repository contains a real child's name — the display name is owner data that never
+ * leaves their device.
+ */
+export function aMilestoneObservation(
+  overrides: Partial<MilestoneObservationRecord> = {},
+): MilestoneObservationRecord {
+  return {
+    ...envelope('milestone-observation', 30),
+    ...OBSERVED,
+    privacy: 'child',
+    milestoneId: 'points-to-show',
+    checklistSource: 'General guidance (built in)',
+    checklistVersion: '2026-08',
+    status: 'yes',
+    ...overrides,
+  } as MilestoneObservationRecord;
+}
+
 /** A guide session (Phase 6). Completed with nothing skipped. */
 export function aGuideSession(
   producedRecordIds: readonly string[] = [],
@@ -578,5 +601,6 @@ export function oneOfEveryFamily(): Record<string, unknown> {
     'guide-session': aGuideSession([observation.recordId]),
     'domain-preference': aDomainPreference(),
     'skill-claim': aSkillClaim(),
+    'milestone-observation': aMilestoneObservation(),
   };
 }

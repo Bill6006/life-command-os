@@ -7,6 +7,7 @@ import {
   openCommitments,
 } from '../support';
 import { assessHealth, summariseHealthCategory } from '../domains/health';
+import { assessFatherhood, summariseFatherhoodCategory } from '../domains/fatherhood';
 import type { CategorySummary, StateAssessment, TrajectoryResult } from '../types';
 
 /**
@@ -155,41 +156,67 @@ export function summariseCategories(
       continue;
     }
 
-    const declining = trajectory.direction === 'declining';
-    const insufficient = trajectory.direction === 'insufficient-evidence';
-    summaries.push({
-      category,
-      condition: insufficient
-        ? 'Not enough evidence to describe'
-        : declining
-          ? 'Losing ground on focused work'
-          : trajectory.direction === 'improving'
-            ? 'Focused work is recovering'
-            : 'Focused work is holding steady',
-      trajectory: trajectory.direction,
-      confidence: trajectory.confidence,
-      freshness: trajectory.freshness,
-      drivers: insufficient
-        ? ['Too few weeks carry evidence to say anything']
-        : [
-            trajectory.detail,
-            latestGoalProgress === undefined
-              ? 'No active goal recorded'
-              : `Most recent goal update was ${String(latestGoalProgress)} day${latestGoalProgress === 1 ? '' : 's'} ago`,
-          ],
-      metrics: [
-        {
-          label: 'Focused hours this week',
-          value:
-            focusObservations.length === 0
-              ? 'Unknown'
-              : String(Math.round((thisWeekFocusMinutes / 60) * 10) / 10),
-        },
-        { label: 'Learning sessions this week', value: String(learningObservations.length) },
-        { label: 'Active goals', value: String(goals.length) },
-      ],
-      wouldChangeIt: 'Two focused blocks this week would be enough to call it stable.',
-    });
+    if (category === 'fatherhood-and-child') {
+      // Delegated to the Fatherhood slice, for the same reason health's is.
+      summaries.push(summariseFatherhoodCategory(assessFatherhood(records, now)));
+      continue;
+    }
+
+    /*
+     * Career, and only career.
+     *
+     * This used to be the loop's fallback, which meant every future category silently
+     * inherited a reading about focused hours. Activating `fatherhood-and-child` put
+     * "losing ground on focused work" under a heading about a two-year-old before the
+     * exhaustiveness check below was added.
+     */
+    /*
+     * Exhaustive by assignment.
+     *
+     * `category` must already be narrowed to career for this to compile, so adding a
+     * life category without writing its summary is a **type error** rather than a panel
+     * quietly inheriting another category's words. That is not hypothetical: this used
+     * to be the loop's fallback, and activating `fatherhood-and-child` put "losing
+     * ground on focused work" under a heading about a two-year-old.
+     */
+    const careerCategory: 'career-work-learning' = category;
+    {
+      const declining = trajectory.direction === 'declining';
+      const insufficient = trajectory.direction === 'insufficient-evidence';
+      summaries.push({
+        category: careerCategory,
+        condition: insufficient
+          ? 'Not enough evidence to describe'
+          : declining
+            ? 'Losing ground on focused work'
+            : trajectory.direction === 'improving'
+              ? 'Focused work is recovering'
+              : 'Focused work is holding steady',
+        trajectory: trajectory.direction,
+        confidence: trajectory.confidence,
+        freshness: trajectory.freshness,
+        drivers: insufficient
+          ? ['Too few weeks carry evidence to say anything']
+          : [
+              trajectory.detail,
+              latestGoalProgress === undefined
+                ? 'No active goal recorded'
+                : `Most recent goal update was ${String(latestGoalProgress)} day${latestGoalProgress === 1 ? '' : 's'} ago`,
+            ],
+        metrics: [
+          {
+            label: 'Focused hours this week',
+            value:
+              focusObservations.length === 0
+                ? 'Unknown'
+                : String(Math.round((thisWeekFocusMinutes / 60) * 10) / 10),
+          },
+          { label: 'Learning sessions this week', value: String(learningObservations.length) },
+          { label: 'Active goals', value: String(goals.length) },
+        ],
+        wouldChangeIt: 'Two focused blocks this week would be enough to call it stable.',
+      });
+    }
   }
 
   return summaries;

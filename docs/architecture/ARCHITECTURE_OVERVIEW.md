@@ -207,7 +207,7 @@ The first vertical slice requires **twenty** families. All are implemented in Ph
 | 19 | `QuestionRecord` |
 | 20 | `QuestionAnswerRecord` |
 
-**Activated later** — twenty-four families are registered as of Phase 7 Prompt 8C:
+**Activated later** — twenty-five families are registered as of Phase 7 Prompt 8D:
 
 - `LearnedBeliefRecord` — Phase 5, when learning behavior exists.
 - `GuideSessionRecord` — Phase 6, because a guide that legitimately asked nothing new
@@ -216,6 +216,10 @@ The first vertical slice requires **twenty** families. All are implemented in Ph
 - `DomainPreferenceRecord` — Phase 7 Prompt 8A. Which areas are switched on is the owner's
   decision with a date, not a setting.
 - `SkillClaimRecord` — Phase 7 Prompt 8C, the first **domain content** family. See §4.2.
+- `MilestoneObservationRecord` — Phase 7 Prompt 8D. An answer against a developmental
+  checklist is meaningless without which list and which revision it was answered against,
+  and checklists get revised, so `checklistSource` and `checklistVersion` travel with
+  every answer. It has no field for a score, a level, or a conclusion.
 
 ### 4.1 Resolved discrepancy: `WeeklyDirectionRecord`
 
@@ -418,6 +422,7 @@ officially supported GitHub Actions approach.
 | Private alpha and release (6, 10) | Encrypted backup and restore; corruption and interruption; fresh-profile recovery; app lock; accessibility; responsive behavior; performance; browser matrix; deployment and rollback; full traceability |
 | Domain slices (7) | The shared panel contract; one candidate per domain; visual eligibility earned **and refused**; Update This Area owning its own questions while the morning stays unchanged; each domain's own prohibited vocabulary asserted against the rendered surface |
 | Reachability (7) | Every owner-facing control exercised on the **production** build from a fresh profile, with no test bridge and no seeding. Added after two finished slices passed every seeded test while being unreachable on the shipped app |
+| Contextual capture (7, v3.1) | Every capture declares its class, owning surface, timing, triggers, privacy exclusions, suppression, follow-up window, and expiry — validated at module load. Placement rules are enforced, not documented |
 
 Coverage percentage is a signal, not the goal. Critical behavior must be covered
 (`TEST-001`).

@@ -52,6 +52,7 @@ import { learnedBeliefRecord, type LearnedBeliefRecord } from './learning';
 import { guideSessionRecord, type GuideSessionRecord } from './guides';
 import { domainPreferenceRecord, type DomainPreferenceRecord } from './domains';
 import { skillClaimRecord, type SkillClaimRecord } from './career';
+import { milestoneObservationRecord, type MilestoneObservationRecord } from './fatherhood';
 import {
   questionAnswerRecord,
   questionRecord,
@@ -74,14 +75,15 @@ export * from './scales';
 export * from './guides';
 export * from './domains';
 export * from './career';
+export * from './fatherhood';
 
 /**
- * Twenty-four canonical record families.
+ * Twenty-five canonical record families.
  *
  * The twenty of the first vertical slice, plus `learned-belief` (**Phase 5**),
- * `guide-session` (**Phase 6**), `domain-preference` (**Prompt 8A**), and
- * `skill-claim` (**Prompt 8C**). Each was deliberately absent until there was
- * behaviour for it to describe.
+ * `guide-session` (**Phase 6**), `domain-preference` (**Prompt 8A**), `skill-claim`
+ * (**Prompt 8C**), and `milestone-observation` (**Prompt 8D**). Each was deliberately
+ * absent until there was behaviour for it to describe.
  *
  * `guide-session` is canonical rather than derived because it cannot be
  * reconstructed from the observations it produced: a guide that legitimately asked
@@ -98,6 +100,10 @@ export * from './career';
  * from observations, and the gap between it and what the evidence supports is the most
  * useful thing the career slice has to say. It carries no assertion of truth — see
  * `career.ts`.
+ *
+ * `milestone-observation` is irreducible for a different reason: an answer against a
+ * developmental checklist is meaningless without which list and which revision it was
+ * answered against, and checklists get revised. See `fatherhood.ts`.
  *
  * Domain content families arrive one at a time with their slice. Adding one early is a
  * stop condition (`LEAN-001`); Prompt 8B needed none, and this is 8C's only one.
@@ -127,6 +133,7 @@ export const RECORD_TYPES = [
   'guide-session',
   'domain-preference',
   'skill-claim',
+  'milestone-observation',
 ] as const;
 
 export type RecordType = (typeof RECORD_TYPES)[number];
@@ -155,7 +162,8 @@ export type CanonicalRecord =
   | LearnedBeliefRecord
   | GuideSessionRecord
   | DomainPreferenceRecord
-  | SkillClaimRecord;
+  | SkillClaimRecord
+  | MilestoneObservationRecord;
 
 /**
  * Schema per family.
@@ -189,6 +197,7 @@ export const RECORD_SCHEMAS: Record<RecordType, z.ZodType> = {
   'guide-session': guideSessionRecord,
   'domain-preference': domainPreferenceRecord,
   'skill-claim': skillClaimRecord,
+  'milestone-observation': milestoneObservationRecord,
 };
 
 /** Families that record first-hand fact rather than system interpretation. */
@@ -205,6 +214,7 @@ export const OBSERVED_RECORD_TYPES = [
   'guide-session',
   'domain-preference',
   'skill-claim',
+  'milestone-observation',
 ] as const satisfies readonly RecordType[];
 
 export function isRecordType(value: unknown): value is RecordType {

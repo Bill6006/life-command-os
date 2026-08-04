@@ -28,6 +28,11 @@ import { buildDomainPanels, type DomainPanel } from './domains/domainPanel';
 import { enforceOneCandidatePerDomain } from './domains/candidateLimit';
 import { assessHealth, generateHealthCandidate, healthContribution } from './domains/health';
 import { assessCareer, careerContribution, generateCareerCandidate } from './domains/career';
+import {
+  assessFatherhood,
+  fatherhoodContribution,
+  generateFatherhoodCandidate,
+} from './domains/fatherhood';
 
 export * from './types';
 export * from './contracts';
@@ -98,11 +103,14 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
   const health = generateHealthCandidate(records, healthEvidence, state, now);
   const careerEvidence = assessCareer(records, now);
   const career = generateCareerCandidate(records, careerEvidence);
+  const fatherhoodEvidence = assessFatherhood(records, now);
+  const fatherhood = generateFatherhoodCandidate(records, fatherhoodEvidence, now);
 
   const candidates = enforceOneCandidatePerDomain([
     ...generateCandidates(records, state, now),
     ...(health.candidate === undefined ? [] : [health.candidate]),
     ...(career.candidate === undefined ? [] : [career.candidate]),
+    ...(fatherhood.candidate === undefined ? [] : [fatherhood.candidate]),
   ]).accepted;
   const effects = candidates.map((candidate) => predictEffects(candidate, state));
 
@@ -184,6 +192,7 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
           healthContribution(records, healthEvidence, health, state, now),
         ],
         ['career-and-learning', careerContribution(careerEvidence, career, trajectory)],
+        ['fatherhood', fatherhoodContribution(fatherhoodEvidence, fatherhood, trajectory)],
       ]),
     ),
     internal: { candidates, effects, rejected },

@@ -1,0 +1,218 @@
+import type { CapabilityEffect } from '../capabilities';
+import { SKILL_LABELS, type TrackedSkillId } from './development';
+
+/**
+ * The closed set of fatherhood actions, and the Tiny Lessons they can carry.
+ *
+ * Same device as the health slice, for a related reason. Health could hurt someone by
+ * composing advice about a symptom; this domain could hurt someone by composing advice
+ * about their child. A generated parenting suggestion is one plausible-looking template
+ * away from telling a father his daughter should be doing something by now.
+ *
+ * So there is no template. Every action is written out below and reviewed as text.
+ *
+ * ## What a Dad action is, and is not
+ *
+ * It is something **the father does**, recorded against him. It is never a change to
+ * her status: those are `milestone-observation` records and `father:skill:*`
+ * observations, and nothing in this file can write either. Practising a skill with her
+ * is evidence that he practised it — what she can now do is a separate observation,
+ * made separately, because a parent who has just spent twenty minutes teaching
+ * something is the least reliable judge of whether she has learned it.
+ *
+ * ## What is absent
+ *
+ * No sleep training method, no discipline technique, no feeding advice, no screen-time
+ * rule, no developmental interpretation. Not filtered — absent.
+ */
+
+export const FATHERHOOD_ACTION_IDS = [
+  'tiny-lesson',
+  'follow-her-lead',
+  'protect-the-wind-down',
+  'repair-after-a-hard-moment',
+  'raise-it-with-someone-qualified',
+] as const;
+export type FatherhoodActionId = (typeof FATHERHOOD_ACTION_IDS)[number];
+
+export interface FatherhoodAction {
+  readonly id: FatherhoodActionId;
+  readonly statement: string;
+  /** Why it is worth doing, in one sentence the owner can disagree with. */
+  readonly whyItMatters: string;
+  /** What would be observable afterwards. Never "did it work". */
+  readonly intendedOutcome: string;
+  readonly minimumVersion: string;
+  readonly stoppingPoint: string;
+  readonly durationMinutes: number;
+  readonly minimumMinutes: number;
+  readonly followUpPromptId: string;
+  readonly capabilityEffects: readonly CapabilityEffect[];
+}
+
+const CONNECTION: CapabilityEffect = {
+  channel: 'connection-and-relationships',
+  effect: 'improves',
+  magnitude: 'meaningful',
+  basis: 'external-research',
+  crossDomain: false,
+};
+
+const PURPOSE: CapabilityEffect = {
+  channel: 'purpose-and-values-alignment',
+  effect: 'improves',
+  magnitude: 'small',
+  basis: 'app-inference',
+  crossDomain: true,
+};
+
+export const FATHERHOOD_ACTIONS: Record<FatherhoodActionId, FatherhoodAction> = {
+  'tiny-lesson': {
+    id: 'tiny-lesson',
+    statement: 'Do one tiny lesson together',
+    whyItMatters:
+      'One small thing practised on purpose gives her a chance to try it, and gives you something you actually watched rather than something you assume.',
+    intendedOutcome: 'The activity happened and you saw how much help she needed',
+    minimumVersion: 'Two minutes, one attempt, whatever she gives you',
+    stoppingPoint: 'Stop the moment she loses interest — a stopped lesson is not a failed one',
+    durationMinutes: 10,
+    minimumMinutes: 2,
+    followUpPromptId: 'father:lesson-happened',
+    capabilityEffects: [CONNECTION, PURPOSE],
+  },
+  'follow-her-lead': {
+    id: 'follow-her-lead',
+    statement: 'Join whatever she is already doing, without redirecting it',
+    whyItMatters:
+      'Joining what already has her attention costs nothing to set up and needs no cooperation from her, which is why it survives a bad evening when a planned activity does not.',
+    intendedOutcome: 'You spent time in her activity rather than starting your own',
+    minimumVersion: 'Sit down next to her for five minutes',
+    stoppingPoint: 'Stop when you need to — leaving early does not undo it',
+    durationMinutes: 15,
+    minimumMinutes: 5,
+    followUpPromptId: 'father:together-happened',
+    capabilityEffects: [CONNECTION],
+  },
+  'protect-the-wind-down': {
+    id: 'protect-the-wind-down',
+    statement: 'Protect the wind-down: same order, no new demands',
+    whyItMatters:
+      'The last half hour is the part of the day most easily lost to everything else, and it is the part she can most predict.',
+    intendedOutcome: 'The wind-down ran in its usual order',
+    minimumVersion: 'Keep the last step the same even if the rest slipped',
+    stoppingPoint:
+      'If it has already gone sideways, let it go — tomorrow is a separate evening',
+    durationMinutes: 30,
+    minimumMinutes: 10,
+    followUpPromptId: 'father:wind-down-happened',
+    capabilityEffects: [CONNECTION],
+  },
+  'repair-after-a-hard-moment': {
+    id: 'repair-after-a-hard-moment',
+    statement: 'Go back to her once things are calm',
+    whyItMatters:
+      'Coming back afterwards is a separate act from what happened, and it is the one that is still available to you.',
+    intendedOutcome: 'You went back to her after it had settled',
+    minimumVersion: 'Sit near her for a minute without raising it',
+    stoppingPoint: 'One attempt. If she is not ready, that is information, not a rejection',
+    durationMinutes: 5,
+    minimumMinutes: 1,
+    followUpPromptId: 'father:together-happened',
+    capabilityEffects: [CONNECTION],
+  },
+  'raise-it-with-someone-qualified': {
+    id: 'raise-it-with-someone-qualified',
+    /*
+     * The action this domain reaches for when it should stop having a view.
+     *
+     * A concern that has stayed put for weeks, or a skill she had and lost, is not
+     * something a decision-support app should interpret. This is not advice about
+     * development — it is the app declining to have an opinion and saying who might.
+     */
+    statement: 'Worth mentioning to your health visitor or GP at the next opportunity',
+    whyItMatters:
+      'You have recorded this more than once over several weeks. That is exactly the kind of thing a person who examines children for a living should hear about, and exactly the kind this app should not interpret.',
+    intendedOutcome: 'You raised it with someone qualified',
+    minimumVersion: 'Write it down somewhere you will have it with you',
+    stoppingPoint: 'Nothing else is being asked of you here',
+    durationMinutes: 10,
+    minimumMinutes: 2,
+    followUpPromptId: 'father:concern-still-present',
+    capabilityEffects: [PURPOSE],
+  },
+};
+
+/* -------------------------------------------------------------------------- */
+/* Today's Tiny Lesson                                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One lesson per tracked skill. Each is an activity, not an instruction to her.
+ *
+ * `whyItMatters` exists so the owner can decline for a reason rather than out of
+ * vagueness, and `minimumVersion` exists because the version that survives a difficult
+ * evening is the one that gets done at all.
+ */
+export interface TinyLesson {
+  readonly skillId: TrackedSkillId;
+  readonly statement: string;
+  readonly whyItMatters: string;
+  readonly minimumVersion: string;
+  readonly stoppingPoint: string;
+}
+
+export const TINY_LESSONS: readonly TinyLesson[] = [
+  {
+    skillId: 'asking-for-help',
+    statement: 'Put something she wants slightly out of reach and wait before helping',
+    whyItMatters:
+      'Waiting a beat leaves room for her to ask, which she cannot do if you are already helping.',
+    minimumVersion: 'Wait three seconds once, then help',
+    stoppingPoint: 'Help her as soon as she gets frustrated',
+  },
+  {
+    skillId: 'putting-things-away',
+    statement: 'Put one thing away together at the end of the game',
+    whyItMatters: 'One object is small enough to finish, which is what makes it repeatable.',
+    minimumVersion: 'You hold the box, she drops one thing in',
+    stoppingPoint: 'One object. Do not turn it into tidying up',
+  },
+  {
+    skillId: 'taking-turns',
+    statement: 'Play one thing where you swap after each go',
+    whyItMatters: 'Turn-taking is easier to practise in a game than in a moment that matters.',
+    minimumVersion: 'Three swaps',
+    stoppingPoint: 'Stop while she is still enjoying it',
+  },
+  {
+    skillId: 'getting-dressed',
+    statement: 'Let her do one part of getting dressed herself',
+    whyItMatters: 'One part is slow; all of it is a battle. The part is the practice.',
+    minimumVersion: 'One arm, one sock — whichever is closest to done',
+    stoppingPoint: 'Take over the moment it stops being a game',
+  },
+  {
+    skillId: 'naming-feelings',
+    statement: 'Say what you notice about how she seems, and leave it there',
+    whyItMatters:
+      'Hearing the word attached to the moment is what makes it available to her later.',
+    minimumVersion: 'One sentence, once',
+    stoppingPoint: 'Do not ask her to agree with you',
+  },
+  {
+    skillId: 'waiting-a-moment',
+    statement: 'Count to three together before handing something over',
+    whyItMatters: 'A short, predictable wait is practice; an unexplained one is just a delay.',
+    minimumVersion: 'Count to three, once',
+    stoppingPoint: 'Hand it over on three, every time',
+  },
+];
+
+export function lessonFor(skillId: string): TinyLesson | undefined {
+  return TINY_LESSONS.find((lesson) => lesson.skillId === skillId);
+}
+
+/** The lesson statement with the skill it practises, for display. */
+export function lessonLabel(lesson: TinyLesson): string {
+  return `${lesson.statement} — practising ${(SKILL_LABELS[lesson.skillId] ?? lesson.skillId).toLowerCase()}`;
+}

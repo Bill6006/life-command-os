@@ -115,15 +115,20 @@ export const DOMAIN_DEFINITIONS: Record<DomainId, DomainDefinition> = {
   },
   fatherhood: {
     id: 'fatherhood',
-    label: 'Fatherhood',
+    label: 'Fatherhood and child development',
     question: 'What did I practise, and what did I notice?',
-    reads: [],
+    reads: ['fatherhood-and-child'],
     privacy: 'child',
+    captureNamespace: 'father',
     channels: ['connection-and-relationships', 'purpose-and-values-alignment'],
     legacyIds: ['LEG-073', 'LEG-075', 'LEG-076', 'LEG-078', 'LEG-079', 'LEG-081'],
     updatePromptId: 'update-area:fatherhood',
     activatedBy: 'Prompt 8D',
-    notBuilt: ['any child score', 'a percentage for connection or safety'],
+    notBuilt: [
+      'any child score',
+      'a percentage for connection or safety',
+      'developmental assessment or diagnosis',
+    ],
   },
   'emotional-and-relationships': {
     id: 'emotional-and-relationships',

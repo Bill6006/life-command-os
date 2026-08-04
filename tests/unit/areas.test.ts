@@ -86,7 +86,6 @@ describe('switching an area on', () => {
   it('refuses every unbuilt area, not just the one that was tried', async () => {
     const records = await seed('areas-all-off');
     for (const domainId of [
-      'fatherhood',
       'emotional-and-relationships',
       'faith-and-meaning',
       'home-and-environment',

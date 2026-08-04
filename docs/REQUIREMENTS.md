@@ -621,6 +621,83 @@ can show, and it is shown without a verdict about the person.
 
 ---
 
+## 3i. Active requirement records — Phase 7, Prompt 8D (Fatherhood and child development)
+
+Controlling document: **Final Lean Master Plan v3.1**, which adds contextual-capture
+metadata to the Phase 7 shared rules (14–19) for Prompts 8D–8H. It does not reopen 7A–8C.
+
+| ID | Implementation | Test IDs | Notes |
+|---|---|---|---|
+| Task 1–2 | `MilestoneObservationRecord` — the 25th family, with `checklistSource` and `checklistVersion` | `the two ladders stay apart` (6) | The list and its revision travel with every answer. Renamed from `source` because the envelope already has one |
+| Task 2 | `REPORTABLE_MILESTONE_STATUSES` — five writable, `not-assessed` derived from absence | `never stores "not assessed"` | Resolved conflict, below |
+| Task 3 | `SKILL_LEVELS` — seven positions on a **support** ladder | `the ladder, and what absence means` (4) | Ordinal and reported, never computed and never a rating |
+| Task 4 | `FATHERHOOD_ACTIONS` — closed set, all about the father | `a Dad action cannot move her status` (3) | No action carries a milestone id, a status, or a level |
+| Task 5 | `capture:fatherhood:*` through the shared Quick Capture path | `one moment, one canonical record` (3) | Offered only while the area is on |
+| Task 6 | `TINY_LESSONS` — why it matters, minimum version, observable follow-up, stopping point | `carries a lesson with a reason` | One per tracked skill |
+| `XDS-015` (tasks 7–8) | `generateFatherhoodCandidate` — zero or one, four branches ending in silence | `the one candidate, and when it stays silent` (7) | Not blocked by `family` or `caregiving`: those are when it belongs |
+| `OWN-013` (task 9) | `update-area:fatherhood`, `captureNamespace: 'father'` | `Update This Area, for fatherhood` (2 browser, 3 unit) | The morning is unchanged, asserted both ways |
+| `OWN-051` (task 10) | The meter **refused** with `hasValidDenominator: false` | `no score for a child, anywhere` (5) | A denominator exists; the number would be a child's score |
+| `OWN-053` (task 10) | A `stage-path` for one skill, and a timeline of moments | `earns a stage path for one skill` | One skill at a time, never averaged |
+| Task 11 | Observable participation, support, completion, and interference prompts | `questions are observable` (4) | Nothing about cause, feeling, or efficacy |
+| Task 12 | Enable and disable through Manage Areas | production `disables without losing anything` | Availability derived from the prompt catalogue — fatherhood became switchable by having its questions, with no list edited |
+| v3.1 §9 | `domain/capture/contextualCapture.ts` + `fatherhood/capture.ts` | `the contextual-capture metadata` (8) | Nine declarations, validated at import |
+
+### The contextual-capture metadata, and what its validator refuses
+
+Every fatherhood capture declares its record family, class, owning surface, timing,
+triggers, privacy, excluded contexts, freshness, duplicate suppression, cooldown,
+repeated-skip behaviour, Skip and Unsure behaviour, linked action, follow-up window,
+expiry, and whether the answer can change the current decision.
+
+The validator runs at module load and refuses:
+
+- a **milestone capture on any guide** — it must be owned by Update This Area or a
+  deliberate review, so the most tempting question in the domain cannot become a daily
+  one;
+- a **triggered question whose answer changes nothing** — interrupting is only justified
+  by decision value, otherwise it is a nag with a rule attached;
+- an **action follow-up** with no linked action, window, or expiry;
+- a **child-classified capture that allows `work-focus`** — a question about the owner's
+  daughter must not arrive on a shared screen mid-meeting;
+- a capture naming a prompt that does not exist, so wording can never bypass the
+  behaviour-first policy.
+
+**No scheduler was built.** Phase 8 owns cross-domain orchestration and will read these
+declarations; Prompt 8D defines and tests them.
+
+### Resolved conflict: "Not Assessed" as a status
+
+The prompt lists six milestone statuses including *Not Assessed*. Phase 2's `OWN-024`
+says an untouched control writes nothing, and absence is the only representation of "not
+reported" that cannot be misread.
+
+**Resolution: all six are visible; five are writable.** `not-assessed` is what the owner
+sees when no record exists and is rejected by the schema. Storing it would create a
+second representation of absence, and the two would disagree the first time a real answer
+was written without the placeholder being cleared.
+
+### The one thing this domain must never produce
+
+A percentage. A denominator genuinely exists — eight milestones, six skills, a countable
+number of yeses — so the refusal cannot rest on missing data. `fatherhoodVisuals` passes
+`hasValidDenominator: false` deliberately and renders the refusal with its reason: the
+number would be real, and it would be a score for a child.
+
+`FORBIDDEN_FATHERHOOD_VOCABULARY` covers assessment language (percentile, developmental
+age, on track, delayed, diagnosis) and blame language (bad parent, should have, neglect),
+asserted against the actions, the prompts, the lessons, and the rendered panel on both the
+test build and the production build.
+
+### Privacy: the child's name
+
+The repository-facing name is **Fatherhood and child development**. A private display name
+is supported as ordinary `child`-classified canonical data on the owner's device, read by
+`childReference()`, which falls back to "your daughter". No real name appears in source,
+fixtures, tests, scenarios, documentation, commits, or build evidence — the fixture uses
+the literal string `Placeholder`, and a repository scan is part of the gate.
+
+---
+
 ## 4. Traceability fields used when a requirement becomes active
 
 Per master plan §68, each active requirement record includes: ID · statement · source

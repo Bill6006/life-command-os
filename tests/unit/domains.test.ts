@@ -210,9 +210,9 @@ describe('only areas with a slice behind them can be switched on', () => {
     expect(implementedDomains().map((definition) => definition.id)).toEqual([
       'health-recovery-energy',
       'career-and-learning',
+      'fatherhood',
     ]);
     expect(unimplementedDomains().map((definition) => definition.id)).toEqual([
-      'fatherhood',
       'emotional-and-relationships',
       'faith-and-meaning',
       'home-and-environment',
@@ -225,13 +225,13 @@ describe('only areas with a slice behind them can be switched on', () => {
     // an older build, or a restored backup) wrote it. It is simply not acted on, which
     // is what stops a frame with nothing behind it reaching the screen.
     const records = [
-      aDomainPreference({ domainId: 'fatherhood', state: 'enabled' }),
+      aDomainPreference({ domainId: 'money', state: 'enabled' }),
     ] as CanonicalRecord[];
 
-    expect(domainState(records, 'fatherhood')).toBe('enabled');
+    expect(domainState(records, 'money')).toBe('enabled');
     expect(enabledDomains(records)).toEqual([]);
     expect(visibleDomains(records)).toEqual([]);
-    expect(mayGenerateCandidate(records, 'fatherhood')).toBe(false);
+    expect(mayGenerateCandidate(records, 'money')).toBe(false);
     expect(buildDomainPanels(records, [], [])).toEqual([]);
   });
 
