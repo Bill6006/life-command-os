@@ -1,5 +1,6 @@
 import { KeyValues, Panel } from '../../components/primitives';
-import { EvidenceSummary } from '../../components/visuals';
+import { EvidenceSummary, Meter, StagePath } from '../../components/visuals';
+import type { VisualSpec } from '../../../intelligence/visuals/eligibility';
 import { GraphFigure } from '../../components/GraphFigure';
 import type { DomainPanel } from '../../../intelligence';
 import { CAPABILITY_EFFECT_LABELS, CAPABILITY_LABELS } from '../../../domain/capabilities';
@@ -17,6 +18,48 @@ import { confidenceLabel, freshnessLabel, trajectoryLabel } from '../../view-mod
  * quantities the engine counted with their units attached. Seven of these panels side
  * by side is a summary; seven scores side by side is the wall the gate forbids.
  */
+/**
+ * One declared visual, drawn as whatever it earned.
+ *
+ * The kind is decided by the engine against the eligibility rules; this only draws the
+ * decision. A meter reaches the screen as a meter when the evidence has a real
+ * denominator, and as words when it does not — the component never makes that call.
+ */
+function DomainVisual({
+  spec,
+  label,
+  points,
+}: {
+  readonly spec: VisualSpec;
+  readonly label: string;
+  readonly points: readonly string[];
+}): React.JSX.Element {
+  if (spec.data?.kind === 'meter') {
+    return (
+      <Meter
+        spec={spec}
+        label="What you could show"
+        current={spec.data.current}
+        target={spec.data.target}
+        percent={spec.data.percent}
+      />
+    );
+  }
+
+  if (spec.data?.kind === 'stage-path') {
+    return (
+      <StagePath
+        spec={spec}
+        label="What the evidence supports"
+        stages={spec.data.stages}
+        currentIndex={spec.data.currentIndex}
+      />
+    );
+  }
+
+  return <EvidenceSummary spec={spec} label={label} points={points} />;
+}
+
 export function DomainPanelView({
   panel,
   onUpdate,
@@ -124,15 +167,15 @@ export function DomainPanelView({
       )}
 
       {/*
-        Every declared visual, not just the first.
+        Every declared visual, in the form it earned, not just the first as a summary.
 
-        The later ones are usually **refusals** — a meter considered and rejected, with
-        the reason. Rendering only the first meant the refusal existed in the data and
-        never reached the screen, which made "the absence of a percentage is a decision
-        on the record" true of the record and not of the page.
+        A spec with no `data` is a declaration only. First position is the domain's
+        evidence summary; anything after it is a representation that was **considered
+        and refused**, shown with its reason so that the absence of a percentage is a
+        decision on the page and not only in the record.
       */}
       {panel.visuals.map((spec, index) => (
-        <EvidenceSummary
+        <DomainVisual
           key={spec.decisionQuestion}
           spec={spec}
           label={index === 0 ? 'Strongest evidence' : 'Not shown here'}

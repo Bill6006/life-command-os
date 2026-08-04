@@ -109,6 +109,7 @@ export const DOMAIN_DEFINITIONS: Record<DomainId, DomainDefinition> = {
     channels: ['learning-and-capability', 'follow-through', 'confidence-and-courage'],
     legacyIds: ['LEG-059', 'LEG-060', 'LEG-061', 'LEG-062', 'LEG-063', 'LEG-064'],
     updatePromptId: 'update-area:career-and-learning',
+    captureNamespace: 'career',
     activatedBy: 'Prompt 8C',
     notBuilt: ['course-content hosting', 'a second task board'],
   },

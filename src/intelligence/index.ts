@@ -27,6 +27,7 @@ import type { EpisodeCore } from './types';
 import { buildDomainPanels, type DomainPanel } from './domains/domainPanel';
 import { enforceOneCandidatePerDomain } from './domains/candidateLimit';
 import { assessHealth, generateHealthCandidate, healthContribution } from './domains/health';
+import { assessCareer, careerContribution, generateCareerCandidate } from './domains/career';
 
 export * from './types';
 export * from './contracts';
@@ -95,10 +96,13 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
    */
   const healthEvidence = assessHealth(records, now);
   const health = generateHealthCandidate(records, healthEvidence, state, now);
+  const careerEvidence = assessCareer(records, now);
+  const career = generateCareerCandidate(records, careerEvidence);
 
   const candidates = enforceOneCandidatePerDomain([
     ...generateCandidates(records, state, now),
     ...(health.candidate === undefined ? [] : [health.candidate]),
+    ...(career.candidate === undefined ? [] : [career.candidate]),
   ]).accepted;
   const effects = candidates.map((candidate) => predictEffects(candidate, state));
 
@@ -179,6 +183,7 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
           'health-recovery-energy',
           healthContribution(records, healthEvidence, health, state, now),
         ],
+        ['career-and-learning', careerContribution(careerEvidence, career, trajectory)],
       ]),
     ),
     internal: { candidates, effects, rejected },

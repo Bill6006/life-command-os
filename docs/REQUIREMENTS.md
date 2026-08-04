@@ -545,6 +545,59 @@ set, the prompt catalogue, and the rendered panel.
 
 ---
 
+## 3h. Active requirement records — Phase 7, Prompt 8C (Career, Azure, and learning)
+
+| ID | Implementation | Test IDs | Notes |
+|---|---|---|---|
+| `LEG-059` (task 1) | `career:next-step` — the exact next step, in the owner's words | `asks career questions only`; browser `leads with the decision question` | Stored verbatim and shown back unedited, course vocabulary and all |
+| `LEG-060` (task 2) | `STUDY_BARRIERS` — ten obstacles, recorded as what happened | `barriers are recorded behaviourally` (4) | The Blueprint's psychological taxonomy survives as ids; no visible label asks the owner to accept a label about themselves |
+| `LEG-061` (task 3) | `LADDER_RUNGS` + `rungFor(evidence)` | `the ladder is climbed by evidence, never by assertion` (5) | Takes counts, never a self-report. Nine study sessions cannot reach the rung one lab does |
+| `LEG-062` (task 4) | `SkillClaimRecord` — the 24th family, and the first domain **content** family | `a claim carries no assertion that it is true` (3); `an unsupported claim cannot be exported as true` (3) | The family has **no truth field**. `proven`, `level`, and `confidence` are parse failures, so "exported as true" has no representation |
+| `LEG-063` (task 5) | `retrieval-strength` scale; `career-retrieval` trend over eight weeks | `treats a week with no recall check as a gap` | A week you did not test is not a week you failed — `null`, never `0` |
+| `LEG-064` `AT-063` (task 6) | `isWorkWin`; `'proof'` added to `CAPTURE_SURFACES` | `one Work Win, one canonical event` (3); browser `reaches Timeline, Learning, and the career panel` | One record, six projections, zero copies |
+| Task 7 | `career:re-entry`, `openInterruption`, `career:return-to-it` | `offers resumption over restarting` | Resumption is cheaper than restarting, and only while it is still cheap |
+| `XDS-015` (tasks 8–9) | `generateCareerCandidate` — zero or one, five branches in strict order | `the candidate is one, ordered, and never a task board` (7) | Same shape as health: an order, not a score |
+| `OWN-013` (task 10) | `update-area:career-and-learning`; `captureNamespace: 'career'` | `Update This Area, for career` (4 unit, 2 browser) | Asserted both ways — career's questions appear there and the morning is unchanged |
+| `OWN-051` `AT-081` (task 11) | `careerVisuals` — a meter **earned**, with `meterEligibility` given a real denominator | `visuals: the same rules, the opposite answer to health` (5) | Health refused a meter on these same rules. The difference is a property of the evidence, not of who wrote the slice |
+| `OWN-053` (task 12) | A `stage-path` over the proof ladder | browser `walks the ladder to the top` | Deliberately no percentage: the rungs are not evenly spaced |
+| `PROD-005` | `CAREER_ACTIONS` — four, closed; `FORBIDDEN_CAREER_VOCABULARY` | `has four actions, none of which is progress through material` | Not filtered — absent. No code path composes an action |
+
+### Two things this domain is forbidden to become
+
+The Blueprint rules out **course-content hosting** and **a second task board**, recorded on
+the domain definition as `notBuilt`. Both are absent rather than suppressed: there is no
+lesson, module, or completion model anywhere in the slice, and no per-item tick control on
+the panel. `FORBIDDEN_CAREER_VOCABULARY` is asserted against the action set, the prompt
+catalogue, and the rendered panel.
+
+### The one place that vocabulary rule does not reach
+
+**What the owner types is theirs.** Someone studying for a certification will write "finish
+the identity module" as their next step, and the app shows it back unaltered — paraphrasing
+it would make the record wrong. The rule governs the product's voice; the test collects the
+owner's own strings out of the records before scanning, so app copy that drifts into course
+vocabulary still fails while the owner's words are left alone.
+
+### Why the Blueprint's barrier names are not on screen
+
+The Blueprint names fear and perfectionism among the reasons a session does not start. Those
+survive as taxonomy **ids**, because merging them into "something else" would lose the
+pattern. Not one of them is visible wording: `OBS-002` forbids asking someone to diagnose
+themselves, and "Were you afraid?" is exactly that. The visible labels say what happened —
+"It looked like more than I had in me", "I kept wanting to prepare more first" — which is
+observable, answerable, and produces evidence rather than a guess.
+
+### A claim is recorded, never adjudicated
+
+`SkillClaimRecord` stores what the owner would say about themselves. It does not store
+whether that is true, and there is no field in which it could. Support is **computed** from
+the records the claim cites, which is why an unsupported claim is a normal state rather than
+a problem, and why the AI export can only ever say "claimed, with *n* supporting records" or
+"claimed, nothing behind it yet". A gap between the two is the most useful thing the domain
+can show, and it is shown without a verdict about the person.
+
+---
+
 ## 4. Traceability fields used when a requirement becomes active
 
 Per master plan §68, each active requirement record includes: ID · statement · source

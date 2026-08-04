@@ -25,6 +25,14 @@ export const CAPTURE_SURFACES = [
   'weekly-review',
   'evidence',
   'export',
+  /**
+   * Career proof (`AT-063`, LEG-064).
+   *
+   * A Work Win is the evidence behind a claim you would make in an interview, so it
+   * has a projection the other captures do not. Still the same record — this is a
+   * sixth place it *appears*, not a second place it is stored.
+   */
+  'proof',
 ] as const;
 export type CaptureSurface = (typeof CAPTURE_SURFACES)[number];
 
@@ -74,7 +82,14 @@ export function projectionsFor(record: ObservationRecord): readonly CaptureSurfa
   // Everything captured is available to the weekly review and to learning; neither
   // copies it, and both read the same record.
   surfaces.push('weekly-review', 'learning');
+  // A Work Win is also the evidence behind an interview claim.
+  if (isWorkWin(record)) surfaces.push('proof');
   return surfaces;
+}
+
+/** True when this capture is a Work Win, whatever else it is (LEG-064). */
+export function isWorkWin(record: ObservationRecord): boolean {
+  return isCapture(record) && record.attribute.endsWith(':work-win');
 }
 
 /**

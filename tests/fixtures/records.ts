@@ -20,6 +20,7 @@ import type {
   QuestionRecord,
   RecommendationEffectEvaluationRecord,
   RecommendationRecord,
+  SkillClaimRecord,
   TrajectoryRecord,
   UntreatedForecastRecord,
   WeeklyDirectionRecord,
@@ -496,6 +497,25 @@ export function aDomainPreference(
   } as DomainPreferenceRecord;
 }
 
+/**
+ * A skill claim (Prompt 8C).
+ *
+ * Unsupported by default, because that is the normal state of a new claim and the one
+ * the export rule cares about.
+ */
+export function aSkillClaim(overrides: Partial<SkillClaimRecord> = {}): SkillClaimRecord {
+  return {
+    ...envelope('skill-claim', 36),
+    ...OBSERVED,
+    statement: 'I can set up Activity One end to end',
+    topic: 'Topic One',
+    intendedUse: 'interview',
+    supportingRecordIds: [],
+    state: 'active',
+    ...overrides,
+  } as SkillClaimRecord;
+}
+
 /** A guide session (Phase 6). Completed with nothing skipped. */
 export function aGuideSession(
   producedRecordIds: readonly string[] = [],
@@ -557,5 +577,6 @@ export function oneOfEveryFamily(): Record<string, unknown> {
     'learned-belief': aLearnedBelief(effectEvaluation.recordId),
     'guide-session': aGuideSession([observation.recordId]),
     'domain-preference': aDomainPreference(),
+    'skill-claim': aSkillClaim(),
   };
 }

@@ -207,10 +207,15 @@ The first vertical slice requires **twenty** families. All are implemented in Ph
 | 19 | `QuestionRecord` |
 | 20 | `QuestionAnswerRecord` |
 
-**Activated later:**
+**Activated later** — twenty-four families are registered as of Phase 7 Prompt 8C:
 
 - `LearnedBeliefRecord` — Phase 5, when learning behavior exists.
-- Domain-specific schemas — only when that domain enters Phase 7.
+- `GuideSessionRecord` — Phase 6, because a guide that legitimately asked nothing new
+  leaves no observations behind, and "I checked in and nothing had changed" cannot be
+  reconstructed from anything else.
+- `DomainPreferenceRecord` — Phase 7 Prompt 8A. Which areas are switched on is the owner's
+  decision with a date, not a setting.
+- `SkillClaimRecord` — Phase 7 Prompt 8C, the first **domain content** family. See §4.2.
 
 ### 4.1 Resolved discrepancy: `WeeklyDirectionRecord`
 
@@ -231,6 +236,21 @@ specialized specifications in the controlling order.
 Time/attention/capacity, North Star/goals/commitments/life seasons, and career/work/learning
 are served entirely by the shared core records above. No area-specific schema is created in
 Phase 2 or Phase 4. The alpha scope is not permission to build three separate engines.
+
+**One family has since been added, and the bar it had to clear is why.** Phase 7 Prompt 8B
+delivered Health, recovery, and energy with **no** new family — everything it reads is an
+ordinary observation. Prompt 8C added exactly one, `SkillClaimRecord`, because what the
+owner would claim about themselves is not derivable from what they did: two people with
+identical study records may claim entirely different things, and the gap between claim and
+evidence is the domain's central reading.
+
+It carries **no assertion that the claim is true** — no `proven`, `level`, or `confidence`
+field exists, so an unsupported claim cannot be stored, rendered, or exported as a fact.
+Support is computed from the records the claim cites (`LEG-062`).
+
+A domain slice may add at most one content family, and only where the content is
+irreducible in this sense. Everything else a domain shows still comes from the shared
+records, which is what stops seven domains becoming seven databases.
 
 ## 5. Projection layer
 
@@ -385,6 +405,7 @@ officially supported GitHub Actions approach.
 | First intelligent slice (4) | Fact versus inference; missing and stale data; forecast targets and horizons; action effects; safety and capacity filtering; deliberate silence; reason traces; deterministic scenarios |
 | Learning and graphs (5) | Outcome windows; execution fidelity; forecast evaluation; recommendation-effect evaluation; unresolved outcomes; expected-versus-actual views; belief changes; chart accessibility and missing data |
 | Private alpha and release (6, 10) | Encrypted backup and restore; corruption and interruption; fresh-profile recovery; app lock; accessibility; responsive behavior; performance; browser matrix; deployment and rollback; full traceability |
+| Domain slices (7) | The shared panel contract; one candidate per domain; visual eligibility earned **and refused**; Update This Area owning its own questions while the morning stays unchanged; each domain's own prohibited vocabulary asserted against the rendered surface |
 
 Coverage percentage is a signal, not the goal. Critical behavior must be covered
 (`TEST-001`).
@@ -400,7 +421,7 @@ The following are **recorded, not created**. Their current status is tracked in
 | Research-card library | Phase 4, just in time, per implemented rule |
 | Model-candidate registry | Phase 8, only for active problems with real candidates |
 | Retired-rule ledger | Phase 8, only when a rule is actually retired |
-| Full domain schemas | Phase 7, one domain at a time |
+| Full domain schemas | Phase 7, one domain at a time — and only where the content is irreducible. Health added none; Career added one (§4.2) |
 | Full traceability generator | Phase 10 |
 | Production security and release artifacts | Phase 10 |
 | `LearnedBeliefRecord` and learning governor | Phase 5 |

@@ -167,6 +167,80 @@ function healthState(
   } as unknown as CanonicalRecord;
 }
 
+/** A career observation — the shared observation family, filed under career. */
+function careerState(
+  attribute: string,
+  state: string,
+  occurredMs = -2 * HOUR,
+): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'workplace',
+    category: 'career-work-learning',
+    attribute,
+    value: { kind: 'state', state },
+  } as unknown as CanonicalRecord;
+}
+
+function careerNote(attribute: string, text: string, occurredMs = -2 * HOUR): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'workplace',
+    category: 'career-work-learning',
+    attribute,
+    value: { kind: 'note', text },
+  } as unknown as CanonicalRecord;
+}
+
+function retrieval(ordinal: number, label: string, occurredMs = -2 * HOUR): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'workplace',
+    category: 'career-work-learning',
+    attribute: 'state:retrieval-strength',
+    value: {
+      kind: 'anchored-scale',
+      scaleId: 'retrieval-strength',
+      scaleVersion: 1,
+      ordinal,
+      label,
+    },
+  } as unknown as CanonicalRecord;
+}
+
+/** A Work Win — one canonical event, projected to six surfaces and copied to none. */
+function workWin(text: string, occurredMs = -1 * DAY): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'workplace',
+    category: 'career-work-learning',
+    attribute: 'capture:career-and-learning:work-win',
+    value: { kind: 'note', text },
+  } as unknown as CanonicalRecord;
+}
+
+/** A claim the owner would make. Carries no assertion that it is true. */
+function claim(
+  statement: string,
+  topic: string,
+  supportingRecordIds: readonly string[] = [],
+): CanonicalRecord {
+  return {
+    ...envelope('skill-claim', -5 * DAY),
+    ...OBSERVED,
+    privacy: 'workplace',
+    statement,
+    topic,
+    intendedUse: 'interview',
+    supportingRecordIds: [...supportingRecordIds],
+    state: 'active',
+  } as unknown as CanonicalRecord;
+}
+
 function star(): CanonicalRecord {
   return {
     ...envelope('north-star', -30 * DAY),
@@ -802,6 +876,106 @@ export const SCENARIOS: readonly Scenario[] = [
       domainPreference('health-recovery-energy', 'enabled'),
       healthScale('physical-energy', 4, 'Good', -3 * DAY),
       healthScale('sleep-recovery', 4, 'Good', -3 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  /* --- Prompt 8C: Career, Azure, and learning ----------------------------- */
+
+  build(
+    'career-no-next-step',
+    'No next step written down',
+    'Career on, study happening, and nothing recorded about what comes next. Expect the smallest possible move: write one sentence.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 11),
+      ...decliningWeeks(),
+      domainPreference('career-and-learning', 'enabled'),
+      careerState('career:studied', 'Yes', -2 * DAY),
+      careerState('career:barrier', 'I was not sure what to do next', -2 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'career-unsupported-claim',
+    'A claim with nothing behind it',
+    'A next step is recorded and a claim has no evidence. Expect the gap named as the most useful thing on the screen, not as a failing.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 11),
+      ...decliningWeeks(),
+      domainPreference('career-and-learning', 'enabled'),
+      careerNote('career:next-step', 'Finish the networking lab', -1 * DAY),
+      careerState('career:studied', 'Yes', -1 * DAY),
+      claim('I can design a hub-and-spoke network', 'networking'),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'career-proven-claim',
+    'A claim with a Work Win behind it',
+    'One canonical Work Win, cited by a claim. Expect the ladder at its top rung and the same record feeding six surfaces.',
+    ((): CanonicalRecord[] => {
+      // Built first so the claim can cite their real ids. A claim points at evidence;
+      // evidence never points at a claim, which is what keeps the direction of proof
+      // one-way.
+      const lab = careerState('career:lab-independence', 'Did it on my own', -3 * DAY);
+      const win = workWin('Migrated the reporting service without downtime');
+
+      return [
+        star(),
+        goal('Goal One', 'career-work-learning', 2),
+        ...decliningWeeks(),
+        domainPreference('career-and-learning', 'enabled'),
+        careerNote('career:next-step', 'Write up the migration', -1 * DAY),
+        careerState('career:studied', 'Yes', -3 * DAY),
+        lab,
+        win,
+        retrieval(4, 'Most of it', -3 * DAY),
+        retrieval(3, 'About half', -10 * DAY),
+        claim('I can run a container migration end to end', 'containers', [
+          lab.recordId,
+          win.recordId,
+        ]),
+        context({ minutes: 40, capacity: 'moderate' }),
+      ];
+    })(),
+  ),
+
+  build(
+    'career-interrupted',
+    'Interrupted and never resumed',
+    'A session stopped and not picked back up. Expect resumption offered while that is still cheap.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 11),
+      ...decliningWeeks(),
+      domainPreference('career-and-learning', 'enabled'),
+      careerNote('career:next-step', 'Finish the identity module walkthrough', -1 * DAY),
+      careerState('career:studied', 'Yes', -1 * DAY),
+      careerState('career:re-entry', 'No', -1 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'career-recurring-barrier',
+    'The same obstacle keeps recurring',
+    'Setup cost recorded three times. Expect it named as a recurring obstacle, with no inference about why.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 2),
+      ...decliningWeeks(),
+      domainPreference('career-and-learning', 'enabled'),
+      careerNote('career:next-step', 'Rebuild the lab environment', -1 * DAY),
+      careerState('career:studied', 'Yes', -1 * DAY),
+      retrieval(4, 'Most of it', -1 * DAY),
+      careerState('career:barrier', 'Getting set up takes too long', -3 * DAY),
+      careerState('career:barrier', 'Getting set up takes too long', -6 * DAY),
+      careerState('career:barrier', 'Getting set up takes too long', -9 * DAY),
+      careerState('career:barrier', 'I was interrupted', -12 * DAY),
       context({ minutes: 40, capacity: 'moderate' }),
     ],
   ),

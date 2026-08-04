@@ -59,7 +59,34 @@ export interface VisualSpec {
   readonly uncertainty: string;
   readonly location: VisualLocation;
   readonly decisionValue: string;
+  /**
+   * What a meter or stage path draws with, when one has been earned.
+   *
+   * Absent by default, and absent is the common case: a spec also records a
+   * representation that was **considered and refused**, and a refusal has nothing to
+   * draw. Health earned neither of these; career is the first domain to earn both,
+   * which is when the data had to travel alongside the declaration.
+   *
+   * Line graphs and bar comparisons are not here — they carry their points as
+   * `Graph`s, which several surfaces outside the domain panel already render.
+   */
+  readonly data?: VisualData | undefined;
 }
+
+/** The points behind a meter or a stage path. */
+export type VisualData =
+  | {
+      readonly kind: 'meter';
+      readonly current: string;
+      readonly target: string;
+      /** `undefined` when the fraction would be invented — the bar is then omitted. */
+      readonly percent: number | undefined;
+    }
+  | {
+      readonly kind: 'stage-path';
+      readonly stages: readonly string[];
+      readonly currentIndex: number | undefined;
+    };
 
 export type Eligibility =
   { readonly eligible: true } | { readonly eligible: false; readonly because: string };

@@ -4,35 +4,32 @@
 
 - Repository: life-command-os (https://github.com/Bill6006/life-command-os)
 - Plan version: 3.0 Final
-- Current phase: **Phase 7 — framework and the first domain slice complete.** Slices
-  8C–8H outstanding.
-- Current prompt: PROMPT 8B (complete)
+- Current phase: **Phase 7 — framework and two domain slices complete.** Slices 8D–8H
+  outstanding.
+- Current prompt: PROMPT 8C (complete)
 
 ## Gate status
 
-- Status: **GREEN.** Every Prompt 8B requirement is met.
+- Status: **GREEN.** Every Prompt 8C requirement is met.
 - Private local use: **READY** (unchanged from Prompt 7B).
 - Gate evidence:
-  - *Uses shared canonical records* — health activated a **category**, not a store. The
-    domain reads the new category and the one its data used to live in, so nothing
-    recorded before this slice is stranded.
+  - *Uses shared canonical records* — career reads the category it has always read. One
+    new family was added, `SkillClaimRecord`, and §4.2 of the architecture overview
+    records the bar it had to clear.
   - *One domain intelligence panel* — the shared 8A contract, unchanged.
-  - *Zero or one candidate* — chosen by a strict order, not a score, so no benefit can
-    outrank a safety concern.
-  - *Observable outcomes defined* — every action carries a behaviour-first follow-up
-    and a stopping point.
+  - *Zero or one candidate* — five branches in a strict order, ending in silence.
+  - *Observable outcomes defined* — every action carries a behaviour-first follow-up.
   - *One optional domain move, subordinate* — asserted.
-  - *Update This Area supported* — its own guide kind, owned by the panel, and it never
-    lengthens the morning check-in. Asserted from both directions.
+  - *Update This Area supported* — career's own questions, and the morning check-in
+    unchanged. Asserted from both directions.
   - *Disable and deprioritise without deleting history* — unchanged from 8A.
   - *What Changed exposed* — through the shared contract.
-  - *Only valid representations* — a line trend and a bar comparison earned; a **meter
-    refused**, with the reason recorded and rendered.
+  - *Only valid representations* — a trend, a bar comparison, a **meter**, and a **stage
+    path**, each earned against the same eligibility rules that refused health a meter.
   - *Privacy and safety boundaries preserved* — everything the slice captures is
-    classified `health`; no diagnosis, treatment, programming, or macro vocabulary
-    exists anywhere in it.
+    classified `workplace` and withheld from AI exports unless explicitly included.
   - *Absent from Now when irrelevant* — nothing about a domain reaches Now.
-  - *Synthetic tests added* — safety, missing, stale, contradictory, Can't Now, silence.
+  - *Synthetic tests added* — five career scenarios, 39 unit and 14 browser tests.
 
 ## GitHub Pages owner preview
 
@@ -44,115 +41,129 @@
 
 ## The decision this slice turned on
 
-Health is the first domain that can hurt someone by being helpful. A health engine that
-composes its own advice will eventually compose advice about a symptom, and the distance
-between "try a short walk" and "that sounds like it might be…" is one plausible-looking
-template.
+The gap between what you would say about yourself and what your records would back up.
 
-**So there is no template.** Every action the domain can propose is written out in full
-in `domain/health/actions.ts` and reviewed as text. If an action is not in that list the
-domain cannot produce it — not because a filter catches it, but because no code path
-constructs one.
+That gap is the most useful thing this domain can show, and it is one sentence away from
+being an accusation. So the claim and the verdict are kept structurally apart:
+`SkillClaimRecord` stores what the owner would claim and **has no field for whether it is
+true**. `proven`, `level`, and `confidence` are parse failures. Support is computed from
+the records the claim cites, which means an unsupported claim is a normal state rather
+than a failing — and "exported as true" has no representation to travel in.
 
-And the domain knows when to stop. Something significantly in the way *for weeks*
-produces one output: worth raising with someone qualified. That is not advice about a
-symptom; it is the app declining to have a view and saying who might.
+The ladder works the same way. `rungFor` takes counts of evidence, never a self-report,
+so a claim cannot climb by being asserted more confidently. Nine study sessions do not
+reach the rung one lab does.
 
 ## Work completed
 
-- **`health-recovery-energy` activated as a life category**, through the slice's own
-  contract — which is what `categories.ts` has said since Phase 2 is the only way a
-  category may arrive. Sleep and food captures moved to it; the domain reads both, so
-  records written before today still count.
-- **Physical and mental energy as separate scales**, asked from Update This Area rather
-  than the morning. They change which action fits, and there is no combined figure
-  anywhere on the reading.
-- **Pain as interference, not intensity**, and persistence as duration, not severity.
-  Both are things the owner can answer without grading themselves.
-- **Hydration, food need, movement, and movement response** — broad answers only.
-- **Time-of-day energy patterns**, as a bar comparison whose empty buckets are absent
-  rather than shown as low.
-- **One health candidate**, by a six-step order ending in silence.
-- **Update This Area** — its own guide kind, entered from the panel, asking that
-  domain's questions and nothing else.
-- **Meditation as a shared action captured by purpose** — no page, no streak, no target.
-- **A recovery trend** whose unrecorded nights are gaps, and a **refused meter** whose
-  refusal is recorded and rendered.
+- **The exact next step**, in the owner's words, stored verbatim and shown back unedited.
+- **Ten study obstacles**, recorded as what happened. The Blueprint's psychological
+  taxonomy survives as ids; none of it is visible wording.
+- **A six-rung evidence ladder** — not started, read about it, followed a guide, did it
+  with help, did it alone, used it for real — defined by evidence, not self-assessment.
+- **`SkillClaimRecord`**, the 24th family and the first domain *content* family, carrying
+  no assertion that the claim is true.
+- **Retrieval strength over eight weeks**, where a week with no recall check is a gap and
+  never a zero.
+- **Work Wins** — one canonical record projected to six surfaces and copied to none.
+- **Interruption and re-entry**, offering resumption while that is still cheaper than
+  restarting.
+- **One career candidate**, by a five-step order ending in silence.
+- **Update This Area** for career, and a morning check-in that is exactly as long as it
+  was.
+- **A meter and a stage path, both earned** — the first time either has been drawn.
+- **The AI export names claims and what stands behind them**, under a header that says a
+  claim is never exported as true.
 
 ### Decisions worth naming
 
-- **An order, not a score.** A scored health candidate would let a large enough expected
-  benefit outrank a safety concern. Six ordered branches cannot.
-- **The escalation asks how long, not how bad.** Duration is a fact the owner can state.
-  Severity on a scale of ten is a clinical judgement, and asking for one would be this
-  product pretending to a role it has explicitly refused.
-- **Update This Area is its own owner.** If health questions joined the morning guide,
-  switching an area on would make the daily check-in longer — and after seven slices the
-  check-in would be the checkbox wall this rebuild exists to end. A test asserts the
-  morning is unchanged.
-- **Sleep and food moved category, not home.** They were filed under time-and-capacity
-  because that was the decision they informed. That was a category error waiting to
-  compound; the slice that gives them a real home is the moment to fix it.
-- **The meter refusal is rendered, not just computed.** "Health 72%" is exactly what the
-  eligibility rules exist to prevent, so the panel says a meter was considered and why
-  it was rejected.
+- **Career earns a meter; health refused one.** Same eligibility rules, opposite answer.
+  "Claims with something behind them, out of claims made" has a denominator the owner
+  defined themselves; health has no total it is a fraction of. The difference is a
+  property of the evidence, not of who wrote the slice — which is the strongest evidence
+  so far that the 8A rules are doing real work.
+- **The forbidden vocabulary rule governs the product's voice, not the owner's.** Someone
+  studying for a certification will write "finish the identity module", and the app shows
+  it back unaltered — paraphrasing it would make the record wrong. The test strips the
+  owner's own strings out of the records before scanning, so app copy that drifts into
+  course vocabulary still fails.
+- **Fear and perfectionism are ids, not labels.** Merging them into "something else" would
+  lose the pattern; asking "were you afraid?" is self-diagnosis, which `OBS-002` forbids.
+  The visible wording says what happened: "It looked like more than I had in me."
+- **Career does not take over its category summary.** Health delegated its summary to its
+  slice because the slice created that category. `career-work-learning` predates this
+  slice and its focused-hours summary is still true, so the slice adds a reading beside it
+  rather than replacing it. A domain panel and a category overview answer different
+  questions.
+- **Four closed actions, and none of them is "do the next module."** The Blueprint rules
+  out course hosting and a second task board; both are absent rather than filtered.
 
 ## Files created or modified
 
-Created (5): `src/domain/health/actions.ts`;
-`src/intelligence/domains/health/{index,assessHealth,healthCandidate}.ts`;
-`tests/unit/health.test.ts`; `tests/e2e/health.spec.ts`
+Created (7): `src/domain/career/ladder.ts`; `src/domain/records/career.ts`;
+`src/intelligence/domains/career/{index,assessCareer,careerCandidate}.ts`;
+`tests/unit/career.test.ts`; `tests/e2e/career.spec.ts`
 
-Modified: `domain/records/{categories,scales,guides}.ts`;
-`domain/prompts/{definitions,ownership}.ts`; `domain/domains/definitions.ts`;
-`intelligence/{index}.ts`; `intelligence/state/categorySummaries.ts`;
-`intelligence/guides/planGuide.ts`; `intelligence/domains/domainPanel.ts`;
-`ui/features/direction/{DirectionSurface,DomainPanelView}.tsx`;
-`ui/features/shell/AppShell.tsx`; `ui/features/guides/GuideSurface.tsx`;
-`app/scenarios.ts`; four unit tests; `tests/e2e/domains.spec.ts`;
+Modified: `domain/records/{index,scales}.ts`; `domain/prompts/definitions.ts`;
+`domain/domains/definitions.ts`; `intelligence/index.ts`;
+`intelligence/domains/captureRouting.ts`; `intelligence/visuals/eligibility.ts`;
+`application/queries/aiExport.ts`; `ui/features/direction/DomainPanelView.tsx`;
+`app/scenarios.ts`; `tests/fixtures/records.ts`; `tests/unit/{records,prompts}.test.ts`;
+`tests/e2e/domains.spec.ts`;
 `docs/{REQUIREMENTS,architecture/ARCHITECTURE_OVERVIEW}.md`
 
 ## Tests and evidence
 
-- **Unit: 339 passed**, up from 306. 33 new for the slice.
-- **Browser: 318 passed**, up from 298. 20 new across desktop and mobile.
-- Covers: the closed action set; no clinical or programming vocabulary in the actions,
-  the prompts, or the rendered panel; no 1-to-10 pain scale; deferral to a person after
-  weeks with no interpretation of the symptom; only stopping proposed while something is
-  significantly in the way; physical and mental energy read separately and changing which
-  action fits; every unreported reading left undefined; three-day-old readings marked
-  stale; a disagreement surfaced rather than resolved; silence as the normal case; health
-  absent from Now; the full panel contract with no numeric field; a recovery trend whose
-  gaps are gaps; a meter refused with its reason; Update This Area asking only health
-  questions; the morning check-in unchanged; meditation captured by purpose with no
-  streak anywhere; and Can't Now behaving identically for a health action.
-- **One real defect found and fixed rather than tested around:** the 8A domain panel
-  rendered only the *first* declared visual, so the meter refusal existed in the data and
-  never reached the screen. That made "the absence of a percentage is a decision on the
-  record" true of the record and false of the page. The panel now renders every
-  declaration.
-- **One improvement the tests prompted:** career offered an "Update this area" button
-  with no prompts behind it, which would have opened an empty guide. A domain can now be
-  readable before it is updatable, and says so plainly instead.
-- Four older assertions were correct failures and were updated to read from
-  `ENABLED_CATEGORIES` and `SCALE_IDS` rather than hard-coded counts, so activating the
-  next category or scale cannot break them again.
+- **Unit: 379 passed**, up from 339. 40 new for the slice.
+- **Browser: 348 passed**, up from 320. 28 new — 14 tests across desktop and mobile.
+- Covers: a claim family with no truth field, asserted by parse failure; the ladder
+  climbing only on cited evidence; nine study sessions never reaching the rung one lab
+  does; one Work Win reaching six surfaces from one record; the five-branch candidate
+  order including silence; barriers counted with no cause inferred and no psychological
+  label rendered; a meter earned and drawn; a stage path whose position is marked for
+  assistive technology and never by colour alone; a retrieval week with no check plotted
+  as a gap; an unsupported claim exported as claimed and undemonstrated; claims withheld
+  by default as workplace data; Update This Area asking only career questions; the morning
+  check-in unchanged; no course or task-board vocabulary in the actions, the prompts, or
+  the rendered panel; the owner's own wording echoed verbatim; Now within five panels;
+  and no horizontal overflow at 375×812.
+- **One real defect found and fixed rather than tested around:** the domain panel rendered
+  every visual as an evidence summary, labelling anything after the first "Not shown
+  here". That was correct while health was the only slice — its extra visual was a
+  refusal — and wrong the moment a domain earned a meter, which would have reached the
+  screen under the refusal heading. `VisualSpec` now carries what a meter or stage path
+  draws with, and the panel renders each kind as itself.
+- Three older assertions were correct failures: the scale list, the family count, and the
+  8A claim that career was readable-but-not-updatable. The last is what 8C changes, so the
+  test now asserts the opposite and keeps the readable-but-not-updatable state covered
+  through Money, which still has no slice.
 
 ## Privacy status
 
 - Synthetic-only repository: **YES** — scanned clean across all tracked files.
-- Real personal data detected in tracked content: **NO**
-- Commit identity: GitHub noreply address only.
+- Real personal data detected in tracked content: **ONE, now removed from HEAD.** See
+  below.
+- Commit identity: GitHub noreply address only (`193191643+Bill6006@users.noreply.github.com`).
 - Dependency audit: `npm audit` — **0 vulnerabilities**.
-- Everything the health slice captures is classified `health` and excluded from AI
-  exports unless explicitly included.
+- Everything the career slice captures is classified `workplace`.
 - Runtime private-data readiness: **READY.** See `docs/PRIVATE_ALPHA.md`.
+
+### The one privacy finding
+
+`PROJECT_STATUS.md` named the 8D slice after a real child's first name, carried in from
+the prompt pack's own prompt title. The row now reads "Fatherhood", matching the domain
+definition, which never contained the name. **The name is not repeated here** — writing it
+into this note would have put it straight back into tracked content.
+
+**It remains in one commit of history** (`b5ffe54`, Prompt 8A). Removing it requires
+rewriting history and force-pushing, as was done once before for the email address. That
+is the owner's call and is listed under Blockers.
 
 ## Architecture decisions
 
 No new ADRs. The slice applies decisions already recorded: ADR-0005 (append-oriented
-records), ADR-0008 (the Console's five-panel cap, which is why no domain reaches Now),
-and the Prompt 8A framework contracts.
+records), ADR-0008 (the Console's five-panel cap, which is why no domain reaches Now), and
+the Prompt 8A framework contracts.
 
 ## New dependencies
 
@@ -160,36 +171,44 @@ and the Prompt 8A framework contracts.
 
 ## New abstractions or infrastructure
 
-**1. `domain/health/actions.ts`** — a closed action set, not a generator.
-- Active requirement: `SAFE-001`, Blueprint §9.2, tasks 8–9 and 12.
-- Why smaller was insufficient: a filter over generated text catches the phrasings you
-  thought of. A closed set has no code path that produces the ones you did not.
+**1. `domain/career/ladder.ts`** — rungs, obstacle taxonomy, and a closed action set.
+- Active requirement: `LEG-060`, `LEG-061`, tasks 2–3 and 8–9.
+- Why smaller was insufficient: the ladder is read by the assessment, the candidate, the
+  panel, and the export. A second definition of what "did it alone" means would drift
+  within a phase, and the drift would be invisible.
 
-**2. `intelligence/domains/health/`** — reading, candidate, and contribution.
-- Active requirement: tasks 1–11.
-- Why smaller was insufficient: the reading is used by both the category summary and
-  the panel, and a second copy would drift from the first within a phase.
+**2. `domain/records/career.ts`** — `SkillClaimRecord`.
+- Active requirement: `LEG-062`, task 4.
+- Why smaller was insufficient: what the owner would claim about themselves is not
+  derivable from what they did. Two people with identical study records may claim
+  entirely different things, and the gap is the domain's central reading.
 
-**3. The `update-area` guide kind.**
-- Active requirement: `XDS-034`, task 10.
-- Why smaller was insufficient: folding domain questions into an existing guide is
-  precisely how the daily check-in grows into a form.
+**3. `intelligence/domains/career/`** — assessment, candidate, contribution.
+- Active requirement: tasks 1–12.
+- Why smaller was insufficient: the same shape health uses; the assessment is read by
+  both the panel and the claim evaluation.
+
+**4. `VisualSpec.data`** — what a meter or stage path draws with.
+- Active requirement: `OWN-051`, `OWN-053`, tasks 11–12.
+- Why smaller was insufficient: an earned meter with no data reached the screen under the
+  refusal heading, which said the opposite of what it meant.
 
 ## Known limitations
 
-- **Six domains remain unimplemented.** Career (8C), fatherhood (8D), emotional and
-  relationships (8E), faith (8F), home (8G), money (8H). Each is readable-but-not-updatable
-  until its slice lands, and says so.
-- **Health is switched off by default**, like every domain. It appears only after the
-  owner enables it.
-- **The energy split is only asked from Update This Area.** That is deliberate — adding
-  it to the morning would cost two questions a day for a distinction that matters
-  occasionally — but it means the split is often absent and the general scale is used.
-- **Time-of-day patterns need readings across the day** to say anything, and a check-in
-  habit clustered at one hour will produce one bucket.
-- **No cross-domain synthesis yet.** Health competes in the same comparison as
-  everything else; genuine tradeoff reasoning between areas is Phase 8.
-- **Cached startup is still unmeasured.** Bundle is ~163 kB gzipped, up from ~160 kB.
+- **Five domains remain unimplemented.** Fatherhood (8D), emotional and relationships
+  (8E), faith (8F), home (8G), money (8H). Each is readable-but-not-updatable until its
+  slice lands, and says so.
+- **Career is switched off by default**, like every domain.
+- **The claim meter counts evidence, not adequacy.** One study session puts something
+  behind a claim here; it may not support that claim in an interview. The visual says so
+  in its own uncertainty declaration, but it is a real limit of the reading.
+- **Obstacles are only as good as what gets recorded.** Sessions where nothing was noted
+  are not counted as obstacle-free, but they are also not counted at all.
+- **Retrieval needs a habit to say anything.** Two weeks of readings is the minimum, and a
+  gap-heavy trend stays a gap-heavy trend.
+- **No cross-domain synthesis yet.** Career competes in the same comparison as everything
+  else; genuine tradeoff reasoning between areas is Phase 8.
+- **Cached startup is still unmeasured.** Bundle is ~175 kB gzipped, up from ~163 kB.
 - Carried forward: the local database is not encrypted at rest; the app lock hides the
   screen only; notifications do not exist; the regression suite runs against a
   bridge-enabled build with production covered by 14 dedicated tests; `frame-ancestors`
@@ -200,8 +219,7 @@ and the Prompt 8A framework contracts.
 
 | Deferred | Activates |
 | --- | --- |
-| Career, Azure, and learning | Prompt 8C |
-| Fatherhood and Adaya | Prompt 8D |
+| Fatherhood | Prompt 8D |
 | Emotional state, social, and relationships | Prompt 8E |
 | Faith and meaning | Prompt 8F |
 | Home and environment | Prompt 8G |
@@ -212,16 +230,20 @@ and the Prompt 8A framework contracts.
 
 ## Blockers
 
-**None blocking Prompt 8C.**
+**None blocking Prompt 8D.**
 
-One non-blocking owner action carried forward: **measure cached startup on the Samsung
-phone** and say if it exceeds three seconds.
+Two non-blocking owner decisions carried forward:
+
+1. **Measure cached startup on the Samsung phone** and say if it exceeds three seconds.
+2. **Decide whether to purge a child's first name from commit `b5ffe54`.** HEAD is clean.
+   A history rewrite and force-push would remove it entirely; leaving it means one commit
+   message-adjacent file in history contains it.
 
 ## Next permitted prompt
 
-**PROMPT 8C — Phase 7 domain slice: Career, Azure, and learning.**
+**PROMPT 8D — Phase 7 domain slice: Fatherhood.**
 
-The framework has now been through one real slice and held: health added a category, a
-panel, a candidate, and its own questions without touching the global decision, the
-Now surface, or any other area's records. 8C is where it gets tested against a domain
-with genuinely different evidence — proof and progression rather than state and capacity.
+Two slices have now run through the shared framework, and the useful result is that they
+disagreed: health refused a meter and career earned one, on the same rules. 8D is the
+hardest test of those rules so far — a domain where almost nothing is countable and where
+a meter would be actively harmful.

@@ -211,6 +211,8 @@ describe('the approved anchored scales', () => {
       'physical-energy',
       'mental-energy',
       'pain-interference',
+      // Prompt 8C. What came back without looking — a trend, so it needs ordinals.
+      'retrieval-strength',
     ]);
     expect(SCALES.energy.anchors.map((a) => a.label)).toEqual([
       'Drained',

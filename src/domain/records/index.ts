@@ -51,6 +51,7 @@ import {
 import { learnedBeliefRecord, type LearnedBeliefRecord } from './learning';
 import { guideSessionRecord, type GuideSessionRecord } from './guides';
 import { domainPreferenceRecord, type DomainPreferenceRecord } from './domains';
+import { skillClaimRecord, type SkillClaimRecord } from './career';
 import {
   questionAnswerRecord,
   questionRecord,
@@ -72,13 +73,15 @@ export * from './learning';
 export * from './scales';
 export * from './guides';
 export * from './domains';
+export * from './career';
 
 /**
- * Twenty-three canonical record families.
+ * Twenty-four canonical record families.
  *
  * The twenty of the first vertical slice, plus `learned-belief` (**Phase 5**),
- * `guide-session` (**Phase 6**), and `domain-preference` (**Phase 7 Prompt 8A**).
- * Each was deliberately absent until there was behaviour for it to describe.
+ * `guide-session` (**Phase 6**), `domain-preference` (**Prompt 8A**), and
+ * `skill-claim` (**Prompt 8C**). Each was deliberately absent until there was
+ * behaviour for it to describe.
  *
  * `guide-session` is canonical rather than derived because it cannot be
  * reconstructed from the observations it produced: a guide that legitimately asked
@@ -90,8 +93,14 @@ export * from './domains';
  * **no domain content** — every fact a domain shows still comes from the shared
  * records, which is what stops seven domains becoming seven databases.
  *
- * Domain-specific *content* families arrive one at a time from Prompt 8B. Adding one
- * early is a stop condition (`LEAN-001`), and none exists yet.
+ * `skill-claim` is the **first genuinely domain-specific family**, and it earns that
+ * by being irreducible: what the owner would claim about themselves cannot be derived
+ * from observations, and the gap between it and what the evidence supports is the most
+ * useful thing the career slice has to say. It carries no assertion of truth — see
+ * `career.ts`.
+ *
+ * Domain content families arrive one at a time with their slice. Adding one early is a
+ * stop condition (`LEAN-001`); Prompt 8B needed none, and this is 8C's only one.
  */
 export const RECORD_TYPES = [
   'observation',
@@ -117,6 +126,7 @@ export const RECORD_TYPES = [
   'learned-belief',
   'guide-session',
   'domain-preference',
+  'skill-claim',
 ] as const;
 
 export type RecordType = (typeof RECORD_TYPES)[number];
@@ -144,7 +154,8 @@ export type CanonicalRecord =
   | QuestionAnswerRecord
   | LearnedBeliefRecord
   | GuideSessionRecord
-  | DomainPreferenceRecord;
+  | DomainPreferenceRecord
+  | SkillClaimRecord;
 
 /**
  * Schema per family.
@@ -177,6 +188,7 @@ export const RECORD_SCHEMAS: Record<RecordType, z.ZodType> = {
   'learned-belief': learnedBeliefRecord,
   'guide-session': guideSessionRecord,
   'domain-preference': domainPreferenceRecord,
+  'skill-claim': skillClaimRecord,
 };
 
 /** Families that record first-hand fact rather than system interpretation. */
@@ -192,6 +204,7 @@ export const OBSERVED_RECORD_TYPES = [
   'question-answer',
   'guide-session',
   'domain-preference',
+  'skill-claim',
 ] as const satisfies readonly RecordType[];
 
 export function isRecordType(value: unknown): value is RecordType {

@@ -1,5 +1,6 @@
 import type { LifeCategory } from '../records/categories';
 import type { PrivacyClass } from '../records/envelope';
+import { STUDY_BARRIERS } from '../career/ladder';
 import { MEDITATION_PURPOSE_LABELS, MEDITATION_PURPOSES } from '../health/actions';
 import { SCALE_LIST, scaleAttribute, type ScaleId } from '../records/scales';
 import { assertPromptCatalogue, type PromptDefinition } from './policy';
@@ -581,6 +582,126 @@ export const HEALTH_PROMPTS: readonly CapturePrompt[] = [
 ];
 
 /* -------------------------------------------------------------------------- */
+/* Career, Azure, and learning (Prompt 8C)                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Update This Area, for career and learning (`OWN-049`, LEG-059, LEG-063).
+ *
+ * Every question is about something that happened, and every one of them can be
+ * answered in a couple of seconds. Note especially what is **not** here: no "how
+ * confident do you feel about Kubernetes", no self-rated skill level, no percentage
+ * through a course. The ladder is climbed by evidence, so the questions collect
+ * evidence.
+ */
+export const CAREER_PROMPTS: readonly CapturePrompt[] = [
+  {
+    promptId: 'update-area:career-and-learning',
+    text: 'Have you studied or practised since last time?',
+    kind: 'observable',
+    answers: ['Yes', 'No', UNSURE],
+    allowsUnknown: true,
+    whatItCouldChange: ['state-interpretation', 'recommendation'],
+    input: choice(['Yes', 'No', UNSURE]),
+    attribute: 'career:studied',
+    category: 'career-work-learning',
+    privacy: 'workplace',
+  },
+  {
+    /**
+     * The single highest-value thing this domain can hold.
+     *
+     * "I do not know what to do next" is the most common reason a study session does
+     * not start, and it is the one the app can actually remove — by having asked for
+     * the next step while the context was still fresh.
+     */
+    promptId: 'career:next-step',
+    text: 'What is the exact next step?',
+    kind: 'observable',
+    answers: [],
+    allowsUnknown: true,
+    whatItCouldChange: ['candidate-eligibility', 'recommendation'],
+    input: { kind: 'text', maxLength: 200 },
+    attribute: 'career:next-step',
+    category: 'career-work-learning',
+    privacy: 'workplace',
+  },
+  {
+    /**
+     * What was in the way — behaviourally worded (LEG-065).
+     *
+     * The Blueprint's taxonomy includes "fear" and "perfectionism". Those ids are kept
+     * so Phase 8 can learn from them, but they are never the words on screen: offering
+     * "fear" as a button asks the owner to accept a label about themselves, which
+     * `OBS-002` forbids and which produces a worse answer than describing what happened.
+     */
+    promptId: 'career:barrier',
+    text: 'What was in the way?',
+    kind: 'observable',
+    answers: STUDY_BARRIERS.map((barrier) => barrier.label),
+    allowsUnknown: true,
+    whatItCouldChange: ['candidate-eligibility', 'recommendation', 'confidence'],
+    input: choice(STUDY_BARRIERS.map((barrier) => barrier.label)),
+    attribute: 'career:barrier',
+    category: 'career-work-learning',
+    privacy: 'workplace',
+  },
+  {
+    promptId: 'career:retrieval',
+    text: 'How much came back without looking?',
+    kind: 'state',
+    answers: ['None of it', 'A little', 'About half', 'Most of it', 'All of it'],
+    allowsUnknown: true,
+    whatItCouldChange: ['state-interpretation', 'confidence'],
+    input: { kind: 'scale', scaleId: 'retrieval-strength' },
+    attribute: scaleAttribute('retrieval-strength'),
+    category: 'career-work-learning',
+    privacy: 'workplace',
+  },
+  {
+    /**
+     * Lab independence — the rung that actually separates knowing from having read.
+     *
+     * Asked as what happened, not as a competence rating.
+     */
+    promptId: 'career:lab-independence',
+    text: 'Did you get through it without following a guide?',
+    kind: 'observable',
+    answers: ['Followed a guide', 'Needed help part way', 'Did it on my own', UNSURE],
+    allowsUnknown: true,
+    whatItCouldChange: ['state-interpretation', 'confidence'],
+    input: choice(['Followed a guide', 'Needed help part way', 'Did it on my own', UNSURE]),
+    attribute: 'career:lab-independence',
+    category: 'career-work-learning',
+    privacy: 'workplace',
+  },
+  {
+    promptId: 'career:re-entry',
+    text: 'Did you get back to it after stopping?',
+    kind: 'observable',
+    answers: ['Yes', 'No', 'Did not stop', UNSURE],
+    allowsUnknown: true,
+    whatItCouldChange: ['recommendation', 'confidence'],
+    input: choice(['Yes', 'No', 'Did not stop', UNSURE]),
+    attribute: 'career:re-entry',
+    category: 'career-work-learning',
+    privacy: 'workplace',
+  },
+  {
+    promptId: 'career:topic',
+    text: 'What was it about?',
+    kind: 'observable',
+    answers: [],
+    allowsUnknown: true,
+    whatItCouldChange: ['state-interpretation'],
+    input: { kind: 'text', maxLength: 120 },
+    attribute: 'career:topic',
+    category: 'career-work-learning',
+    privacy: 'workplace',
+  },
+];
+
+/* -------------------------------------------------------------------------- */
 /* Quick Capture shell (task 15)                                               */
 /* -------------------------------------------------------------------------- */
 
@@ -635,6 +756,7 @@ export const ALL_PROMPTS: readonly CapturePrompt[] = [
   ...SLEEP_PROMPTS,
   ...FOOD_PROMPTS,
   ...HEALTH_PROMPTS,
+  ...CAREER_PROMPTS,
   ...QUICK_CAPTURE_PROMPTS,
 ];
 

@@ -49,6 +49,14 @@ export const SCALE_IDS = [
    * which is observable and which the owner can answer without grading themselves.
    */
   'pain-interference',
+  /**
+   * How much came back without looking (Prompt 8C, LEG-063).
+   *
+   * A scale rather than a choice because retrieval over time is a genuine trend, and
+   * a trend needs comparable ordinals. It measures what was recalled, not how well the
+   * owner thinks they know it — the two diverge exactly where it matters.
+   */
+  'retrieval-strength',
 ] as const;
 export type ScaleId = (typeof SCALE_IDS)[number];
 
@@ -151,6 +159,12 @@ export const SCALES: Record<ScaleId, ScaleDefinition> = {
     'Good',
     'Strong',
   ]),
+  'retrieval-strength': scale(
+    'retrieval-strength',
+    'How much came back without looking?',
+    'more recalled unaided',
+    ['None of it', 'A little', 'About half', 'Most of it', 'All of it'],
+  ),
   'pain-interference': scale(
     'pain-interference',
     'Is anything physical getting in the way right now?',

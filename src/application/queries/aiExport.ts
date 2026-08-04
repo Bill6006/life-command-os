@@ -5,6 +5,7 @@ import {
   type CanonicalRecord,
   type PrivacyClass,
   type RecordType,
+  type SkillClaimRecord,
 } from '../../domain/records';
 import { listAllRecords } from './readRecords';
 
@@ -206,6 +207,23 @@ export function buildAiExport(
     JSON.stringify(record).includes('"status":"unresolved"'),
   ).length;
 
+  /*
+   * Claims are rendered with the evidence behind them and never as facts (LEG-062).
+   *
+   * The record has no field asserting the claim is true, so there is nothing here that
+   * *could* be exported as one. What is exported is the count of supporting records,
+   * which for an unsupported claim is zero and says so in words.
+   */
+  const claims = visible
+    .filter((record): record is SkillClaimRecord => record.recordType === 'skill-claim')
+    .filter((claim) => claim.state === 'active')
+    .map((claim) => {
+      const supporting = claim.supportingRecordIds.length;
+      return supporting === 0
+        ? `- **Claimed, nothing behind it yet:** "${claim.statement}" (${claim.topic}, for ${claim.intendedUse}). No supporting records. This has not been demonstrated.`
+        : `- **Claimed, with ${String(supporting)} supporting record${supporting === 1 ? '' : 's'}:** "${claim.statement}" (${claim.topic}, for ${claim.intendedUse}).`;
+    });
+
   const rangeLabel =
     options.range.kind === 'custom'
       ? `${options.range.fromIso.slice(0, 10)} to ${options.range.toIso.slice(0, 10)}`
@@ -265,6 +283,15 @@ export function buildAiExport(
     'are never combined. Confidence labels are qualitative on purpose.',
     '',
     ...(learning.length === 0 ? ['_Nothing in this window._'] : learning),
+    '',
+    '## Claims, and what supports them',
+    '',
+    'What the owner would say about themselves, beside what the records actually show.',
+    '**A claim is never exported as true** — the record carries no such assertion, so the',
+    'most that can be stated is the evidence, and for an unsupported claim the evidence is',
+    'nothing at all. Treat an unsupported claim as an intention, not a capability.',
+    '',
+    ...(claims.length === 0 ? ['_No claims recorded._'] : claims),
     '',
     '## Open questions for review',
     '',

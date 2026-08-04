@@ -24,9 +24,16 @@ beforeEach(() => {
  * Gate requirement: every active core record validates independently.
  */
 describe('core record families', () => {
-  it('registers twenty-three families, none of them domain content', () => {
-    expect(RECORD_TYPES).toHaveLength(23);
+  it('registers twenty-four families, one of them domain content', () => {
+    expect(RECORD_TYPES).toHaveLength(24);
     expect(Object.keys(RECORD_SCHEMAS).sort()).toEqual([...RECORD_TYPES].sort());
+  });
+
+  it('registers SkillClaimRecord, the first domain content family (Prompt 8C)', () => {
+    // It earns being a family by being irreducible: what the owner would claim about
+    // themselves cannot be derived from observations. It carries no assertion that the
+    // claim is true — see the family's own test below.
+    expect(RECORD_TYPES).toContain('skill-claim');
   });
 
   it('registers DomainPreferenceRecord, activated in Phase 7 Prompt 8A', () => {
@@ -49,18 +56,15 @@ describe('core record families', () => {
     expect(RECORD_TYPES).toContain('guide-session');
   });
 
-  it('still registers no domain-specific content family', () => {
-    // Prompt 8B onwards activates those, one domain at a time. `domain-preference`
-    // is not one of them: it holds a preference, never domain content.
-    for (const domainish of [
-      'sleep',
-      'mood',
-      'expense',
-      'workout',
-      'medication',
-      'milestone',
-    ]) {
-      expect(RECORD_TYPES.some((type) => type.includes(domainish))).toBe(false);
+  it('adds domain content families only with their slice', () => {
+    // One per slice at most, and only where the content is irreducible. Health needed
+    // none — everything it reads is an ordinary observation. These belong to slices
+    // that have not run.
+    for (const notYet of ['milestone', 'expense', 'workout', 'medication', 'faith-practice']) {
+      expect(
+        RECORD_TYPES.some((type) => type.includes(notYet)),
+        notYet,
+      ).toBe(false);
     }
   });
 
