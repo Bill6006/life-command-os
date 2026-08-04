@@ -79,7 +79,9 @@ test.describe('application shell', () => {
     // OPS-002: the four fields needed to verify a deployed preview.
     const main = page.getByRole('main');
     await expect(main).toContainText('Plan version');
-    await expect(main).toContainText('3.0 Final');
+    // The controlling plan for remaining work, so the owner can tell which one the
+    // deployed build was produced against.
+    await expect(main).toContainText('3.1 Contextual Capture');
     await expect(main).toContainText('Phase 7');
     await expect(main).toContainText('Built');
   });
