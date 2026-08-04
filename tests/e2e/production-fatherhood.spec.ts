@@ -98,7 +98,6 @@ test.describe('the area works end to end on a fresh profile', () => {
     await expect(manageAreas(page)).toBeVisible();
     expect(sawMilestone).toBe(true);
 
-
     const after = await recordCount(page);
     expect(after).toBeGreaterThan(0);
 
