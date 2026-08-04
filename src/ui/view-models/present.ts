@@ -119,5 +119,9 @@ const CATEGORY_LABELS: Record<LifeCategory, string> = {
 };
 
 export function categoryLabel(category: string): string {
-  return CATEGORY_LABELS[category as LifeCategory] ?? category;
+  // Widened deliberately: the const above is exhaustive over `LifeCategory`, but the
+  // argument is a plain string, so the lookup genuinely can miss. Casting the key
+  // instead would have told the type system a lie about that.
+  const labels: Record<string, string | undefined> = CATEGORY_LABELS;
+  return labels[category] ?? category;
 }
