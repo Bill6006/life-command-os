@@ -81,6 +81,22 @@ test.describe('the health panel', () => {
     await expect(healthPanel(page)).toContainText('invented precision');
   });
 
+  test('names every category in words, never as a slug', async ({ page }) => {
+    // The health category reached a deployed screen labelled `health-recovery-energy`
+    // because `categoryLabel` fell through to the raw id. It is a typed map now, so
+    // an unnamed category fails to compile — but this checks the rendered result.
+    await open(page, 'health-enabled');
+    await goTo(page, 'Direction');
+
+    const labels = await page.locator('.grid > .panel > .panel-label').allTextContents();
+
+    expect(labels.length).toBeGreaterThan(0);
+    for (const label of labels) {
+      expect(label, label).not.toMatch(/^[a-z]+(-[a-z]+)+$/);
+    }
+    expect(labels).toContain('Health, recovery & energy');
+  });
+
   test('never grades the person, in any state', async ({ page }) => {
     for (const scenario of ['health-enabled', 'health-constrained', 'health-stale']) {
       await open(page, scenario);

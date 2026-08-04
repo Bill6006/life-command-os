@@ -1,4 +1,4 @@
-import type { EvidenceValue } from '../../domain/records';
+import type { EvidenceValue, LifeCategory } from '../../domain/records';
 import type { ConfidenceAssessment, FreshnessStatus } from '../../intelligence';
 
 /**
@@ -103,15 +103,21 @@ export function trajectoryLabel(direction: string): string {
   return direction === 'insufficient-evidence' ? 'Insufficient evidence' : direction;
 }
 
+/**
+ * The human label for a category.
+ *
+ * `CATEGORY_LABELS` is typed `Record<LifeCategory, string>`, so **activating a category
+ * without naming it fails to compile**. It used to fall through to returning the raw
+ * id, which is how `health-recovery-energy` reached a deployed screen as a slug: a
+ * silent default is a defect that ships.
+ */
+const CATEGORY_LABELS: Record<LifeCategory, string> = {
+  'time-attention-capacity': 'Time, attention & capacity',
+  'direction-and-commitments': 'Direction & commitments',
+  'career-work-learning': 'Career, work & learning',
+  'health-recovery-energy': 'Health, recovery & energy',
+};
+
 export function categoryLabel(category: string): string {
-  switch (category) {
-    case 'time-attention-capacity':
-      return 'Time, attention & capacity';
-    case 'direction-and-commitments':
-      return 'Direction & commitments';
-    case 'career-work-learning':
-      return 'Career, work & learning';
-    default:
-      return category;
-  }
+  return CATEGORY_LABELS[category as LifeCategory] ?? category;
 }
