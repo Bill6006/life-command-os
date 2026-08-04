@@ -81,7 +81,8 @@ test.describe('canonical persistence in a real browser', () => {
     const version = await page.evaluate(
       () => globalThis.__lifeCommandOsDiagnostics?.schemaVersion,
     );
-    expect(version).toBe(2);
+    // Version 3 adds the snapshot store that makes a restore reversible.
+    expect(version).toBe(3);
   });
 
   test('validates before writing, and writes nothing when validation fails', async ({
@@ -175,32 +176,50 @@ test.describe('canonical persistence in a real browser', () => {
     expect(result.attribute).toBe('available-minutes');
   });
 
-  /** Gate requirement: canonical data survives synthetic restore. */
-  test('exports and restores through a real reload', async ({ page }) => {
+  /**
+   * Gate requirement: canonical data survives an encrypted round trip and a reload.
+   *
+   * The browser is where this has to be proved. `crypto.subtle` exists under Node too,
+   * but the thing at risk is the combination — Web Crypto, IndexedDB, and a real page
+   * lifecycle — and only one of those can be shimmed convincingly.
+   */
+  test('encrypts, restores, and survives a real reload', async ({ page }) => {
+    const passphrase = 'seventeen candles beside the river';
+
     const backup = await page.evaluate(
-      async ([observation, correction]) => {
+      async ([[observation, correction], secret]) => {
         const api = globalThis.__lifeCommandOsDiagnostics;
         await api?.writeRecord(observation);
         await api?.writeRecord(correction);
-        return api?.exportBackup();
+        const result = await api?.createEncryptedBackup(secret);
+        return result?.ok === true ? result.file : undefined;
       },
-      [anObservation(1, 45), aCorrection(2, 1, 30)] as const,
+      [[anObservation(1, 45), aCorrection(2, 1, 30)], passphrase] as const,
     );
 
     expect(backup).toBeTruthy();
-    expect(JSON.parse(backup ?? '{}')).toMatchObject({ encrypted: false, recordCount: 2 });
+    // Encrypted on the way out: nothing legible about the records is in the file.
+    expect(backup).toContain('"format": "life-command-os.backup"');
+    expect(backup).not.toContain('available-minutes');
+    expect(JSON.parse(backup ?? '{}')).toMatchObject({
+      encrypted: true,
+      approximateRecordCount: 2,
+    });
 
     await clearDatabase(page);
     await page.reload();
     await page.waitForFunction(() => globalThis.__lifeCommandOsDiagnostics !== undefined);
 
-    const restored = await page.evaluate(async (raw) => {
-      const api = globalThis.__lifeCommandOsDiagnostics;
-      const emptyCount = (await api?.listAllRecords())?.length;
-      const result = await api?.restoreBackup(raw);
-      const after = await api?.listAllRecords();
-      return { emptyCount, ok: result?.ok, afterCount: after?.length };
-    }, backup ?? '');
+    const restored = await page.evaluate(
+      async ([raw, secret]) => {
+        const api = globalThis.__lifeCommandOsDiagnostics;
+        const emptyCount = (await api?.listAllRecords())?.length;
+        const result = await api?.applyRestore(raw, secret);
+        const after = await api?.listAllRecords();
+        return { emptyCount, ok: result?.ok, afterCount: after?.length };
+      },
+      [backup ?? '', passphrase] as const,
+    );
 
     expect(restored.emptyCount).toBe(0);
     expect(restored.ok).toBe(true);
@@ -220,7 +239,7 @@ test.describe('canonical persistence in a real browser', () => {
       async (record) => {
         const api = globalThis.__lifeCommandOsDiagnostics;
         await api?.writeRecord(record);
-        const attempt = await api?.restoreBackup('{ not json');
+        const attempt = await api?.applyRestore('{ not json', 'seventeen candles');
         const after = await api?.listAllRecords();
         return { ok: attempt?.ok, count: after?.length };
       },
@@ -228,6 +247,31 @@ test.describe('canonical persistence in a real browser', () => {
     );
 
     expect(result.ok).toBe(false);
+    expect(result.count).toBe(1);
+  });
+
+  test('the wrong passphrase changes nothing', async ({ page }) => {
+    const passphrase = 'seventeen candles beside the river';
+    const result = await page.evaluate(
+      async ([record, secret]) => {
+        const api = globalThis.__lifeCommandOsDiagnostics;
+        await api?.writeRecord(record);
+        const backup = await api?.createEncryptedBackup(secret);
+        const file = backup?.ok === true ? backup.file : '';
+        const attempt = await api?.applyRestore(file, 'a completely different phrase');
+        const after = await api?.listAllRecords();
+        return {
+          ok: attempt?.ok,
+          rolledBack: attempt?.ok === false ? attempt.rolledBack : undefined,
+          count: after?.length,
+        };
+      },
+      [anObservation(1, 45), passphrase] as const,
+    );
+
+    expect(result.ok).toBe(false);
+    // Nothing was opened, so nothing needed rolling back.
+    expect(result.rolledBack).toBe(false);
     expect(result.count).toBe(1);
   });
 

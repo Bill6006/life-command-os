@@ -15,6 +15,8 @@ import { expect, test, type Page } from '@playwright/test';
  * that wants a decision on screen has to write the records that produce one.
  */
 async function seed(page: Page, scenario = 'action'): Promise<void> {
+  // The bridge is loaded by a dynamic import, so it may not exist on first paint.
+  await page.waitForFunction(() => globalThis.__lifeCommandOsDiagnostics !== undefined);
   const issues = await page.evaluate(async (scenarioId) => {
     const bridge = globalThis.__lifeCommandOsDiagnostics;
     if (bridge === undefined) throw new Error('Test bridge is not installed');
@@ -78,7 +80,7 @@ test.describe('application shell', () => {
     const main = page.getByRole('main');
     await expect(main).toContainText('Plan version');
     await expect(main).toContainText('3.0 Final');
-    await expect(main).toContainText('Phase 6 (Prompt 7A)');
+    await expect(main).toContainText('Phase 6');
     await expect(main).toContainText('Built');
   });
 });

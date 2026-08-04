@@ -218,8 +218,9 @@ export function NowSurface({
           you one thing at a time, and only when the answer could change something.
         </p>
         <p className="fine">
-          Everything you enter stays on this device. Encrypted backup and verified recovery
-          arrive in the next step, so do not put anything here you could not bear to lose yet.
+          Everything you enter stays on this device — there is no server and no account. Take an
+          encrypted backup from Data &amp; Privacy once you have put something real in, and open
+          it once to check the passphrase works. Nobody can recover that passphrase for you.
         </p>
         <Actions
           primary="Start a check-in"

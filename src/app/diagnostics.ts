@@ -1,5 +1,5 @@
 import { writeRecord, writeRecords } from '../application/commands/writeRecord';
-import { exportBackup, restoreBackup } from '../application/commands/backupCommands';
+import { applyRestore, createEncryptedBackup } from '../application/commands/recoveryCommands';
 import {
   listAllRecords,
   listCurrentRecords,
@@ -16,7 +16,17 @@ import { replaceAllRecords } from '../infrastructure/database/recordRepository';
 import { SCENARIOS, scenarioById, shiftScenario } from './scenarios';
 
 /**
- * Browser diagnostics bridge — **temporary, and scheduled for removal in Phase 3.**
+ * Browser test bridge — **absent from every production build.**
+ *
+ * `__TEST_BRIDGE__` is a compile-time constant, false in production, so the dynamic
+ * import in `main.tsx` folds to `if (false)` and this module — along with the whole
+ * synthetic scenario corpus — is dropped from the bundle. A test reads the built
+ * artifact off disk and fails if any trace of it survives. That is removal rather than
+ * concealment, which is what Prompt 7B task 18 asks for.
+ *
+ * The end-to-end suite builds with the flag set so it can seed a known corpus.
+ * Fresh-profile recovery is proved separately, against the production build, through
+ * the real interface only — see `tests/e2e/production-recovery.spec.ts`.
  *
  * Why this exists:
  *   The Phase 2 gate requires evidence that canonical data survives a real reload
@@ -33,17 +43,13 @@ import { SCENARIOS, scenarioById, shiftScenario } from './scenarios';
  * already have. Any code able to call these functions could read and write the same
  * IndexedDB database directly. There is no server, no account, and no secret here.
  *
- * **Removal trigger — revised twice.** The original said "when Phase 3 delivers the
- * Data & Privacy surface", which was wrong: Phase 3's Data & Privacy was a static
- * synthetic view and could not exercise real storage. The corrected trigger was
- * Phase 6. Prompt 7A narrows it once more, to **Prompt 7B**, which builds the real
- * Data & Privacy surface and explicitly requires removing owner-facing diagnostics
- * bridges from the normal flow.
- *
- * **Scenario seeding lives here from Phase 6.** The owner-facing scenario picker is
- * gone — the shell reads real records now. The synthetic scenarios remain, because
- * they are how the browser tests get a known corpus into IndexedDB before driving the
- * real interface, and they are reached only through this bridge.
+ * **Removal history.** The original trigger said "when Phase 3 delivers the Data &
+ * Privacy surface", which was wrong: Phase 3's Data & Privacy was a static synthetic
+ * view and could not exercise real storage. It moved to Phase 6, then to Prompt 7B —
+ * and 7B removed it from the shipped product rather than deleting the file, because
+ * the browser suite still needs a way to establish a known corpus, and doing that
+ * through a compile-time-stripped module is better than doing it by poking IndexedDB
+ * from the test, which would prove the browser works rather than that this code does.
  */
 
 export interface DiagnosticsBridge {
@@ -53,8 +59,8 @@ export interface DiagnosticsBridge {
   listAllRecords: typeof listAllRecords;
   listCurrentRecords: typeof listCurrentRecords;
   readSupersessionChain: typeof readSupersessionChain;
-  exportBackup: () => Promise<string>;
-  restoreBackup: typeof restoreBackup;
+  createEncryptedBackup: (passphrase: string) => ReturnType<typeof createEncryptedBackup>;
+  applyRestore: (raw: string, passphrase: string) => ReturnType<typeof applyRestore>;
   getProjection: (name: ProjectionName) => Promise<unknown>;
   rebuildAllProjections: () => Promise<void>;
   dropAllProjections: typeof dropAllProjections;
@@ -82,8 +88,8 @@ export function installDiagnosticsBridge(): void {
     listAllRecords,
     listCurrentRecords,
     readSupersessionChain,
-    exportBackup: () => exportBackup(new Date()),
-    restoreBackup,
+    createEncryptedBackup: (passphrase) => createEncryptedBackup(passphrase, new Date()),
+    applyRestore: (raw, passphrase) => applyRestore(raw, passphrase, new Date()),
     getProjection: (name) => getProjection(name, new Date()),
     rebuildAllProjections: () => rebuildAllProjections(new Date()),
     dropAllProjections,

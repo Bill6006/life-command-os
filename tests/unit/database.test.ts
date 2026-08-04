@@ -44,10 +44,13 @@ describe('IndexedDB connection foundation', () => {
     const database = await openDatabase();
     const tableNames = database.tables.map((table) => table.name).sort();
 
-    // The twenty record families share a single `records` store because they share
-    // one envelope. A per-family or per-domain table appearing here would mean a
-    // domain schema had been created ahead of its Phase 7 activation (LEAN-001).
-    expect(tableNames).toEqual(['_meta', 'projections', 'records']);
+    // The twenty-two record families share a single `records` store because they
+    // share one envelope. A per-family or per-domain table appearing here would mean
+    // a domain schema had been created ahead of its Phase 7 activation (LEAN-001).
+    //
+    // `snapshots` is not a domain store: it holds whole copies of canonical state
+    // taken before a restore, so that a replacement restore is reversible.
+    expect(tableNames).toEqual(['_meta', 'projections', 'records', 'snapshots']);
   });
 
   it('commits a transaction and reads the value back', async () => {

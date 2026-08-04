@@ -52,6 +52,23 @@ export const MIGRATIONS: readonly MigrationStep[] = [
     },
     note: 'Phase 2: canonical record store and rebuildable projection store.',
   },
+  {
+    version: 3,
+    stores: {
+      /**
+       * Pre-restore safety snapshots (`OWN-067`, LEG-134).
+       *
+       * A restore replaces canonical history. The snapshot taken immediately before
+       * it is what makes that reversible — and it lives in the database rather than
+       * in memory precisely because the failure it guards against is the tab dying
+       * mid-restore. On the next boot the snapshot is still there.
+       *
+       * Indexed by time so the newest is findable without scanning.
+       */
+      snapshots: '&snapshotId, createdAt',
+    },
+    note: 'Phase 6: pre-restore safety snapshots, so a replacement restore is reversible.',
+  },
 ];
 
 /** The version the application currently opens. */

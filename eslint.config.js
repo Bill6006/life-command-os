@@ -7,6 +7,8 @@ export default tseslint.config(
   {
     ignores: [
       'dist/**',
+      // The end-to-end build. Same source, built with the test bridge included.
+      'dist-e2e/**',
       'coverage/**',
       'playwright-report/**',
       'test-results/**',

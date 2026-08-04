@@ -63,9 +63,22 @@ export default defineConfig({
   ],
   define: {
     __BUILD_PLAN_VERSION__: JSON.stringify('3.0 Final'),
-    __BUILD_PHASE__: JSON.stringify('Phase 6 (Prompt 7A)'),
+    __BUILD_PHASE__: JSON.stringify('Phase 6'),
     __BUILD_COMMIT__: JSON.stringify(resolveCommit()),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+    /**
+     * The browser test bridge (Prompt 7B task 18).
+     *
+     * **False in every production build**, which is what removes it from the private
+     * alpha rather than merely hiding it: the `if` around `installDiagnosticsBridge`
+     * folds to `if (false)` and the whole module is dropped from the bundle. A test
+     * asserts that the production output contains no trace of it.
+     *
+     * The end-to-end suite builds with `LCOS_TEST_BRIDGE=1` so it can seed a known
+     * corpus. Fresh-profile recovery is proved separately, against the production
+     * build, through the real interface only.
+     */
+    __TEST_BRIDGE__: JSON.stringify(process.env['LCOS_TEST_BRIDGE'] === '1'),
   },
   build: {
     target: 'es2022',

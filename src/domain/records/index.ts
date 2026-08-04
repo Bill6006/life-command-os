@@ -238,3 +238,60 @@ export function parseCanonicalRecord(input: unknown): ParseResult {
 
   return { ok: true, record: result.data as CanonicalRecord };
 }
+
+/**
+ * Parses a record, quarantining top-level fields this version does not understand.
+ *
+ * Only the import path uses this. A backup written by a **newer** version of the app
+ * carries fields these schemas have never heard of, and because every family schema
+ * is strict, plain parsing rejects the whole record — which would mean a restore that
+ * silently refuses your own data, or worse, one that drops the parts it cannot read.
+ *
+ * So unrecognised top-level keys are moved into `unknownFields` and the record is
+ * parsed again. They survive storage, export, and rollback untouched (LEG-152), and
+ * are put back at the top level when the file is written out.
+ *
+ * **Top level only.** An unknown key nested inside `value` or `confidence` is still a
+ * rejection, because moving it would change the meaning of a field this version does
+ * claim to understand. That boundary is deliberate rather than an oversight.
+ */
+export function parseWithUnknownFieldQuarantine(input: unknown): ParseResult {
+  const direct = parseCanonicalRecord(input);
+  if (direct.ok) return direct;
+  if (direct.reason !== 'schema-violation') return direct;
+
+  const candidate = input as Record<string, unknown> & { recordType?: unknown };
+  if (!isRecordType(candidate.recordType)) return direct;
+
+  const parsed = RECORD_SCHEMAS[candidate.recordType].safeParse(input);
+  if (parsed.success) return direct;
+
+  const unrecognised = parsed.error.issues.flatMap((issue) =>
+    issue.code === 'unrecognized_keys' && issue.path.length === 0
+      ? (issue as unknown as { keys: string[] }).keys
+      : [],
+  );
+  if (unrecognised.length === 0) return direct;
+
+  const quarantined: Record<string, unknown> = {
+    ...(candidate['unknownFields'] as Record<string, unknown> | undefined),
+  };
+  const cleaned: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(candidate)) {
+    if (unrecognised.includes(key)) quarantined[key] = value;
+    else cleaned[key] = value;
+  }
+  cleaned['unknownFields'] = quarantined;
+
+  return parseCanonicalRecord(cleaned);
+}
+
+/** Puts quarantined fields back at the top level, for writing a file out. */
+export function withUnknownFieldsRestored(record: CanonicalRecord): unknown {
+  const source = record as unknown as Record<string, unknown>;
+  const unknown = source['unknownFields'] as Record<string, unknown> | undefined;
+  if (unknown === undefined) return record;
+  const rest: Record<string, unknown> = { ...source };
+  delete rest['unknownFields'];
+  return { ...rest, ...unknown };
+}

@@ -26,7 +26,43 @@ export type WriteFailureReason =
   | 'unknown-record-type'
   | 'schema-violation'
   | 'invariant-violation'
-  | 'duplicate-record';
+  | 'duplicate-record'
+  /** The browser refused the write for lack of space. Nothing was stored. */
+  | 'storage-full'
+  /** The transaction failed for some other reason. Nothing was stored. */
+  | 'transaction-failed';
+
+/**
+ * Classifies a storage failure into something the interface can say honestly.
+ *
+ * A quota failure and a transaction failure need different words — one is "your
+ * device is full", the other is "that did not save, try again" — and both need to be
+ * distinguishable from "your data was rejected as invalid", which is not a storage
+ * problem at all.
+ *
+ * Dexie aborts the transaction on either, so in every branch here the correct thing
+ * to tell the owner is that nothing was written.
+ */
+export function classifyStorageError(error: unknown): {
+  reason: WriteFailureReason;
+  issues: string[];
+} {
+  const name = error instanceof Error ? error.name : '';
+  if (name === 'QuotaExceededError' || /quota/i.test(name)) {
+    return {
+      reason: 'storage-full',
+      issues: [
+        'There is no room left for this device to store more. Nothing was saved. Take a backup, then free some space.',
+      ],
+    };
+  }
+  return {
+    reason: 'transaction-failed',
+    issues: [
+      `That did not save and nothing was changed.${error instanceof Error ? ` (${error.message})` : ''}`,
+    ],
+  };
+}
 
 export interface WriteSuccess {
   readonly ok: true;
@@ -62,7 +98,7 @@ export async function writeRecord(input: unknown): Promise<WriteResult> {
     if (error instanceof Error && error.name === 'DuplicateRecordError') {
       return { ok: false, reason: 'duplicate-record', issues: [error.message] };
     }
-    throw error;
+    return { ok: false, ...classifyStorageError(error) };
   }
 
   // Canonical state changed, so every derived view is now potentially wrong.
@@ -101,7 +137,13 @@ export async function writeRecords(inputs: readonly unknown[]): Promise<WriteRes
     return incoming.map(() => ({ ok: false, reason: 'invariant-violation', issues }));
   }
 
-  await appendRecords(database, incoming);
+  try {
+    await appendRecords(database, incoming);
+  } catch (error) {
+    // The batch is atomic, so a failure means none of it was written.
+    const classified = classifyStorageError(error);
+    return incoming.map(() => ({ ok: false, ...classified }));
+  }
   await clearProjections(database);
 
   return incoming.map((record) => ({ ok: true, record }));

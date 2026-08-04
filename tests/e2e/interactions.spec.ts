@@ -12,6 +12,8 @@ import { expect, test, type Page } from '@playwright/test';
 const PHONE = { width: 375, height: 812 };
 
 async function seed(page: Page, scenario: string): Promise<void> {
+  // The bridge is loaded by a dynamic import, so it may not exist on first paint.
+  await page.waitForFunction(() => globalThis.__lifeCommandOsDiagnostics !== undefined);
   const issues = await page.evaluate(async (scenarioId) => {
     const bridge = globalThis.__lifeCommandOsDiagnostics;
     if (bridge === undefined) throw new Error('Test bridge is not installed');
@@ -351,8 +353,13 @@ test.describe('Data & Privacy tells the truth about the owner’s own records', 
     // false in the one place where being trusted matters most.
     expect(text).not.toMatch(/synthetic scenario records/i);
 
-    // And it still leads with what is not yet safe, rather than burying it.
-    await expect(main).toContainText(/no encrypted backup and no tested recovery/i);
+    // Records exist and no backup has been taken, so the surface says so first —
+    // above everything else on the page, and marked as needing action now.
+    await expect(main).toContainText(/You have records on this device and no backup/i);
+    await expect(main).toContainText('Act now');
+
+    // And the standing promises still hold.
+    await expect(main).toContainText(/Nobody can recover this passphrase/i);
     await expect(main).toContainText(/no delete control/i);
   });
 });

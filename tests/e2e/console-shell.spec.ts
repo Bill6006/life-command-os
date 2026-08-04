@@ -54,6 +54,7 @@ const DESTINATIONS = ['Now', 'Timeline', 'Direction', 'Commitments'];
  * happened to be in memory when the records were written.
  */
 async function select(page: Page, scenario: string): Promise<void> {
+  await page.waitForFunction(() => globalThis.__lifeCommandOsDiagnostics !== undefined);
   const failures = await page.evaluate(async (scenarioId) => {
     const bridge = globalThis.__lifeCommandOsDiagnostics;
     if (bridge === undefined) throw new Error('Test bridge is not installed');
@@ -120,8 +121,10 @@ test.describe('every scenario and interface state renders', () => {
     const main = page.getByRole('main');
     await expect(main).toContainText(/There is nothing here, and that is fine/i);
     await expect(main).toContainText(/no questionnaire/i);
-    // It says plainly that private data is not yet safe here. That is true until 7B.
-    await expect(main).toContainText(/encrypted backup and verified recovery/i);
+    // It points at the one thing a new owner must actually do, and is honest that the
+    // backup passphrase is unrecoverable.
+    await expect(main).toContainText(/Take an encrypted backup/i);
+    await expect(main).toContainText(/Nobody can recover that passphrase/i);
     await expect(page.getByRole('button', { name: 'Start a check-in' })).toBeVisible();
 
     // No onboarding, and no request to declare what matters most (`OWN-006`).

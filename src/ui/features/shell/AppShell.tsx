@@ -34,6 +34,9 @@ import {
   planGuide,
   suggestedGuide,
 } from '../../../intelligence/guides/planGuide';
+import { isLockEnabled, unlock } from '../../../application/commands/appLock';
+import { onDatabaseSuperseded } from '../../../application/queries/storageInfo';
+import { LockScreen } from '../data-privacy/LockScreen';
 import '../../design-system/console.css';
 
 /**
@@ -109,7 +112,23 @@ export function AppShell(): React.JSX.Element {
   const [mode, setMode] = useState<Mode>({ kind: 'console' });
   const [moreOpen, setMoreOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [locked, setLocked] = useState<boolean | undefined>(undefined);
+  const [staleTab, setStaleTab] = useState(false);
   const offline = useIsOffline();
+
+  // The lock is checked before anything is rendered, so records never flash on screen
+  // ahead of it. `undefined` means "not yet known", which renders as loading.
+  useEffect(() => {
+    void isLockEnabled().then(setLocked);
+  }, []);
+
+  useEffect(
+    () =>
+      onDatabaseSuperseded(() => {
+        setStaleTab(true);
+      }),
+    [],
+  );
 
   const { status, records, episode, error, writeFailure, now, refresh, reportWriteFailure } =
     useLocalRecords();
@@ -123,7 +142,7 @@ export function AppShell(): React.JSX.Element {
   const interfaceState: InterfaceState =
     writeFailure !== undefined
       ? 'recovery'
-      : status === 'loading'
+      : status === 'loading' || locked === undefined
         ? 'loading'
         : status === 'error'
           ? 'error'
@@ -316,11 +335,37 @@ export function AppShell(): React.JSX.Element {
     return undefined;
   })();
 
+  if (locked === true) {
+    return (
+      <div className="shell">
+        <main className="body" id="main" tabIndex={-1}>
+          <LockScreen
+            onUnlock={async (passphrase) => {
+              const ok = await unlock(passphrase);
+              if (ok) setLocked(false);
+              return ok;
+            }}
+          />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <>
       <a className="skip-link" href="#main">
         Skip to main content
       </a>
+
+      {staleTab ? (
+        <p className="banner" role="alert">
+          <span className="banner-label">Another tab</span>
+          <span>
+            This app was updated in another tab, so this one stopped saving to avoid writing
+            through an old schema. Nothing here was lost. Reload to continue.
+          </span>
+        </p>
+      ) : null}
 
       <div className="shell">
         <nav className="rail" aria-label="Main">
@@ -448,7 +493,7 @@ export function AppShell(): React.JSX.Element {
             <LearningSurface episode={episode} />
           ) : null}
           {flow === undefined && destination === 'data-privacy' ? (
-            <DataPrivacySurface records={records} />
+            <DataPrivacySurface recordCount={records.length} />
           ) : null}
         </main>
       </div>

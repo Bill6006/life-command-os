@@ -1,233 +1,255 @@
 # Life Command OS Project Status
 
 ## Project identity
+
 - Repository: life-command-os (https://github.com/Bill6006/life-command-os)
 - Plan version: 3.0 Final
-- Current phase: Phase 6 — Integrated private alpha, real interactions, and Guide foundation
-- Current prompt: PROMPT 7A (complete). **Phase 6 is incomplete until Prompt 7B.**
+- Current phase: **Phase 6 — complete.** Prompts 7A and 7B both delivered.
+- Current prompt: PROMPT 7B (complete)
 
 ## Gate status
-- Status: **GREEN** for Prompt 7A. Phase 6 as a whole remains open.
+
+- Status: **GREEN.** Every Prompt 7B gate requirement is met.
+- **Private local use: READY.**
 - Gate evidence:
-  - *All checks pass* — 212 unit tests, 266 browser tests, lint, typecheck, format, build.
-  - *No normal prompt asks why, what caused it, whether it worked, or how it felt* — the
-    policy rejects all four families, and the catalogue validates itself on import, so a
-    prohibited question cannot reach a person without breaking the build.
-  - *Real interactions survive reload* — Start, Can't Now, guide completion, outcome
-    capture, weekly response, and Quick Capture each write canonical records; every browser
-    assertion reloads the page before reading.
-  - *No default value becomes evidence* — nothing is preselected anywhere, and an untouched
-    control writes no record at all. Asserted in both the unit and browser suites.
-  - *Guides meet the interaction budget* — a normal check-in is capped at five responses;
-    only `45` and `full`, chosen deliberately, go beyond it.
-  - *No private data in repository evidence* — synthetic-only, scanned clean.
+  - *Encrypted backup round-trip passes* — AES-256-GCM with a PBKDF2-SHA-256 key at
+    600,000 iterations. Standard Web Crypto primitives, no dependency, no invention.
+  - *Fresh-profile restore reproduces exact canonical history* — proved on the
+    **production build**, through the real interface, in a browser context with no
+    shared storage. No test bridge exists in that build to help it.
+  - *Corruption stops before mutation* — six damage cases, each leaving canonical state
+    byte-identical and taking no snapshot, because nothing was about to be replaced.
+  - *Rollback is tested* — including the refusal to roll back to a snapshot that fails
+    its own checksum.
+  - *Unknown fields and privacy metadata survive* — a field written by a newer version
+    is quarantined, stored, and put back on the next export.
+  - *AI export is not confused with backup* — it says it cannot restore anything in its
+    own opening lines, and withholds every sensitive class by default.
+  - *No private payload appears in repository evidence* — scanned clean; and a browser
+    test records every network request during a full session on the production build.
+  - *Accessibility, offline, reload, update, and recovery checks pass.*
 
 ## GitHub Pages owner preview
+
 - URL: **https://bill6006.github.io/life-command-os/**
 - Deployment status: **LIVE**
 - Deployed commit: current head of `main`. Data & Privacy reports the exact commit.
-- Hosted build contains synthetic content only: **YES** — and the deployed app now starts
-  **empty**, because it reads real local records rather than a chosen scenario.
+- Hosted build contains synthetic content only: **YES** — in fact it now contains no
+  data at all. The app starts empty and the scenario corpus is not in the bundle.
 
 > **Service-worker note.** A returning visitor may see the previous build once; reload again.
 
-## What changed most: the app now reads what is stored
-Through Phase 5 the shell picked a set of synthetic records from a dropdown and asked the
-engine to reason over them. That dropdown is gone. The shell reads IndexedDB, the controls
-write back through the application layer, and the surfaces render what committed.
+## What Phase 6 changed, in one paragraph
 
-The synthetic scenarios still exist and every test still uses them — they are seeded through
-the test bridge, so the browser tests now drive **exactly the interface the owner uses**
-rather than a scenario the owner could also see.
+Through Phase 5 this was a demonstration: a scenario picker, synthetic records, and an
+engine reasoning over them. Prompt 7A replaced that with real local interactions — the
+controls write canonical records and the app reads what is stored. Prompt 7B made it
+safe to actually use: encrypted portable backup, verified restore with a dry run and an
+automatic safety snapshot, tested rollback, a real Data & Privacy surface, readable
+exports that withhold by default, and an application lock that is honest about being a
+curtain rather than a vault.
 
-## Work completed
-- **The behaviour-first question boundary** — `domain/prompts/policy.ts` rejects questions
-  requiring a cause, a feeling, an efficacy judgement, or self-diagnosis. Every prompt in the
-  product is a `CapturePrompt`; the catalogue calls `assertPromptCatalogue` at module load, so
-  a violation fails the build, the tests, and the page load together.
-- **The seven approved anchored scales** — energy, mood, stress, confidence, overwhelm,
-  sleep/recovery, readiness. Ordinal, visible label, scale id, and scale version are stored
-  together, and the direction of each scale is data rather than an assumption.
-- **Wired response controls** — Start, Can't Now, Done / Record outcome, Update state, Why
-  this. All write through `application/commands/`; the UI cannot reach IndexedDB and fails
-  lint if it tries.
-- **`GuideSessionRecord`** — the twenty-second canonical family. Morning, catch-up,
-  afternoon, evening, weekly, and quick check-in, at 15 / 30 / 45 / Full depth, one question
-  at a time.
-- **Lightweight sleep and food capture** — times, counts, and two existing scales. Sleep
-  duration is calculated and labelled an estimate. Five food prompts, no checkbox wall.
-- **Quick Capture shell** — one capture writes one canonical event.
-- **Real interface states** — loading, empty, and error are driven by real storage; recovery
-  by a real failed write.
+## Work completed — Prompt 7B
+
+- **Encrypted portable backup** — `infrastructure/crypto/backupCrypto.ts`. AES-256-GCM,
+  PBKDF2-HMAC-SHA-256 at 600,000 iterations, fresh salt and IV per export, and the
+  crypto metadata passed as additional authenticated data so editing it breaks
+  decryption rather than weakening the key. ADR-0009 records what was rejected.
+- **Versioned format** — `formatVersion` for the envelope and `cryptoVersion` for the
+  parameters, both plaintext, so a file from a newer version is *identified* rather
+  than misreported as a wrong password.
+- **The full recovery sequence** — validate everything, dry run, durable safety
+  snapshot, replace, verify against storage, roll back automatically on mismatch.
+- **Schema v3** — a `snapshots` store, so the way back is in the database rather than
+  in memory and survives the tab dying mid-restore.
+- **Unknown-field quarantine** — `unknownFields` on the envelope. A backup from a newer
+  build restores here without losing what this build cannot read.
+- **Field-level privacy** — `fieldPrivacy`, where an override may narrow a record's
+  class but never widen it.
+- **Real Data & Privacy** — health, backup, restore with preview and dry run, restore
+  points, application lock, readable export, storage, and build.
+- **Readable AI exports** — 7 / 30 / 90 days, all time, and custom, with every
+  sensitive class excluded until explicitly included, and withheld fields shown as
+  `[withheld: health]` rather than silently dropped.
+- **Storage failure handling** — quota and transaction failures typed separately from
+  invalid data; a stale tab yields its connection and says so instead of writing
+  through an old schema.
+- **The test bridge is gone from production** — compile-time stripped, and a test reads
+  the built artifact off disk to prove no trace of it survives.
+- **`docs/PRIVATE_ALPHA.md`** — what to do on day one, and every limit stated plainly.
 
 ### Decisions worth naming
-- **Starting is not executing.** Pressing Start writes an execution in the
-  `unknown-execution` state. It opens the outcome window so the evening guide can follow up,
-  and claims nothing about what happened. The real state is written later as a superseding
-  record. The evaluation layer already refuses to read `unknown-execution` as evidence, so an
-  un-followed-up start can never quietly become a success.
-- **Completing is not an outcome.** "Did you finish it?" describes the execution. Whether
-  anything changed is a separate observable question, and with no answer to one the outcome
-  stays `unresolved`. Finishing an action is never promoted into evidence that it helped.
-- **An untouched control writes nothing.** Not a zero, not a null, not a placeholder record.
-  Absence of a record is the only representation of "not reported" that cannot later be
-  misread. A deliberate "I cannot tell" *does* write — as its own value kind, so nothing can
-  read it as no, zero, or unchanged.
-- **Declining for lack of time makes free time `unresolved`, not smaller.** Guessing a number
-  downwards would be inventing evidence. Unresolved is true, and the engine's honest response
-  to it is to ask — which is the recomputation the owner wanted.
-- **The guide session record has no failure state, and cannot be given one.** Its outcomes are
-  completed, stopped, snoozed, and skipped. Nothing there can express missed, overdue, or
-  incomplete, so no later feature can start counting them.
-- **Guide entry and Quick Capture are bars, not panels.** The Blueprint wants both on Now;
-  ADR-0008 caps Now at five panels. Making them controls satisfies both rather than trading
-  one against the other.
 
-## Files created or modified
-Created (14): `src/domain/records/{scales,guides}.ts`; `src/domain/prompts/{policy,definitions}.ts`;
-`src/intelligence/guides/planGuide.ts`;
-`src/application/commands/{capture,decisionEpisode,guideSession}.ts`;
-`src/ui/state/useLocalRecords.ts`; `src/ui/features/guides/{GuideSurface,PromptControl}.tsx`;
-`src/ui/features/respond/RespondSurfaces.tsx`; `tests/unit/{prompts,interactions}.test.ts`;
-`tests/e2e/interactions.spec.ts`; `tests/support/required.ts`
+- **Verification asks the database, not the code.** After a restore, records are re-read
+  from IndexedDB and hashed. Comparing what was just written would prove only that the
+  code remembers what it did a moment ago. This ordering is also what makes "an
+  interrupted restore cannot report success" structural: an interruption means the
+  verification step never runs, so nothing reports success — and the snapshot taken
+  before the replacement survives, because it is durable.
+- **A wrong passphrase and a damaged file are one failure.** Separating them would tell
+  an attacker holding the file when a guess was structurally close, and tells the owner
+  nothing they would act on differently.
+- **The local database is not encrypted, and every surface that touches the subject
+  says so.** A browser page cannot encrypt its own storage at rest and still open
+  without a passphrase every time — the key would have to live where the page can read
+  it, which is where an attacker with the device can read it. Implementing it would
+  produce the appearance of encryption and none of the substance.
+- **No passphrase recovery, deliberately.** Any recovery path is a second way into the
+  file. The interface says "nobody can recover this passphrase — not you, not me, not
+  Anthropic, not GitHub" before the owner types one.
+- **Notifications are deferred with reasons, not half-built.** Push needs a server, in
+  an app whose central claim is that there is no server; local notifications need the
+  page open, in which case they tell you nothing. There is no honest third option, and
+  `docs/PRIVATE_ALPHA.md` §6 says so rather than shipping a stub.
+- **Two builds are served in CI, not one.** The regression suite needs to seed a corpus,
+  which needs the bridge; the private alpha must not contain one. Rather than weaken
+  either requirement, both builds are served and recovery is proved against production.
 
-Modified: `domain/records/{index,envelope,evidence,direction}.ts`; `domain/policies/invariants.ts`;
-`intelligence/decision/{selectOutput,weeklyDirection}.ts`; `app/{scenarios,diagnostics}.ts`;
-`ui/features/{shell/AppShell,now/NowSurface,data-privacy/DataPrivacySurface}.tsx`;
-`ui/components/primitives.tsx`;
-`ui/design-system/console.css`; `vite.config.ts`; `tests/fixtures/records.ts`;
-`tests/unit/records.test.ts`; `tests/e2e/{console-shell,shell}.spec.ts`;
-`docs/{REQUIREMENTS.md,architecture/ARCHITECTURE_OVERVIEW.md}`
+## Files created or modified — Prompt 7B
+
+Created (10): `src/infrastructure/crypto/backupCrypto.ts`;
+`src/infrastructure/backup/portableBackup.ts`;
+`src/infrastructure/database/snapshotStore.ts`;
+`src/application/commands/{recoveryCommands,appLock}.ts`;
+`src/application/queries/{aiExport,storageHealth}.ts`;
+`src/ui/features/data-privacy/LockScreen.tsx`; `scripts/build-e2e.mjs`;
+`tests/unit/{recovery,export}.test.ts`;
+`tests/e2e/{production-recovery,privacy-audit}.spec.ts`;
+`docs/PRIVATE_ALPHA.md`; `docs/decisions/ADR-0009-backup-encryption.md`
+
+Deleted (3): `src/infrastructure/backup/developmentBackup.ts`,
+`src/application/commands/backupCommands.ts`, `tests/unit/backup.test.ts` — the
+unencrypted development format, superseded rather than kept alongside.
+
+Modified: `domain/records/{envelope,index}.ts`;
+`infrastructure/database/{connection,migrations}.ts`;
+`application/commands/writeRecord.ts`; `application/queries/storageInfo.ts`;
+`app/{diagnostics,main}.tsx`; `ui/features/{shell/AppShell,now/NowSurface,data-privacy/DataPrivacySurface}.tsx`;
+`ui/design-system/console.css`; `vite.config.ts`; `playwright.config.ts`;
+`eslint.config.js`; `package.json`; `.gitignore`; three e2e specs; three unit tests;
+`docs/{REQUIREMENTS,architecture/ARCHITECTURE_OVERVIEW}.md`
 
 ## Tests and evidence
-- **Unit: 212 passed**, up from 143. 69 new across prompts and interactions.
-- **Browser: 268 passed**, up from 252, across desktop and mobile viewports.
-- **Live verification** at 375 × 812 against the deployed build, service worker cleared and
-  starting from an empty profile: no scenario picker anywhere; the empty state reached; a
-  real morning check-in run through the interface; nothing preselected; the stored
-  observation carrying ordinal `4`, label `Good`, `scaleId`, `scaleVersion`, `privacy:
-  health`, both timestamps and local-time context; two records surviving a reload; and the
-  answered question correctly not asked again.
-- Covers: every prohibited question family rejected; the shipped catalogue passing the policy;
-  Unknown writing nothing and Unsure writing something; Start, decline, guide completion,
-  outcome, weekly response and capture all surviving a reload; catch-up asking strictly less;
-  depth changing quantity but not meaning; snooze and skip never becoming failure; one
-  capture writing one event; every new control at 44 × 44 with no horizontal overflow.
+
+- **Unit: 259 passed**, up from 212. 54 new across recovery and export.
+- **Browser: 284 passed**, up from 268 — including **14 against the production build**
+  with no test bridge present.
+- Covers: AES-GCM round trip; salt and IV never reused; tampered ciphertext and tampered
+  crypto metadata both rejected; six corruption cases each leaving state untouched; the
+  dry run writing nothing; snapshot before replacement; rollback to exactly the previous
+  state; refusal to roll back a damaged snapshot; superseded records surviving a round
+  trip so history cannot silently shrink; unknown fields quarantined and restored;
+  every sensitive class withheld by default; field-level withholding; the four export
+  ranges; a v2→v3 migration that leaves canonical records alone; every network request
+  in a full production session being same-origin; nothing reaching the console;
+  `localStorage` holding no life data.
 - **Three real defects found by these tests and fixed rather than tested around:**
-  1. **Cross-record invariant checking was quadratic.** It asked "is a cycle reachable from
-     here?" once per record, each search starting with a fresh visited set. That was tolerable
-     while only restore used the path — but Phase 6 wired it to *every user write*, so a few
-     thousand stored records would have made saving a check-in block for seconds. Replaced
-     with a single three-colour depth-first search. **5,000 records: 4,838 ms → 20,000
-     records: 332 ms.** The regression test now builds twenty thousand rather than five, so
-     the length is the assertion and there is no wall-clock threshold to go flaky.
-  2. **"I cannot tell" was being dropped.** The outcome command read `Unsure` only when it
-     arrived as a list choice, so pressing the dedicated *I cannot tell* button produced
-     `unresolved` (nothing reported) instead of `unknown` (looked, could not say). Those are
-     different claims about the evidence.
-  3. **The browser tests raced their own writes** — reloading before the transaction had
-     committed. It passed on desktop and failed on mobile, which is the signature of a timing
-     bug rather than a behavioural one. My first fix was itself wrong: it waited for the guide
-     bar, which never disappears when the write is made from the console, so it settled
-     instantly for Start and stayed flaky. Console writes now wait for the follow-up control,
-     which cannot render until the execution is stored and re-read. Suite run twice clean.
-  4. **Data & Privacy called the owner's own records synthetic** — found by using the
-     deployed build rather than by a test. The sentence was true through Phase 5 and false
-     the moment the controls became real, in the one place where being trusted matters most.
-     The surface now describes what is actually stored, states plainly that there is no
-     encrypted backup and no tested recovery yet, and stops calling the unencrypted export
-     anything it is not. A browser assertion now guards it.
-- Two of my own assertions were wrong and were corrected: one required Quick Capture to offer
-  "Unsure" (the owner is writing something down unprompted — it is not a state they can be
-  in), and one asserted guide timing against UTC when the rule is deliberately the owner's
-  local wall clock.
-- One test file gained an assertion it should always have had: `oneOfEveryFamily()` must
-  cover every registered family. It did not cover `learned-belief`, which therefore went
-  unfixtured through the whole of Phase 5.
+  1. **Two failure messages did not say that nothing had changed.** The ones for a file
+     that is not a backup at all — which is exactly the case where someone picked the
+     wrong file and is most likely to panic. Found by a browser test asserting the
+     reassurance; the whole message set now carries it.
+  2. **`schemaVersion` and the store list were asserted as constants** in two older
+     tests, so the v3 migration failed them. Correct failures: the assertions were
+     updated, and a new test was added for the upgrade that actually carries risk —
+     v2 to v3 with canonical records present, which is what would catch a migration
+     written as a drop-and-rebuild.
+  3. **The e2e build script failed silently on Windows.** `spawnSync('npx.cmd')` without
+     a shell exits non-zero with no output, which surfaced as "webServer was not able to
+     start". Resolving the Vite binary through Node removed the shell from the problem.
+- One of my own assertions was wrong: an export test searched for a rendered timestamp
+  in the wrong format. Corrected to slice the document by heading, which tests the thing
+  it meant to test — that a record lands in the right section.
 
 ## Privacy status
-- Synthetic-only repository: **YES** — scanned clean over all tracked files.
+
+- Synthetic-only repository: **YES** — scanned clean across all tracked files.
 - Real personal data detected in tracked content: **NO**
 - Commit identity: GitHub noreply address only.
-- Runtime private-data readiness: **NOT YET** — requires Prompt 7B. The empty state says so
-  in as many words, on screen, to the owner.
+- Dependency audit: `npm audit` — **0 vulnerabilities**.
+- Secret scan: clean. XSS surface: no `dangerouslySetInnerHTML`, `innerHTML`, `eval`, or
+  `new Function` anywhere in `src/`.
+- Network: no `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`, or `sendBeacon` in
+  `src/` — and verified at runtime, on the production build, across a full session.
+- **Runtime private-data readiness: READY.** See `docs/PRIVATE_ALPHA.md` before starting.
 
 ## Architecture decisions
-No new ADRs. Two new directories, both created only now that there is behaviour for them:
-`domain/prompts/` (what may be asked is a product rule, not a rendering concern) and
-`intelligence/guides/` (planning is deterministic reasoning over records; the answers are
-written by the application layer, so intelligence still never touches storage).
+
+**ADR-0009 — Backup encryption: standard primitives, no invented cryptography.** Records
+the choice of AES-256-GCM and PBKDF2 at 600,000 iterations, and what was rejected:
+Argon2id (not in Web Crypto — would mean shipping a cryptographic dependency), a lower
+iteration count, encrypting the local database (dishonest rather than undesirable), any
+passphrase recovery mechanism, and distinguishing a wrong passphrase from a damaged file.
 
 ## New dependencies
-**None.**
+
+**None.** The cryptography is Web Crypto only.
 
 ## New abstractions or infrastructure
 
-**1. `domain/prompts/` — the question boundary**
-- Active requirement: `OBS-001`, `OBS-002`, `OBS-003`, `OBS-012`; Prompt 7A task 8.
-- Why smaller was insufficient: a prohibited question is easy to add by accident and nearly
-  impossible to catch in review once there are a hundred prompts. Making every prompt a
-  validated definition turns it into a build failure instead of a conversation.
+**1. `infrastructure/crypto/`** — one file, two primitives, no dependency.
+- Active requirement: `OWN-066`, LEG-139; tasks 1–2.
+- Why smaller was insufficient: the parameters must travel with the file and be
+  authenticated, or a future change orphans old backups and an edited file gets a
+  weaker key.
 
-**2. `GuideSessionRecord` — the twenty-second family**
-- Active requirement: `OWN-016`–`OWN-021`, LEG-020; Prompt 7A task 10.
-- Why smaller was insufficient: a guide that legitimately asked nothing new leaves no
-  observations, so "I checked in and nothing had changed" cannot be reconstructed from
-  anything else. And its closed set of outcomes is what makes "snooze is never failure"
-  structural rather than a copywriting rule.
+**2. `infrastructure/backup/portableBackup.ts`** — replaces the unencrypted format.
+- Active requirement: `OWN-066`, `OWN-067`, LEG-128; tasks 4–5.
+- Why smaller was insufficient: eight distinct failure modes need eight distinct
+  messages, because "that did not work" on a recovery screen is the point at which
+  people start doing damage.
 
-**3. `anchored-scale` and `unsure` observed values**
-- Active requirement: `OWN-026`–`OWN-032`, `OBS-006`; tasks 5–7 and 9.
-- Why smaller was insufficient: a bare state string records what the owner picked while
-  losing what the choices meant, which makes the reading uncomparable the first time the
-  anchors are reworded. And "I cannot tell" needs a shape with no value field, so no reader
-  can mistake it for no, zero, or unchanged.
+**3. `snapshots` store (schema v3)** — durable pre-restore safety snapshots.
+- Active requirement: `OWN-067`, LEG-134; task 4.
+- Why smaller was insufficient: the failure it guards against is the tab dying mid
+  restore, and an in-memory snapshot dies with it.
 
-**4. `privacy` on the envelope**
-- Active requirement: `OWN-070`; task 6.
-- Why smaller was insufficient: the person entering a fact is the only one who reliably knows
-  how sensitive it is. Unclassified resolves to the most protective class, so forgetting to
-  classify fails closed. Prompt 7B's export consent consumes it.
+**4. `application/queries/aiExport.ts`** — readable export, separate product.
+- Active requirement: `OWN-068`–`OWN-070`; tasks 9–13.
+- Why smaller was insufficient: withholding has to be the default and has to be
+  *visible*, because an invisible omission reads as an absence of evidence.
 
-**Removed:** the owner-facing scenario picker and its scaffolding styles.
-**Carried forward:** the diagnostics bridge, now the seeding path for browser tests, removed
-in Prompt 7B.
+**Removed:** the unencrypted development backup format, and the test bridge from every
+production build.
 
 ## Known limitations
-- **`locked` is still only a design state.** There is no lock to be in until Prompt 7B builds
-  one. `error` and `recovery` are implemented and render from real signals, but reaching them
-  in a browser test needs fault injection, which arrives with 7B's corruption, quota, and
-  interrupted-write tests.
-- **Sleep and food are captured under `time-attention-capacity`**, not a Health domain, which
-  does not exist until Phase 7. They are classified `health` for privacy regardless — privacy
-  and category are deliberately orthogonal. Phase 7's Health slice projects them by attribute
-  rather than re-entering them.
-- **Beliefs are still derived, not persisted.** The record family is registered and
-  schema-enforced; the engine recomputes from evaluations each run.
-- **Follow-ups are the general observable set.** Action-specific follow-ups (`OBS-009`) belong
-  to the domains that declare them, in Phases 7–8.
-- **Manual Domain Focus, Minimum Wins, and the domain panels are not built.** Phase 7.
-- **Cached startup is still unmeasured.** Bundle is ~152 kB gzipped, up from ~137 kB.
-- Carried forward: `frame-ancestors` unenforceable on Pages; Chromium-only matrix; no router;
-  service-worker staleness; deletion semantics undecided.
+
+- **The local database is not encrypted at rest.** Documented at length in
+  `docs/PRIVATE_ALPHA.md` §3 and stated on the Data & Privacy surface itself.
+- **The application lock hides the screen and nothing more.** It cannot protect a
+  compromised device, and it says so where the owner turns it on.
+- **Notifications do not exist.** Deferred with reasons rather than stubbed.
+- **The end-to-end regression suite runs against a build containing the test bridge.**
+  The production build is exercised by 14 tests covering recovery, the privacy audit,
+  and the bridge's absence — but the broader suite is not run twice. Phase 10's release
+  matrix is the place to widen that if it proves worth the CI time.
+- **Only three life areas are active.** Health, fatherhood, relationships, faith, home,
+  and money arrive in Phase 7; sleep and food are captured under time-and-capacity and
+  classified `health` for privacy until then.
+- **Beliefs are still derived, not persisted.**
+- **Cached startup is still unmeasured.** Bundle is ~158 kB gzipped, up from ~152 kB.
+- Carried forward: `frame-ancestors` unenforceable on Pages; Chromium-only matrix; no
+  router; service-worker staleness; deletion semantics undecided.
 
 ## Deferred work
+
 | Deferred | Activates |
-|---|---|
-| Encrypted backup, versioned crypto metadata, dry-run restore, safety snapshot, rollback, fresh-profile recovery, real Data & Privacy, AI exports, field-level export consent, app lock, notifications, diagnostics-bridge removal | Prompt 7B |
-| Domain framework, domain slices, action-specific follow-ups, Manual Domain Focus, Minimum Wins | Phase 7 |
-| Cross-domain synthesis, full Can't Now regeneration, strategic review, model comparison | Phase 8 |
-| Legacy importer | Phase 9 |
-| Traceability generator, browser matrix, release artifacts | Phase 10 |
+| --- | --- |
+| Shared domain framework, all domain slices, action-specific follow-ups, Manual Domain Focus, Minimum Wins | Phase 7 |
+| Cross-domain synthesis, full Can't Now regeneration, strategic review, optional model comparison | Phase 8 |
+| Quarantined legacy importer | Phase 9 |
+| Traceability generator, full browser matrix, startup measurement, release artifacts, notifications if ever justified | Phase 10 |
 
 ## Blockers
-**None blocking Prompt 7B.**
 
-One non-blocking owner action carried forward: **measure cached startup on the Samsung phone**
-and say if it exceeds three seconds.
+**None blocking Prompt 8A.**
+
+One non-blocking owner action carried forward: **measure cached startup on the Samsung
+phone** and say if it exceeds three seconds.
 
 ## Next permitted prompt
-**PROMPT 7B — Phase 6: encryption, recovery, and private-alpha readiness.**
 
-Until 7B passes, entering meaningful private data is not safe. The empty state says exactly
-that, on screen, rather than leaving the owner to infer it.
+**PROMPT 8A — Phase 7: shared domain framework.**
+
+Before that, one thing worth doing yourself: open the deployed app, put something real
+in it, take a backup, and **restore it into a fresh browser profile**. The tests prove
+that path works. Doing it once yourself is what turns that into trust.

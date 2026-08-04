@@ -2,7 +2,7 @@
 
 **Status:** Controlling
 **Plan version:** 3.0 Final
-**Current phase:** Phase 6 (Prompt 7A complete, Prompt 7B outstanding)
+**Current phase:** Phase 6 — complete (Prompts 7A and 7B)
 
 **Controlling artifacts from v3.0.** The Final Product Blueprint, Updated Requirements
 Register v2, Final Acceptance Test Matrix, and Final Legacy Decisions map now supply the
@@ -410,6 +410,43 @@ Resolution: what is stored is everything freshness is computed **from** — `occ
 `recordedAt` — and `assessFreshness` derives it against the decision at hand. Freshness is
 shown wherever a reading is shown, so the owner-visible requirement is met without a field
 that goes stale in storage.
+
+---
+
+## 3e. Active requirement records — Phase 6, Prompt 7B
+
+| ID | Implementation | Test IDs | Notes |
+|---|---|---|---|
+| `OWN-066` | `infrastructure/crypto/backupCrypto.ts` — AES-256-GCM, PBKDF2-SHA-256 at 600,000 iterations; `portableBackup.ts` | `recovery.test.ts` → `the cryptography is standard and used as intended` (6); `the backup file` (5) | ADR-0009. No invented cryptography; crypto metadata is authenticated, not merely stored |
+| `OWN-067` | `application/commands/recoveryCommands.ts` — dry run, snapshot, apply, verify, rollback | `restore, verification, and rollback` (6); `corruption stops before mutation` (6) | Verification re-reads from storage rather than trusting what was written |
+| `OWN-067` (fresh profile) | Data & Privacy restore flow | `production-recovery.spec.ts` → `a backup made here restores exactly onto a profile that has never seen it` | Proved on the **production build**, through the real interface, in a browser context with no shared storage |
+| `OWN-068` `OWN-069` | `application/queries/aiExport.ts` — 7 / 30 / 90 / all / custom | `export.test.ts` → `ranges` (3); `the export says what it is not` (2) | The export states in its opening lines that it cannot restore anything |
+| `OWN-070` | Default include set is `['general']`; `classificationOf` fails closed | `sensitive classes are excluded until explicitly included` (12) | Unclassified resolves to `private-pattern`, the most protective class |
+| `AT-113` | `fieldClassificationOf` + `fieldPrivacy` on the envelope | `field-level privacy` (3) | A field override may narrow the record's class, never widen it |
+| `OWN-071` `OWN-072` | No network code anywhere in `src/` | `privacy-audit.spec.ts` → `every request during a full session is same-origin` (5) | Verified at runtime on the production build, not by grep |
+| `OWN-073` | **Deferred with reasons** — `docs/PRIVATE_ALPHA.md` §6 | `offers no notification permission prompt, because none is implemented` | Push needs a server; local notifications need the page open. Neither is honest here |
+| `LEG-139` | `MINIMUM_PASSPHRASE_LENGTH`, honest guidance copy | `refuses a passphrase too short to be worth encrypting with` | "Nobody can recover this passphrase" appears before the owner types one |
+| `LEG-152` | `unknownFields` on the envelope; `parseWithUnknownFieldQuarantine` | `unknown fields and privacy metadata survive` (3) | Top-level quarantine only; a nested unknown is still a rejection, deliberately |
+| `LEG-134` `LEG-135` | `snapshots` store (schema v3); digest verification after apply | `takes a restore point before replacing anything`; `refuses to roll back to a damaged restore point` | The snapshot is durable, so it survives the tab dying mid-restore |
+| `LEG-137` `LEG-141` | `application/queries/storageHealth.ts` | `Data & Privacy tells the truth about the owner's own records` | Quiet when healthy; there is no "all systems operational" counterpart |
+| App lock | `application/commands/appLock.ts`; `LockScreen` | `states the lock does not encrypt, and that the passphrase is unrecoverable` | Verifier only, never the passphrase; limits stated on the surface itself |
+| Storage failures | `classifyStorageError` in `writeRecord.ts` | Typed `storage-full` / `transaction-failed` results | Quota and transaction failures are distinguishable from invalid data |
+| Stale tab | `onDatabaseSuperseded` in `connection.ts` | Rendered as an alert banner in `AppShell` | This tab yields the connection rather than blocking another tab's upgrade |
+| Migration | `MIGRATIONS` v3 | `migrations.test.ts` → `upgrades a version 2 database without touching the canonical records` | The test that would catch a drop-and-rebuild migration |
+| Task 18 | `__TEST_BRIDGE__` compile-time constant | `the production build carries no test bridge` (2) | Removal, not concealment: the bundle contains no trace of it |
+
+### Why success is only reported after reading storage back
+
+`applyRestore` writes, then re-reads from IndexedDB and hashes what came back. Comparing
+the values just written would prove only that the code can remember what it did a moment
+ago. The question worth answering is whether the *database* holds them, and the only way
+to answer it is to ask the database.
+
+That ordering is also what makes "an interrupted restore cannot report success" true
+rather than hoped for: an interruption at any point means the verification step never
+runs, so nothing reports success — and the safety snapshot, written before the
+replacement began, survives the interruption because it is in the database rather than
+in memory.
 
 ---
 

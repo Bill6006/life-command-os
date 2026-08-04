@@ -164,6 +164,27 @@ export function isSensitive(record: { privacy?: PrivacyClass | undefined }): boo
 }
 
 /**
+ * The effective class of one field.
+ *
+ * A field with no override inherits the record's class. There is deliberately no way
+ * for a field override to be *less* private than the record: an override that
+ * loosened the record's classification would be a way to leak by accident.
+ */
+export function fieldClassificationOf(
+  record: {
+    privacy?: PrivacyClass | undefined;
+    fieldPrivacy?: Record<string, PrivacyClass> | undefined;
+  },
+  field: string,
+): PrivacyClass {
+  const override = record.fieldPrivacy?.[field];
+  const base = classificationOf(record);
+  if (override === undefined) return base;
+  // "general" is the only non-sensitive class; an override may narrow, never widen.
+  return base === 'general' ? override : base === override ? override : base;
+}
+
+/**
  * Builds the envelope fields for one record family.
  *
  * `recordType` is a literal, which is the first line of defence against passing
@@ -190,6 +211,23 @@ export function envelopeShape<T extends string>(recordType: T, basis: EvidenceBa
      * records written before Phase 6; unclassified is treated as most-private.
      */
     privacy: z.enum(PRIVACY_CLASSES).optional(),
+    /**
+     * Per-field overrides, for records whose fields differ in sensitivity.
+     *
+     * One record can carry a general fact and a health detail; classifying the whole
+     * record at the stricter level would over-redact, and at the looser level would
+     * leak. Absent fields inherit the record's class (`OWN-070`, `AT-113`).
+     */
+    fieldPrivacy: z.record(z.string(), z.enum(PRIVACY_CLASSES)).optional(),
+    /**
+     * Fields a newer version of the app wrote that this version does not understand.
+     *
+     * Quarantined rather than dropped. A backup taken on a later version must survive
+     * a round trip through an earlier one without losing information (LEG-152) — and
+     * silently discarding data the owner cannot see is the worst way to fail.
+     * Restored to the top level on export.
+     */
+    unknownFields: z.record(z.string(), z.unknown()).optional(),
     /** The record this one replaces. Backwards-pointing only, never mutated in. */
     supersedesRecordId: z.uuid().optional(),
     /** Links the full chain of one decision episode together. */

@@ -47,10 +47,27 @@ export interface StoredProjection {
   value: unknown;
 }
 
+/**
+ * A copy of canonical state taken immediately before a restore replaces it.
+ *
+ * Stored, not held in memory: the failure this exists to survive is the tab dying
+ * part-way through a restore, and an in-memory snapshot dies with it.
+ */
+export interface StoredSnapshot {
+  snapshotId: string;
+  createdAt: string;
+  reason: string;
+  recordCount: number;
+  /** SHA-256 over the serialised records, so a damaged snapshot is detectable. */
+  digest: string;
+  records: unknown[];
+}
+
 export class LifeCommandDatabase extends Dexie {
   readonly meta!: Dexie.Table<MetaEntry, string>;
   readonly records!: Dexie.Table<StoredRecord, string>;
   readonly projections!: Dexie.Table<StoredProjection, string>;
+  readonly snapshots!: Dexie.Table<StoredSnapshot, string>;
 
   constructor(name: string = DATABASE_NAME) {
     super(name);
@@ -64,14 +81,47 @@ export class LifeCommandDatabase extends Dexie {
     this.meta = this.table('_meta');
     this.records = this.table('records');
     this.projections = this.table('projections');
+    this.snapshots = this.table('snapshots');
   }
 }
 
 let instance: LifeCommandDatabase | undefined;
 
+/**
+ * Notified when another tab upgrades the database underneath this one.
+ *
+ * IndexedDB cannot apply a schema upgrade while an older connection is open, so the
+ * only two options are to close this one or to block the other tab indefinitely.
+ * Closing is correct — but it leaves this tab holding a connection that will now
+ * fail, so the interface has to be told rather than left to discover it through a
+ * broken write.
+ */
+type StaleTabListener = () => void;
+const staleTabListeners = new Set<StaleTabListener>();
+
+export function onDatabaseSuperseded(listener: StaleTabListener): () => void {
+  staleTabListeners.add(listener);
+  return () => staleTabListeners.delete(listener);
+}
+
+let superseded = false;
+
+/** True once another tab has upgraded the database and this connection was closed. */
+export function isDatabaseSuperseded(): boolean {
+  return superseded;
+}
+
 /** Opens (or returns) the singleton connection. Safe to call repeatedly. */
 export async function openDatabase(): Promise<LifeCommandDatabase> {
-  instance ??= new LifeCommandDatabase();
+  if (instance === undefined) {
+    instance = new LifeCommandDatabase();
+    instance.on('versionchange', () => {
+      // Yield to the other tab rather than blocking its upgrade forever.
+      superseded = true;
+      instance?.close();
+      for (const listener of staleTabListeners) listener();
+    });
+  }
   if (!instance.isOpen()) {
     await instance.open();
   }
@@ -82,6 +132,7 @@ export async function openDatabase(): Promise<LifeCommandDatabase> {
 export function closeDatabase(): void {
   instance?.close();
   instance = undefined;
+  superseded = false;
 }
 
 /**

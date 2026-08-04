@@ -76,7 +76,7 @@ life-command-os/
     infrastructure/
       database/
       backup/
-      crypto/          # activated when Phase 6 begins
+      crypto/          # Phase 6 — Web Crypto only, see ADR-0009
       logging/
     importers/
       legacy/          # activated only if Phase 9 is authorized
@@ -122,6 +122,12 @@ requires (`ARCH-001`).
 - **`intelligence/guides/` plans, it does not capture.** `planGuide` decides what is worth
   asking from the records and returns a plan. The answers are written by
   `application/commands/`, preserving the rule that intelligence never touches storage.
+- **`infrastructure/crypto/` contains one file and no dependency.** Web Crypto
+  primitives used as intended — AES-256-GCM and PBKDF2-HMAC-SHA-256 — and nothing else.
+  The reasoning, including what was rejected, is in ADR-0009.
+- **`logging/` is still empty, and that is the design.** There is no payload logging
+  anywhere; a browser test drives a full session on the production build and fails if
+  anything reaches the console at all.
 
 ### 2.2 The importer boundary is a rule, not a directory
 

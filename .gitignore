@@ -41,6 +41,9 @@ credentials.json
 # --- Dependencies and build output ---
 node_modules/
 dist/
+# The end-to-end build. Identical to production except that it includes the test
+# bridge, which is why it is built separately and never deployed.
+dist-e2e/
 dist-ssr/
 build/
 *.local

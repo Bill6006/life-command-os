@@ -22,8 +22,13 @@ describe('migration registry', () => {
   });
 
   it('registers migrations only for schemas that exist', () => {
-    expect(CURRENT_SCHEMA_VERSION).toBe(2);
-    expect(storeNamesAtCurrentVersion()).toEqual(['_meta', 'projections', 'records']);
+    expect(CURRENT_SCHEMA_VERSION).toBe(3);
+    expect(storeNamesAtCurrentVersion()).toEqual([
+      '_meta',
+      'projections',
+      'records',
+      'snapshots',
+    ]);
   });
 
   it('documents why each version exists', () => {
@@ -38,8 +43,8 @@ describe('migration registry', () => {
  * version change would destroy canonical history — which is the one thing this
  * product cannot do to its user.
  */
-describe('upgrading a version 1 database', () => {
-  it('preserves existing data and adds the new stores', async () => {
+describe('upgrading an older database', () => {
+  it('upgrades a version 1 database in place, keeping its data', async () => {
     const v1 = new Dexie(MIGRATION_TEST_DB);
     v1.version(1).stores({ _meta: '&key' });
     await v1.open();
@@ -50,7 +55,7 @@ describe('upgrading a version 1 database', () => {
     const upgraded = new LifeCommandDatabase(MIGRATION_TEST_DB);
     await upgraded.open();
 
-    expect(upgraded.verno).toBe(2);
+    expect(upgraded.verno).toBe(CURRENT_SCHEMA_VERSION);
     await expect(upgraded.meta.get('created-under')).resolves.toEqual({
       key: 'created-under',
       value: 'phase-1',
@@ -59,10 +64,50 @@ describe('upgrading a version 1 database', () => {
       '_meta',
       'projections',
       'records',
+      'snapshots',
     ]);
 
     // The new stores are usable immediately after the upgrade.
     await expect(upgraded.records.count()).resolves.toBe(0);
+    await expect(upgraded.snapshots.count()).resolves.toBe(0);
+    upgraded.close();
+  });
+
+  /**
+   * The upgrade that actually carries risk.
+   *
+   * A version 2 database holds canonical records. Version 3 adds a store beside them,
+   * and the requirement is that it is *added* — not that the database is recreated
+   * with the new shape. This is the test that would catch a migration written as a
+   * drop-and-rebuild, which reads identically in the source and destroys everything.
+   */
+  it('upgrades a version 2 database without touching the canonical records', async () => {
+    const v2 = new Dexie(MIGRATION_TEST_DB);
+    v2.version(1).stores({ _meta: '&key' });
+    v2.version(2).stores({
+      records:
+        '&recordId, recordType, occurredAt, recordedAt, supersedesRecordId, decisionEpisodeId',
+      projections: '&name',
+    });
+    await v2.open();
+    await v2.table('records').add({
+      recordId: '00000000-0000-4000-8000-000000000001',
+      recordType: 'observation',
+      occurredAt: '2026-01-05T09:00:00.000Z',
+      recordedAt: '2026-01-05T09:00:00.000Z',
+    });
+    expect(v2.verno).toBe(2);
+    v2.close();
+
+    const upgraded = new LifeCommandDatabase(MIGRATION_TEST_DB);
+    await upgraded.open();
+
+    expect(upgraded.verno).toBe(CURRENT_SCHEMA_VERSION);
+    await expect(upgraded.records.count()).resolves.toBe(1);
+    await expect(
+      upgraded.records.get('00000000-0000-4000-8000-000000000001'),
+    ).resolves.toMatchObject({ recordType: 'observation' });
+    await expect(upgraded.snapshots.count()).resolves.toBe(0);
     upgraded.close();
   });
 });
