@@ -120,7 +120,7 @@ Modified: `domain/fatherhood/{development,routing,capture}.ts`;
 
 ## Tests and evidence
 
-- **Unit: 495 passed**, up from 450. 45 new for the bridge.
+- **Unit: 497 passed**, up from 450. 47 new for the bridge.
 - **Browser: 428 passed**, up from 393. 35 new — 14 against seeded state on desktop and
   mobile, 7 on the **production** build in an isolated context.
 - All twenty-one required proofs are covered: six sections render; every relevant skill is
@@ -135,9 +135,18 @@ Modified: `domain/fatherhood/{development,routing,capture}.ts`;
   percentage, ranking, or comparison renders; sensitive milestone statuses stay out of
   ordinary guides; the domain survives reload, disable, and re-enable; Now stays compact;
   build metadata reports v3.2; and no child name or birth date appears anywhere.
-- **One design defect found and fixed:** every write closed the map and returned to the
-  console, so updating three skills meant opening the page three times. Found by the
-  browser tests. `run()` now takes a `stay` option and the scan page keeps its place.
+- **Two design defects found and fixed.**
+- **The first, found by the browser tests:** every write closed the map and returned to
+  the console, so updating three skills meant opening the page three times. `run()` now
+  takes a `stay` option and the scan page keeps its place.
+- **The second, found by looking at the deployed build:** fifteen of sixteen rows were
+  highlighted. Every relevant skill starts with nothing recorded, so treating "untouched"
+  as "newly relevant" lit up the whole page — the exact opposite of what a highlight is
+  for, and contrary to the file's own comment about it. "New" now means a band change
+  brought the skill in; on a first visit nothing is new, there is just the map.
+- **One CI failure worth recording:** two spec files were edited after the last format
+  pass, so the repo-wide format check failed and the deploy never ran. `npm run verify` is
+  the whole check and running it on a subset is not running it.
 - Three older assertions were correct failures: the 8D tests opened the guided flow
   through "Update this area", which now opens the map. They go through "Take me through
   it instead" and assert the same things.

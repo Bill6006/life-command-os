@@ -112,17 +112,22 @@ function levelFromLabel(label: string | undefined): SkillLevel | undefined {
     : SKILL_LEVELS.find((level) => SKILL_LEVEL_LABELS[level] === label);
 }
 
-/** The band the owner chose, and whether he has chosen at all. */
+/** The band the owner chose, the one before it, and whether he has chosen at all. */
 export function currentAgeBand(records: readonly CanonicalRecord[]): {
   readonly band: AgeBand;
+  readonly previous: AgeBand | undefined;
   readonly chosen: boolean;
 } {
-  const chosen = currentObservations(records)
+  const history = currentObservations(records)
     .filter((observation) => observation.attribute === AGE_BAND_ATTRIBUTE)
-    .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))[0];
+    .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
 
-  const band = chosen === undefined ? undefined : ageBandFromLabel(stateText(chosen) ?? '');
-  return { band: band ?? DEFAULT_AGE_BAND, chosen: band !== undefined };
+  const band =
+    history[0] === undefined ? undefined : ageBandFromLabel(stateText(history[0]) ?? '');
+  const previous =
+    history[1] === undefined ? undefined : ageBandFromLabel(stateText(history[1]) ?? '');
+
+  return { band: band ?? DEFAULT_AGE_BAND, previous, chosen: band !== undefined };
 }
 
 export function buildLearningMap(records: readonly CanonicalRecord[], now: Date): LearningMap {
@@ -132,11 +137,27 @@ export function buildLearningMap(records: readonly CanonicalRecord[], now: Date)
       .filter((observation) => observation.attribute === attribute)
       .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
 
-  const { band, chosen } = currentAgeBand(records);
+  const { band, previous, chosen } = currentAgeBand(records);
   const relevant = new Set(skillsForBand(band).map((skill) => skill.id));
 
+  /*
+   * "New" means *newly* relevant, not merely untouched.
+   *
+   * On a first visit every relevant skill has nothing recorded against it, so marking
+   * those as new lit up the entire page — the exact opposite of what a highlight is
+   * for, and visible on the deployed build as fifteen of sixteen rows emphasised. A
+   * skill is new when the band change brought it in; on day one there is no "new",
+   * there is just the map.
+   */
+  const wasRelevant = new Set(
+    previous === undefined ? [] : skillsForBand(previous).map((skill) => skill.id),
+  );
+  const newlyRelevant = new Set(
+    previous === undefined ? [] : [...relevant].filter((id) => !wasRelevant.has(id)),
+  );
+
   const built = TRACKED_SKILLS.map((skill) =>
-    buildSkill(skill, relevant.has(skill.id), byAttribute, now),
+    buildSkill(skill, relevant.has(skill.id), newlyRelevant.has(skill.id), byAttribute, now),
   ).filter(
     (entry) => entry.currentlyRelevant || entry.level !== undefined || entry.evidenceCount > 0,
   );
@@ -161,6 +182,7 @@ export function buildLearningMap(records: readonly CanonicalRecord[], now: Date)
 function buildSkill(
   skill: LearningSkill,
   currentlyRelevant: boolean,
+  newlyRelevant: boolean,
   byAttribute: (attribute: string) => ObservationRecord[],
   now: Date,
 ): LearningMapSkill {
@@ -199,7 +221,7 @@ function buildSkill(
   const highlights: SkillHighlight[] = [];
   const anythingRecorded = level !== undefined || evidenceItems.length > 0;
 
-  if (currentlyRelevant && !anythingRecorded) highlights.push('newly-relevant');
+  if (newlyRelevant && !anythingRecorded) highlights.push('newly-relevant');
   if (progression.kind === 'suggested') highlights.push('possible-progression');
 
   const freshness =

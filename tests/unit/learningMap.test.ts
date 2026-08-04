@@ -173,11 +173,10 @@ describe('the map is complete and scannable', () => {
     expect(busy.highlightedCount).toBeLessThan(busy.visibleSkillCount);
   });
 
-  it('marks new, stale, and recently changed distinctly', () => {
+  it('marks stale and recently changed distinctly', () => {
     const map = buildLearningMap(
       [
         bandRecord('around-2-3-years'),
-        // Nothing recorded: new for this age.
         // Recorded long ago: stale.
         skillReading('naming-feelings', 'needs-support', '2026-01-05T17:00:00.000Z'),
         // Two readings, the newer one recent: recently changed.
@@ -187,12 +186,41 @@ describe('the map is complete and scannable', () => {
       NOW,
     );
 
-    expect(required(mapSkill(map, 'counting-objects'), 'new').highlights).toContain(
-      'newly-relevant',
-    );
     expect(required(mapSkill(map, 'naming-feelings'), 'stale').highlights).toContain('stale');
     expect(required(mapSkill(map, 'taking-turns'), 'changed').highlights).toContain(
       'recently-changed',
+    );
+  });
+
+  it('marks nothing as new on a first visit', () => {
+    /*
+     * Found on the deployed build: every relevant skill starts with nothing recorded, so
+     * treating "untouched" as "new" lit up fifteen of sixteen rows. A page where
+     * everything is emphasised is a page where nothing is.
+     */
+    const first = buildLearningMap([bandRecord('around-2-3-years')], NOW);
+    expect(first.highlightedCount).toBe(0);
+    for (const skill of allMapSkills(first)) {
+      expect(skill.highlights, skill.skillId).toEqual([]);
+    }
+  });
+
+  it('marks a skill new only when a band change brought it in', () => {
+    const moved = buildLearningMap(
+      [
+        bandRecord('around-2-3-years', '2026-01-01T09:00:00.000Z'),
+        bandRecord('around-4-5-years', '2026-08-01T09:00:00.000Z'),
+      ],
+      NOW,
+    );
+
+    // Arrived with the new band.
+    expect(required(mapSkill(moved, 'recognises-own-name'), 'new').highlights).toContain(
+      'newly-relevant',
+    );
+    // Was already relevant before the change, so it is not news.
+    expect(mapSkill(moved, 'counting-objects')?.highlights ?? []).not.toContain(
+      'newly-relevant',
     );
   });
 });
