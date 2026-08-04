@@ -36,6 +36,14 @@ import {
 } from '../../../intelligence/guides/planGuide';
 import { isLockEnabled, unlock } from '../../../application/commands/appLock';
 import { setDomainState } from '../../../application/commands/domainPreference';
+import {
+  recordSkillEvidence,
+  respondToProgression,
+  setAgeBand,
+  setSkillLevel,
+} from '../../../application/commands/fatherhood';
+import { buildLearningMap } from '../../../intelligence/domains/fatherhood/learningMap';
+import { LearningMapView } from '../direction/LearningMapView';
 import { quickCaptureOptions } from '../../../domain/capture/registry';
 import type { DomainId } from '../../../domain/domains/definitions';
 import { onDatabaseSuperseded } from '../../../application/queries/storageInfo';
@@ -73,7 +81,15 @@ type Mode =
     }
   | { readonly kind: 'decline' }
   | { readonly kind: 'outcome'; readonly episode: OpenEpisode }
-  | { readonly kind: 'capture' };
+  | { readonly kind: 'capture' }
+  /**
+   * The fatherhood learning map: a scan page, not a guide.
+   *
+   * `Update This Area` opens this for a domain that has several independently editable
+   * items. The guided one-question-at-a-time flow is still reachable from it, for when
+   * the owner would rather be led than scan.
+   */
+  | { readonly kind: 'learning-map' };
 
 const PRIMARY: readonly { id: Destination; label: string }[] = [
   { id: 'now', label: 'Now' },
@@ -171,8 +187,16 @@ export function AppShell(): React.JSX.Element {
    * Every write follows the same shape: run it, surface a failure honestly, reload the
    * truth from storage. Nothing renders optimistically — the interface shows what
    * committed, not what was attempted.
+   *
+   * `stay` keeps the current surface open afterwards. A guide is finished by answering
+   * it, so it closes; a scan page is a place the owner is *working*, and closing it
+   * after every edit would make updating three things a matter of opening it three
+   * times — which is exactly the friction the scan page exists to remove.
    */
-  const run = async (work: () => Promise<{ ok: boolean; issues?: readonly string[] }>) => {
+  const run = async (
+    work: () => Promise<{ ok: boolean; issues?: readonly string[] }>,
+    options: { readonly stay?: boolean } = {},
+  ) => {
     setBusy(true);
     try {
       const result = await work();
@@ -182,6 +206,7 @@ export function AppShell(): React.JSX.Element {
       }
       reportWriteFailure(undefined);
       await refresh();
+      if (options.stay === true) return;
       setMode({ kind: 'console' });
       setNowView('decision');
     } catch (caught) {
@@ -322,6 +347,55 @@ export function AppShell(): React.JSX.Element {
             submitOutcome(mode.episode, answers);
           }}
           onCancel={() => {
+            setMode({ kind: 'console' });
+          }}
+        />
+      );
+    }
+
+    if (mode.kind === 'learning-map') {
+      return (
+        <LearningMapView
+          map={buildLearningMap(records, now)}
+          busy={busy}
+          onSetLevel={(skillId, level, note) => {
+            void run(() => setSkillLevel({ skillId, level, note }, new Date()), { stay: true });
+          }}
+          onRecordEvidence={(skillId, level) => {
+            void run(() => recordSkillEvidence({ skillId, level }, new Date()), { stay: true });
+          }}
+          onSetAgeBand={(band) => {
+            void run(() => setAgeBand(band, new Date()), { stay: true });
+          }}
+          onProgressionResponse={(skill, response) => {
+            if (response !== 'approve') return;
+            if (skill.progression.kind !== 'suggested') return;
+            const { to, supporting } = skill.progression;
+            void run(
+              async () => {
+                const result = await respondToProgression(
+                  {
+                    skillId: skill.skillId,
+                    response,
+                    to,
+                    supportingRecordIds: supporting.map((item) => item.recordId),
+                  },
+                  new Date(),
+                );
+                return result ?? { ok: true };
+              },
+              { stay: true },
+            );
+          }}
+          onOpenGuided={() => {
+            setMode({
+              kind: 'guide',
+              guide: 'update-area',
+              depth: 'full',
+              domainId: 'fatherhood',
+            });
+          }}
+          onClose={() => {
             setMode({ kind: 'console' });
           }}
         />
@@ -504,7 +578,11 @@ export function AppShell(): React.JSX.Element {
               records={records}
               busy={busy}
               onUpdateArea={(domainId) => {
-                setMode({ kind: 'guide', guide: 'update-area', depth: 'full', domainId });
+                setMode(
+                  domainId === 'fatherhood'
+                    ? { kind: 'learning-map' }
+                    : { kind: 'guide', guide: 'update-area', depth: 'full', domainId },
+                );
               }}
               onSetAreaState={(domainId, state) => {
                 void run(() => setDomainState(records, { domainId, state }, new Date()));

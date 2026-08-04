@@ -65,27 +65,42 @@ export function movedForward(from: SkillLevel, to: SkillLevel): boolean {
 /**
  * The skills this slice tracks.
  *
- * A short list on purpose. A hundred trackable skills is a checklist, and a checklist
- * is the thing the owner already abandoned once.
+ * Prompt 8D held six of them in a flat list here. Prompt 8D.2 replaced that with the
+ * six-section learning map in `learningMap.ts`, and this file re-exports it so that
+ * every existing importer keeps working — the six original skill ids are unchanged,
+ * because records already reference them.
  */
-export const TRACKED_SKILLS = [
-  { id: 'asking-for-help', label: 'Asking for help with words or signs' },
-  { id: 'putting-things-away', label: 'Putting something back where it lives' },
-  { id: 'taking-turns', label: 'Taking turns in a game' },
-  { id: 'getting-dressed', label: 'Getting dressed, or part of it' },
-  { id: 'naming-feelings', label: 'Naming what she is feeling' },
-  { id: 'waiting-a-moment', label: 'Waiting a moment before getting something' },
-] as const;
-export type TrackedSkillId = (typeof TRACKED_SKILLS)[number]['id'];
+export {
+  LEARNING_SECTIONS,
+  SECTION_LABELS,
+  LEARNING_MAP_SOURCE,
+  LEARNING_MAP_VERSION,
+  TRACKED_SKILLS,
+  SKILL_LABELS,
+  skillById,
+  skillsInSection,
+  skillsForBand,
+  skillAttribute,
+  skillEvidenceAttribute,
+  skillIdFromEvidenceAttribute,
+  skillIdFromLevelAttribute,
+  type LearningSection,
+  type LearningSkill,
+} from './learningMap';
 
-export const SKILL_LABELS: Record<string, string> = Object.fromEntries(
-  TRACKED_SKILLS.map((skill) => [skill.id, skill.label]),
-);
+export {
+  AGE_BANDS,
+  AGE_BAND_LABELS,
+  AGE_BAND_ATTRIBUTE,
+  DEFAULT_AGE_BAND,
+  ageBandFromLabel,
+  ageBandIndex,
+  isAgeBand,
+  type AgeBand,
+} from './ageBands';
 
-/** The attribute one skill's readings are filed under. */
-export function skillAttribute(skillId: string): string {
-  return `father:skill:${skillId}`;
-}
+/** Kept as a name for readability; the map's ids are ordinary strings. */
+export type TrackedSkillId = string;
 
 /* -------------------------------------------------------------------------- */
 /* The official checklist                                                       */

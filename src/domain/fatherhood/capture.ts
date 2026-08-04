@@ -85,6 +85,39 @@ export const FATHERHOOD_CAPTURES: readonly ContextualCapture[] = [
   },
   {
     /**
+     * One occasion, from whichever surface the owner was on.
+     *
+     * Owned by Update This Area because that is where he deliberately looks at her
+     * learning; a Tiny Lesson follow-up writes the same attribute through the decision
+     * episode, which is the point — one canonical record either way.
+     */
+    id: 'father:skill-evidence',
+    domainId: 'fatherhood',
+    recordFamily: 'observation',
+    captureClass: 'update-this-area',
+    owningSurface: 'update-this-area',
+    promptId: 'father:skill-evidence',
+    eligibleGuides: [],
+    triggers: [
+      'The owner opened the learning map',
+      'A Tiny Lesson for this skill was completed',
+    ],
+    parentingContext: 'Straight after the occasion, while what happened is still exact',
+    privacy: 'child',
+    excludedContexts: ['work-focus', 'commute'],
+    freshnessHours: 12,
+    duplicateSuppression: 'One occasion per skill per entry; repeats are separate occasions',
+    cooldownHours: 0,
+    repeatedSkip: 'owner-initiated',
+    skipWritesNothing: true,
+    offersUnsure: true,
+    linkedAction: undefined,
+    followUpWindowHours: undefined,
+    expiresAfterHours: undefined,
+    canAffectCurrentDecision: false,
+  },
+  {
+    /**
      * The one milestone capture. Barred from every guide by the validator, not by
      * this file remembering to leave the list empty.
      */

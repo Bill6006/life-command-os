@@ -96,6 +96,21 @@ export async function completeGuideSession(
   };
 
   const combined = [
+    ...(routed.skillEvidence === undefined
+      ? []
+      : [
+          {
+            recordId: newRecordId(),
+            draft: {
+              recordId: '',
+              recordType: 'observation',
+              ...envelope,
+              category: 'fatherhood-and-child',
+              attribute: routed.skillEvidence.attribute,
+              value: { kind: 'state', state: routed.skillEvidence.state },
+            },
+          },
+        ]),
     ...(routed.skillReading === undefined
       ? []
       : [

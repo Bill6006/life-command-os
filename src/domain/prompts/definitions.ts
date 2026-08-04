@@ -842,6 +842,26 @@ export const FATHERHOOD_PROMPTS: readonly CapturePrompt[] = [
     privacy: 'child',
   },
   {
+    /**
+     * One occasion, recorded as evidence rather than as a level.
+     *
+     * The same canonical attribute the learning map writes, so an observation made in
+     * the guided flow and one made on the map are the same record type — never two
+     * versions of one fact. It moves nothing on its own; several occasions across
+     * separate days may suggest a move, and the owner decides.
+     */
+    promptId: 'father:skill-evidence',
+    text: 'How much help did she need this time?',
+    kind: 'observable',
+    answers: [...SUPPORT_LEVELS, UNSURE],
+    allowsUnknown: true,
+    whatItCouldChange: ['state-interpretation', 'confidence'],
+    input: choice([...SUPPORT_LEVELS, UNSURE]),
+    attribute: 'father:skill-evidence',
+    category: 'fatherhood-and-child',
+    privacy: 'child',
+  },
+  {
     /** Which item on the list, before the answer about it. */
     promptId: 'father:milestone',
     text: 'Which one are you looking at?',

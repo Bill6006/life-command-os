@@ -90,7 +90,7 @@ function driversOf(evidence: FatherhoodEvidence): readonly string[] {
 
   if (evidence.untouchedSkills.length > 0) {
     drivers.push(
-      `${String(evidence.untouchedSkills.length)} tracked skills have no reading — that is an absence, not a gap in her`,
+      `${String(evidence.untouchedSkills.length)} skills relevant at this age have no reading — that is an absence, not a gap in her`,
     );
   }
 

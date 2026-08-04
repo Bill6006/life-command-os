@@ -151,6 +151,16 @@ test.describe('Update This Area, for fatherhood', () => {
     await openArea(page, 'fatherhood-enabled');
     await panel(page).getByRole('button', { name: 'Update this area' }).click();
 
+    /*
+     * Since Prompt 8D.2 this opens the scan-friendly map. The guided one-question-at-a-
+     * time flow is still here and still owns the same questions — it is now reached from
+     * the map, for an owner who would rather be led than scan.
+     */
+    await expect(
+      page.getByRole('region', { name: 'Child development and learning map' }),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Take me through it instead' }).click();
+
     const main = page.getByRole('main');
     await expect(main).toContainText('Update this area');
     await expect(main).toContainText('Did you spend time together since last time?');

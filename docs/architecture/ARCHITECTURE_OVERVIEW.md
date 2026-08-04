@@ -1,7 +1,7 @@
 # Architecture Overview
 
 **Status:** Controlling (subordinate to the [Product Constitution](../PRODUCT_CONSTITUTION.md))
-**Plan version:** 3.1 Contextual Capture Amendment
+**Plan version:** 3.2 Coverage, Domain Scan, Learning Map, and AI Review Amendment
 **Scope:** the approved technical shape of Life Command OS
 
 This document records decisions that are expensive to reverse. It is deliberately concise.
@@ -422,6 +422,7 @@ officially supported GitHub Actions approach.
 | Private alpha and release (6, 10) | Encrypted backup and restore; corruption and interruption; fresh-profile recovery; app lock; accessibility; responsive behavior; performance; browser matrix; deployment and rollback; full traceability |
 | Domain slices (7) | The shared panel contract; one candidate per domain; visual eligibility earned **and refused**; Update This Area owning its own questions while the morning stays unchanged; each domain's own prohibited vocabulary asserted against the rendered surface |
 | Reachability (7) | Every owner-facing control exercised on the **production** build from a fresh profile, with no test bridge and no seeding. Added after two finished slices passed every seeded test while being unreachable on the shipped app |
+| Scan and progression (7, v3.2) | The full domain page shows every relevant item at once and updates one without walking the rest; a progression is evidence-backed, one rung, cited, and applied only on owner approval. Verified in an isolated context that never touches the owner's profile |
 | Contextual capture (7, v3.1) | Every capture declares its class, owning surface, timing, triggers, privacy exclusions, suppression, follow-up window, and expiry — validated at module load. Placement rules are enforced, not documented |
 
 Coverage percentage is a signal, not the goal. Critical behavior must be covered

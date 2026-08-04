@@ -10,11 +10,13 @@ import {
   SKILL_LEVELS,
   SKILL_LEVEL_LABELS,
   TRACKED_SKILLS,
+  skillsForBand,
   milestoneText,
   skillAttribute,
   type SkillLevel,
 } from '../../../domain/fatherhood/development';
 import { currentObservations, currentOfType } from '../../support';
+import { currentAgeBand } from './learningMap';
 import { captureDomain, isCapture } from '../captureRouting';
 import type { FreshnessStatus } from '../../types';
 
@@ -165,10 +167,19 @@ export function assessFatherhood(
   }
   skills.sort((a, b) => b.at.localeCompare(a.at));
 
+  /*
+   * Counted against the **current age band**, not the whole map.
+   *
+   * Prompt 8D.2 grew the map from six skills to twenty-seven. Saying "twenty-four
+   * tracked skills have no reading" would be true, useless, and would read like a
+   * backlog — which is exactly what a learning map must not become. What is worth
+   * saying is how much of what is relevant *now* has nothing recorded.
+   */
   const touched = new Set(skills.map((skill) => skill.skillId));
-  const untouchedSkills = TRACKED_SKILLS.filter((skill) => !touched.has(skill.id)).map(
-    (skill) => SKILL_LABELS[skill.id] ?? skill.id,
-  );
+  const { band } = currentAgeBand(records);
+  const untouchedSkills = skillsForBand(band)
+    .filter((skill) => !touched.has(skill.id))
+    .map((skill) => SKILL_LABELS[skill.id] ?? skill.id);
 
   /* --- official milestones ------------------------------------------------ */
 

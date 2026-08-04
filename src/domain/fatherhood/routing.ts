@@ -4,6 +4,7 @@ import {
   SKILL_LEVEL_LABELS,
   TRACKED_SKILLS,
   skillAttribute,
+  skillEvidenceAttribute,
   DEFAULT_MILESTONE_SOURCE,
   DEFAULT_MILESTONE_SOURCE_VERSION,
 } from './development';
@@ -49,6 +50,14 @@ export interface RoutedAnswer {
 export interface RoutedRecords {
   /** Observations to write instead of the raw drafts, keyed by attribute. */
   readonly skillReading: { readonly attribute: string; readonly state: string } | undefined;
+  /**
+   * One occasion, written to the same attribute the learning map uses.
+   *
+   * This is what makes "one observation entered through different surfaces creates one
+   * canonical record" true rather than aspirational: there is a single attribute for
+   * skill evidence, and both surfaces write it.
+   */
+  readonly skillEvidence: { readonly attribute: string; readonly state: string } | undefined;
   readonly milestone:
     | {
         readonly milestoneId: string;
@@ -82,6 +91,18 @@ export function routeFatherhoodAnswers(answers: readonly RoutedAnswer[]): Routed
       ? undefined
       : { attribute: skillAttribute(skill.id), state: SKILL_LEVEL_LABELS[level] };
 
+  const evidenceLabel = answerFor(answers, 'father:skill-evidence');
+  const evidenceLevel = SKILL_LEVELS.find(
+    (entry) => SKILL_LEVEL_LABELS[entry] === evidenceLabel,
+  );
+  const skillEvidence =
+    skill === undefined || evidenceLevel === undefined
+      ? undefined
+      : {
+          attribute: skillEvidenceAttribute(skill.id),
+          state: SKILL_LEVEL_LABELS[evidenceLevel],
+        };
+
   /* --- the milestone answer ----------------------------------------------- */
 
   const milestoneLabel = answerFor(answers, 'father:milestone');
@@ -110,7 +131,8 @@ export function routeFatherhoodAnswers(answers: readonly RoutedAnswer[]): Routed
     if (answerFor(answers, promptId) !== undefined) consumed.push(promptId);
   }
   if (skillReading !== undefined) consumed.push('father:skill-level');
+  if (skillEvidence !== undefined) consumed.push('father:skill-evidence');
   if (milestone !== undefined) consumed.push('father:milestone-status');
 
-  return { skillReading, milestone, consumedPromptIds: consumed };
+  return { skillReading, skillEvidence, milestone, consumedPromptIds: consumed };
 }

@@ -81,7 +81,7 @@ test.describe('application shell', () => {
     await expect(main).toContainText('Plan version');
     // The controlling plan for remaining work, so the owner can tell which one the
     // deployed build was produced against.
-    await expect(main).toContainText('3.1 Contextual Capture');
+    await expect(main).toContainText('3.2 Coverage and Learning Map');
     await expect(main).toContainText('Phase 7');
     await expect(main).toContainText('Built');
   });

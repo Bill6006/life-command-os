@@ -78,6 +78,8 @@ test.describe('the area works end to end on a fresh profile', () => {
 
     /* --- its own questions, including the milestone one --------------------- */
     await panel(page).getByRole('button', { name: 'Update this area' }).click();
+    // The map opens first; the guided flow is reached from it (Prompt 8D.2).
+    await page.getByRole('button', { name: 'Take me through it instead' }).click();
     const main = page.getByRole('main');
     await expect(main).toContainText('Did you spend time together since last time?');
 
@@ -95,6 +97,7 @@ test.describe('the area works end to end on a fresh profile', () => {
     if ((await save.count()) > 0) await save.click();
     await expect(manageAreas(page)).toBeVisible();
     expect(sawMilestone).toBe(true);
+
 
     const after = await recordCount(page);
     expect(after).toBeGreaterThan(0);

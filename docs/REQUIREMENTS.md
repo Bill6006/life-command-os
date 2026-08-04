@@ -1,8 +1,8 @@
 # Core Requirements Registry
 
 **Status:** Controlling
-**Plan version:** 3.1 Contextual Capture Amendment (supersedes v3.0 for remaining work)
-**Current phase:** Phase 7 — Prompts 8A–8D complete; slices 8E–8H outstanding
+**Plan version:** 3.2 Coverage, Domain Scan, Learning Map, and AI Review Amendment
+**Current phase:** Phase 7 — Prompts 8A–8D and the 8D.2 bridge complete; slices 8E–8H outstanding
 
 **Controlling artifacts from v3.0.** The Final Product Blueprint, Updated Requirements
 Register v2, Final Acceptance Test Matrix, and Final Legacy Decisions map now supply the
@@ -710,6 +710,75 @@ is supported as ordinary `child`-classified canonical data on the owner's device
 `childReference()`, which falls back to "your daughter". No real name appears in source,
 fixtures, tests, scenarios, documentation, commits, or build evidence — the fixture uses
 the literal string `Placeholder`, and a repository scan is part of the gate.
+
+---
+
+## 3j. Active requirement records — Phase 7, Prompt 8D.2 (Fatherhood learning map)
+
+A **bounded Phase 7 bridge**, not a numbered phase. Controlling document: Final Lean
+Master Plan v3.2. It amends Prompt 8D without reopening it.
+
+| ID | Implementation | Test IDs | Notes |
+|---|---|---|---|
+| v3.2 §10 (task 1) | `domain/fatherhood/learningMap.ts` — six sections, twenty-seven skills | `the map is complete and scannable` (6); browser `shows all six sections at once` | Every section renders, including empty ones |
+| Task 2 | `domain/fatherhood/ageBands.ts`; `AGE_BAND_ATTRIBUTE` | `age bands add without removing` (4); `changing the age band` (2) | **No birth date is stored anywhere** |
+| Task 3 | `intelligence/domains/fatherhood/learningMap.ts` — level, last observation, freshness, lesson, highlights | `highlights only what needs attention` | Four highlights only; everything else deliberately quiet |
+| Task 4 | The seven-rung ladder, unchanged from Prompt 8D | `keeps the six original skill ids` | Ids are a promise — records already reference them |
+| Task 5 | `domain/fatherhood/progression.ts` | `a progression is suggested, never applied` (10); `a progression only moves when the owner approves it` (6) | Three observations, two occasions, one rung, cited, owner-approved |
+| Task 6 | `father:skill-evidence:<id>` written by the map **and** the guided flow | `one canonical record, whichever surface it came from` (4) | A completed lesson is one occasion, never mastery |
+| Task 7 | Milestones keep their own family and section | `keeps official milestones out of the personal map`; `keeps sensitive milestone statuses out of the ordinary guides` | Concern and possible-loss stay in deliberate review |
+| Task 8 | `LearningMapView` — buttons throughout, one optional note | browser `needs no typing at all` | Structured controls before free text |
+| Task 9 | `__BUILD_PLAN_VERSION__` → `3.2 Coverage and Learning Map` | production `reports plan version 3.2` | Category-label duplication left to Phase 8, as instructed |
+
+### The progression rule, and why each clause is in it
+
+Three qualifying observations, across two separate days, supporting the next rung, with
+no newer contradictory occasion, advancing at most one rung, citing the records behind
+it, and applied only when the owner presses Approve.
+
+- **One good evening is not a change in what she can do.** Hence three.
+- **Three notes from one bath-time is one occasion described three times**, which is the
+  easiest way to fool yourself. Hence two separate days.
+- **A ladder that can be climbed three rungs at once is a ladder nobody trusts.** Hence
+  one.
+- **A newer occasion below the current level makes "she has moved up" misleading**, so
+  the suggestion is withheld and the disagreement is named instead — `conflicting`, never
+  a downgrade.
+
+**There is no automatic downgrade and no code path from evidence to a stored level.** A
+lower observation is real evidence, is kept, and is shown. Changing a level is a
+judgement about a child, and only her father makes it.
+
+### Declining costs nothing
+
+`Keep current level`, `Review evidence`, and `Not now` write **nothing at all**.
+Declining says something about the father's judgement, not about the child, and storing
+it as evidence would let a hesitation become a fact about a two-year-old.
+
+### Why a level and an occasion are separate attributes
+
+`father:skill:<id>` is what the owner declares is true now. `father:skill-evidence:<id>`
+is what he saw once. Keeping them apart is what allows several occasions to add up to a
+suggestion without the app having quietly changed anything — and it is why a Tiny Lesson
+can contribute to a progression while a completed lesson never means mastery.
+
+Both the learning map and the guided flow write the same evidence attribute, which is
+what makes "one observation through different surfaces creates one canonical record" true
+rather than aspirational.
+
+### Scan page and guided flow are both preserved
+
+`Update This Area` opens the map: everything relevant at once, updated item by item. The
+one-question-at-a-time guided update is reached from it and is unchanged. Neither
+replaced the other, because they answer different needs — the app deciding what is worth
+asking, and the owner deciding what he wants to look at.
+
+### Verification never touches the owner's profile
+
+Production verification runs in an isolated browser context. Prompt 8D's verification
+cleared an IndexedDB to obtain a fresh profile and destroyed the records in it; v3.2 Part
+V makes that a stop condition, and `tests/e2e/production-learning-map.spec.ts` uses a
+throwaway context and Playwright's clock to cross a day boundary instead.
 
 ---
 

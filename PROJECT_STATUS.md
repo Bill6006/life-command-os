@@ -3,182 +3,163 @@
 ## Project identity
 
 - Repository: life-command-os (https://github.com/Bill6006/life-command-os)
-- Plan version: **3.1 Contextual Capture Amendment** (supersedes v3.0 for remaining work)
-- Current phase: **Phase 7 — framework and three domain slices complete, all reachable.**
-  Slices 8E–8H outstanding.
-- Current prompt: PROMPT 8D v3.1 (complete)
+- Plan version: **3.2 Coverage, Domain Scan, Learning Map, and AI Review Amendment**
+  (supersedes v3.1 for remaining work)
+- Current phase: **Phase 7 — framework, three domain slices, and the 8D.2 bridge
+  complete.** Slices 8E–8H outstanding.
+- Current prompt: PROMPT 8D.2 v3.2 (complete)
+
+**Prompt 8D.2 is a bounded Phase 7 bridge. It adds no numbered phase.**
 
 ## Gate status
 
-- Status: **GREEN.** Every Prompt 8D requirement and every contextual-capture metadata
-  rule passes. Verified on the production build from a genuinely fresh profile at
-  375×812.
+- Status: **GREEN.** Every Prompt 8D.2 requirement passes, and every Prompt 8D behaviour
+  it was required to preserve still passes.
 - Private local use: **READY** (unchanged from Prompt 7B).
 - Gate evidence:
-  - *Official milestones with source and version* — carried on every answer, in the
-    record, permanently.
-  - *Personal skill progression* — seven positions on a support ladder, reported, never
-    computed.
-  - *Dad actions stored separately from child status* — structurally: no action carries a
-    milestone id, a status, or a level.
-  - *Meaningful moments* — one Quick Capture write, offered only while the area is on.
-  - *Today's Tiny Lesson* — why it matters, minimum version, observable follow-up,
-    stopping point.
-  - *Zero or one candidate* — four branches, ending in silence.
-  - *One subordinate domain move* — asserted.
-  - *Update This Area* — its own questions, and a morning check-in that is unchanged.
-  - *Stage and timeline only where valid* — and a **percentage refused** with its reason.
-  - *Observable outcomes* — participation, support, completion, interference.
-  - *Enable and disable through Manage Areas* — without deleting history, proved on the
-    production build.
-  - *Contextual-capture metadata* — nine declarations, validated at import, with the
-    placement rules enforced rather than documented.
-  - *No child scoring and no privacy leak* — asserted against the rendered production
-    build, and the repository carries no child's name.
+  - *The full learning map is fast to scan* — six sections, everything relevant at once,
+    one item updated without walking any other, and no typing required.
+  - *Progression suggestions are evidence-backed, transparent, one-rung, and
+    owner-approved* — three observations across two separate days, citing the records,
+    labelled a suggestion, applied only on Approve.
+  - *Age-band changes preserve history* — the band decides what is newly worth looking
+    at, never what is true. Nothing is ever removed.
+  - *Milestones remain separate* — their own family, their own section, out of every
+    daily guide.
+  - *No grading, scoring, or privacy leak* — asserted against the rendered production
+    build; no birth date is stored anywhere.
+  - *No owner-profile deletion* — verification runs in an isolated context. See below.
 
 ## GitHub Pages owner preview
 
 - URL: **https://bill6006.github.io/life-command-os/**
 - Deployment status: **LIVE**
-- Deployed commit: current head of `main`. Data & Privacy reports the exact commit.
+- Deployed commit: current head of `main`. Data & Privacy reports the exact commit and
+  now reports plan version **3.2 Coverage and Learning Map**.
 - Hosted build contains synthetic content only: **YES** — and no data at all; the app
   starts empty and the scenario corpus is not in the production bundle.
 
-## The decision this slice turned on
+## The decision this bridge turned on
 
-**A denominator exists, and the number must still not be shown.**
+**Two interactions, both of them right, kept apart.**
 
-Health refused a meter because health has no total to be a fraction of. Career earned one
-because "claims with evidence, out of claims made" has a denominator the owner defined.
-Fatherhood is the case where the eligibility rules could have been satisfied: eight
-milestones, six skills, a countable number of yeses. The percentage would compute cleanly.
+A guide asks one question at a time because the app is deciding what is worth asking. A
+learning map shows everything at once because the owner has deliberately opened it to see
+where things stand and change the one or two that moved. Prompt 8D had only the first,
+so updating one skill meant walking every question — the checklist this rebuild exists to
+end, arriving through the back door.
 
-It would also be a score for a child.
+Both now exist. `Update This Area` opens the map; "Take me through it instead" opens the
+guided flow, unchanged. Neither replaced the other.
 
-So `fatherhoodVisuals` passes `hasValidDenominator: false` deliberately, and the refusal is
-rendered with its reason rather than left as an absence. That is the one output this domain
-must never produce, and the code says so where the next person to read it will see it.
+The second decision is what the map is *not* allowed to do with that reach. It can see
+everything, so it could easily produce a total. It produces none: no grade, no score, no
+percentage, no ranking, no comparison — and the two numbers it does expose count rows on
+a page, not anything about a child.
 
 ## Work completed
 
-- **Two ladders that never merge.** An official checklist answer is one family; a personal
-  skill reading is an ordinary observation. Nothing takes both.
-- **`MilestoneObservationRecord`**, the 25th family, carrying `checklistSource` and
-  `checklistVersion` with every answer — so replacing the list later leaves earlier
-  answers meaningful.
-- **Five reportable statuses**, including "was doing it, not now". *Not assessed* is the
-  absence of a record and is rejected by the schema.
-- **A seven-position support ladder** — not introduced, exposed through play, practising
-  with daddy, needs support, doing sometimes, doing often, uses on her own.
-- **Five Dad actions**, closed and written out in full, none of which can touch her status.
-- **Six Tiny Lessons**, one per tracked skill, each with a reason, a minimum version, an
-  observable follow-up, and a stopping point.
-- **Meaningful moments** through the shared Quick Capture path, offered only when the area
-  is on, classified `child`.
-- **One candidate**, by a four-step order that ends in silence — including the branch that
-  stops having a view and names who should.
-- **A stage path for one skill and a timeline of moments**, and a **refused percentage**.
-- **Contextual-capture metadata**, the v3.1 addition: nine declarations with a validator
-  that refuses milestone review on a guide, a triggered question with no decision value,
-  an incomplete follow-up, and a child question that allows work focus.
+- **A six-section learning map** — language and early reading, numbers and thinking,
+  motor skills, social and emotional, independence and practical life, creativity and
+  play — with twenty-seven skills, each carrying its source, version, and age bands.
+- **Age bands chosen by the owner, with no birth date stored anywhere.** A date of birth
+  is the most identifying thing this app could hold about a child; the band buys the same
+  relevance in one tap.
+- **Changing the band adds and never removes.** A skill that leaves the band is marked
+  as kept from an earlier age band, keeps every observation, and is never called a gap.
+- **Quiet by default**, with exactly four highlights: newly relevant, stale, recently
+  changed, and possible progression.
+- **Structured quick updates** — every control is a button; the only text field says
+  "optional" and writes nothing when blank.
+- **Evidence separated from declared level.** `father:skill:<id>` is what the owner says
+  is true; `father:skill-evidence:<id>` is what he saw once. Both the map and the guided
+  flow write the same evidence attribute.
+- **A conservative progression rule** — three observations, two separate days, one rung,
+  citing the records, withheld when a newer occasion disagrees.
+- **Four responses, one of which writes.** Approve applies the rung; Keep current level,
+  Review evidence, and Not now write nothing at all.
+- **Official milestones untouched** — their own family, their own review, absent from
+  every daily guide.
+- **Plan and build metadata now report v3.2.**
 
 ### Decisions worth naming
 
-- **A milestone answer never supersedes.** Every other repeated answer in this product
-  replaces the last. "Not yet" in March and "yes" in June are both true, and the change
-  between them is the only developmental information in the pair — superseding would
-  delete the one thing worth keeping.
-- **The support ladder is not an achievement ladder.** "Needs support" sits above
-  "practising with daddy" because attempting something and needing help is further along
-  than being shown it.
-- **The Blueprint's checklist is not reproduced.** The built-in list is plainly worded and
-  written here, attributed to what it is — "General guidance (built in)". The feature is
-  not the list; it is that the source and version travel with the answer.
-- **Fatherhood actions are not blocked by `family` or `caregiving`.** Every other domain
-  treats those as protected. These are precisely the contexts in which a Dad action
-  belongs.
-- **The candidate never keys off the checklist.** It reads a skill the owner chose to
-  practise. Turning someone else's list of what is typical into a to-do list for a parent
-  is how a supportive tool becomes a source of pressure.
+- **Declining a suggestion records nothing.** It says something about the father's
+  judgement, not about the child. Storing it would let a hesitation become a fact about a
+  two-year-old.
+- **There is no automatic downgrade, and no code path from evidence to a stored level.**
+  A lower observation is real evidence, kept and shown; the app can say "this disagrees
+  with the level you set" and stops there.
+- **Three observations from one bath-time is one occasion.** The rule counts separate
+  days, which is the stricter reading of "dates or occasions" and the honest one.
+- **A completed Tiny Lesson is never mastery.** It is one occasion. Three across separate
+  days is what a *suggestion* needs, and even then the owner decides.
+- **Empty sections still render.** A heading with nothing under it is a true statement
+  about the map; hiding it would make the page change shape as the child grows.
+- **The scan page stays open after an edit.** `run()` gained a `stay` option: a guide is
+  finished by answering it, but a scan page is somewhere the owner is working, and
+  closing it after each change would make updating three things a matter of opening it
+  three times.
 
 ## Files created or modified
 
-Created (11): `src/domain/records/fatherhood.ts`;
-`src/domain/fatherhood/{development,actions,capture,routing}.ts`;
-`src/domain/capture/{contextualCapture,registry}.ts`;
-`src/application/commands/milestone.ts`;
-`src/intelligence/domains/fatherhood/{index,assessFatherhood,fatherhoodCandidate}.ts`;
-`tests/unit/fatherhood.test.ts`;
-`tests/e2e/{fatherhood,production-fatherhood}.spec.ts`
+Created (8): `src/domain/fatherhood/{learningMap,ageBands,progression}.ts`;
+`src/application/commands/fatherhood.ts`;
+`src/intelligence/domains/fatherhood/learningMap.ts`;
+`src/ui/features/direction/LearningMapView.tsx`;
+`tests/unit/{learningMap,learningMapCommands}.test.ts`;
+`tests/e2e/{learning-map,production-learning-map}.spec.ts`
 
-Modified: `domain/records/{index,categories}.ts`; `domain/prompts/definitions.ts`;
-`domain/domains/definitions.ts`; `intelligence/index.ts`;
-`intelligence/state/categorySummaries.ts`; `intelligence/guides/planGuide.ts`;
-`application/commands/guideSession.ts`;
-`ui/features/respond/RespondSurfaces.tsx`; `ui/features/shell/AppShell.tsx`;
-`ui/view-models/present.ts`; `app/scenarios.ts`; `playwright.config.ts`;
-`tests/fixtures/records.ts`; `tests/unit/{records,domains,areas}.test.ts`;
-`tests/e2e/{domains,production-areas}.spec.ts`;
+Modified: `domain/fatherhood/{development,routing,capture}.ts`;
+`domain/prompts/definitions.ts`; `application/commands/guideSession.ts`;
+`intelligence/domains/fatherhood/assessFatherhood.ts`;
+`intelligence/domains/fatherhood/index.ts`; `ui/features/shell/AppShell.tsx`;
+`ui/design-system/console.css`; `app/scenarios.ts`; `vite.config.ts`;
+`playwright.config.ts`; `tests/e2e/{fatherhood,production-fatherhood,shell}.spec.ts`;
 `docs/{REQUIREMENTS,architecture/ARCHITECTURE_OVERVIEW}.md`
 
 ## Tests and evidence
 
-- **Unit: 450 passed**, up from 396. 54 new for the slice.
-- **Browser: 393 passed**, up from 359. 34 new — 14 against seeded state on desktop and
-  mobile, 6 on the **production** build from a fresh profile.
-- Covers all fourteen required proofs: milestones and personal skills separate; Dad
-  actions unable to mutate child status; no percentage or score renderable; one moment
-  reaching every projection from one record; a Tiny Lesson with an action-linked
-  observable follow-up; milestone prompts absent from the daily guides; metadata
-  declaring timing, trigger, privacy, suppression, follow-up, and expiration; duplicate
-  entry paths producing one canonical event; Skip and Unsure without penalty; prohibited
-  causal questions rejected; enable–update–disable–reload–re-enable preserving data; Now
-  compact with no domain dashboard; a fresh production profile enabling the area through
-  Manage Areas; and no real child name in tracked files or production evidence.
-- **Two real defects found and fixed rather than tested around.**
-- **The first was found only on the deployed build.** Update This Area asked "how much
-  help did she need" and "have you seen her do this", and stored both under attributes
-  nothing reads — so the panel said "nothing recorded here yet" immediately after the
-  owner had recorded something. A level with no skill and a status with no milestone are
-  not readable facts. Each question now has a "which one" step before it, the pair is
-  combined into one canonical record on save, and the selection is consumed rather than
-  stored. The production test now reads the panel after answering, which is the only
-  check that could have caught this — counting records would not have.
-- **Making the metadata load-bearing fell out of the same fix.** `planGuide` collected a
-  domain's questions by namespace, so fatherhood's action follow-ups were asked inside
-  Update This Area with no action to follow up. The declared `owningSurface` now decides,
-  which shortened the flow to seven questions and made the contextual-capture declarations
-  do real work rather than describe intentions.
-- **The second:** `categorySummaries` ended
-  in a fallback branch that applied **career's** focused-hours reading to any category it
-  did not recognise. Activating `fatherhood-and-child` put "losing ground on focused work"
-  under a heading about a two-year-old. The branching is now exhaustive by assignment, so
-  activating a category without writing its summary is a type error.
-- **One copy change the tests forced:** the refusal originally read "a figure could be
-  calculated…". "Could be" is on the speculation list this domain is checked against, and
-  narrowing the check to let my own wording through would have been the wrong fix. The
-  sentence is blunter now.
-- Five older assertions were correct failures from activating the domain: the family
-  count, the domain-content list, and three that used fatherhood as a stand-in for an
-  unbuilt area. Availability flipped on its own — fatherhood became switchable purely by
-  having its update prompt, with no list edited anywhere.
+- **Unit: 495 passed**, up from 450. 45 new for the bridge.
+- **Browser: 428 passed**, up from 393. 35 new — 14 against seeded state on desktop and
+  mobile, 7 on the **production** build in an isolated context.
+- All twenty-one required proofs are covered: six sections render; every relevant skill is
+  visible together; one item updates without walking the rest; structured controls need
+  no typing; milestones and personal skills stay separate; an age-band change introduces
+  new skills without deleting history; retained skills and observations survive it; three
+  observations across two occasions suggest one rung; fewer cannot; contradictory newer
+  evidence withholds the suggestion and names the disagreement; a progression is never
+  applied without approval; Keep current level and Not now write nothing; no automatic
+  downgrade exists; Tiny Lesson evidence supports without declaring mastery; one
+  observation through two surfaces makes one canonical record; no letter grade, score,
+  percentage, ranking, or comparison renders; sensitive milestone statuses stay out of
+  ordinary guides; the domain survives reload, disable, and re-enable; Now stays compact;
+  build metadata reports v3.2; and no child name or birth date appears anywhere.
+- **One design defect found and fixed:** every write closed the map and returned to the
+  console, so updating three skills meant opening the page three times. Found by the
+  browser tests. `run()` now takes a `stay` option and the scan page keeps its place.
+- Three older assertions were correct failures: the 8D tests opened the guided flow
+  through "Update this area", which now opens the map. They go through "Take me through
+  it instead" and assert the same things.
 
 ## Privacy status
 
 - Synthetic-only repository: **YES** — scanned clean across all tracked files.
-- **No child's name in source, fixtures, tests, scenarios, docs, commits, or build
-  evidence.** The display name is owner data on the owner's device; the fixture uses the
-  literal string `Placeholder`, and the domain falls back to "your daughter".
-- Everything this slice captures is classified `child` and excluded from AI exports unless
-  explicitly included.
+- **No child name and no birth date** in source, fixtures, tests, scenarios, docs,
+  commits, or build evidence. The age band is a chosen range, not a date.
+- Everything the bridge captures is classified `child`.
 - Commit identity: GitHub noreply address only.
 - Dependency audit: `npm audit` — **0 vulnerabilities**.
-- Runtime private-data readiness: **READY.** See `docs/PRIVATE_ALPHA.md`.
+- **No owner profile was deleted or cleared.** Prompt 8D's verification cleared an
+  IndexedDB to obtain a fresh profile and destroyed the records in it. v3.2 Part V makes
+  that a stop condition; verification now runs in a throwaway browser context, and
+  crossing a day boundary is done with Playwright's clock rather than by touching data.
 
 ## Architecture decisions
 
-No new ADRs. The slice applies decisions already recorded: ADR-0005 (append-oriented
-records), ADR-0008 (the five-panel cap on Now), and the Prompt 8A framework contracts.
+No new ADRs. The bridge applies decisions already recorded: ADR-0005 (append-oriented
+records) and the Prompt 8A framework contracts. The scan-versus-guide separation is
+recorded in `docs/REQUIREMENTS.md` §3j and in the architecture testing progression.
 
 ## New dependencies
 
@@ -186,47 +167,45 @@ records), ADR-0008 (the five-panel cap on Now), and the Prompt 8A framework cont
 
 ## New abstractions or infrastructure
 
-**1. `domain/records/fatherhood.ts`** — `MilestoneObservationRecord`.
-- Active requirement: tasks 1–2.
-- Why smaller was insufficient: an answer against a checklist is meaningless without which
-  list and which revision. In an attribute string those are beyond validation and beyond
-  query.
+**1. `domain/fatherhood/learningMap.ts`** — the sectioned, age-banded map.
+- Active requirement: Master Plan v3.2 §10, Prompt 8D.2 tasks 1–3.
+- Why smaller was insufficient: a flat list cannot express which skills are relevant now,
+  and the six-skill list could not carry sections, bands, or per-skill provenance.
 
-**2. `domain/fatherhood/`** — the ladders, the closed action set, the lessons.
-- Active requirement: tasks 3–6.
-- Why smaller was insufficient: the same device as `domain/health/actions.ts`, for a
-  related reason — a generated parenting suggestion is one template away from telling a
-  father his daughter should be doing something by now.
+**2. `domain/fatherhood/progression.ts`** — the suggestion rule.
+- Active requirement: task 5.
+- Why smaller was insufficient: the rule is read by the map, the commands, and the tests.
+  A version of it inside the component would be untestable and would drift.
 
-**3. `domain/capture/contextualCapture.ts`** — the metadata contract and its validator.
-- Active requirement: Master Plan v3.1 §9, Phase 7 shared rules 14–19.
-- Why smaller was insufficient: 8E–8H all declare this metadata and Phase 8 orchestrates
-  it. Putting the contract inside the fatherhood folder would force a move; leaving the
-  placement rules as prose would leave them unenforced.
+**3. `application/commands/fatherhood.ts`** — the four writes.
+- Active requirement: tasks 1–6, `ARCH-001`.
+- Why smaller was insufficient: the interface must not write, and the "approve applies
+  exactly one rung, declining writes nothing" rule belongs where it can be tested against
+  storage.
 
-**4. `domain/capture/registry.ts`** — the aggregation Quick Capture reads.
-- Active requirement: task 5, placement rules.
-- Why smaller was insufficient: the alternative is a component with a list of domain names
-  in it, which is exactly the coupling the shared framework removes.
+**4. `ui/features/direction/LearningMapView.tsx`** — the scan page.
+- Active requirement: tasks 1, 3, 8.
+- Why smaller was insufficient: a guide cannot show several independently editable items,
+  and reusing the guide would have meant walking every question to change one.
 
 ## Known limitations
 
-- **Four domains remain unimplemented.** Emotional and relationships (8E), faith (8F),
-  home (8G), money (8H).
-- **A domain panel and its category overview have similar names.** With fatherhood on,
-  Direction shows "Fatherhood and child development" (the slice's reading) beside
-  "Fatherhood & child development" (the shared category summary). True of health since 8B.
-  They answer different questions and both are useful, but the labels are close enough to
-  be momentarily confusing. Worth resolving in Phase 8, which owns the surface.
-- **The built-in checklist is a starting point, not an authority**, and configuring an
-  owner-supplied source is supported by the record but has no interface yet.
-- **Triggered questions are declared, not scheduled.** The metadata says when a question
-  becomes relevant; nothing yet acts on it. That is Phase 8 by design.
-- **The concern branch keys off a milestone answer**, so a worry the owner never recorded
-  against a checklist item does not reach it.
-- **No cross-domain synthesis yet.** Fatherhood competes in the same comparison as
-  everything else.
-- **Cached startup is still unmeasured.** Bundle is ~181 kB gzipped, up from ~175 kB.
+- **The built-in map is guidance, not authority.** Configuring an owner-supplied source
+  is supported by the data model — every skill carries source and version — but has no
+  interface yet.
+- **Age bands are approximate and overlapping**, which is deliberate, but it means a
+  child near a boundary shows a slightly wider set than strictly necessary.
+- **A suggestion needs two calendar days.** An owner recording several occasions in one
+  evening will see nothing until the next day. That is the rule working, but it is worth
+  knowing before it looks like a bug.
+- **Highlights are computed, not dismissible.** A stale skill stays marked until
+  something is recorded; there is no "I know" control yet.
+- **The duplicate panel/category naming remains.** Direction still shows "Fatherhood and
+  child development" beside "Fatherhood & child development". Phase 8 owns the
+  system-wide resolution, as the plan directs.
+- **No Weekly Quick Domain Scan, cross-domain scheduler, monthly review, or AI coaching
+  prompt** — all explicitly Phase 8.
+- **Cached startup is still unmeasured.** Bundle is ~186 kB gzipped, up from ~181 kB.
 - Carried forward: the local database is not encrypted at rest; the app lock hides the
   screen only; notifications do not exist; `frame-ancestors` unenforceable on Pages;
   Chromium-only matrix; no router; service-worker staleness; deletion semantics undecided.
@@ -239,8 +218,10 @@ records), ADR-0008 (the five-panel cap on Now), and the Prompt 8A framework cont
 | Faith and meaning | Prompt 8F |
 | Home and environment | Prompt 8G |
 | Money | Prompt 8H |
+| Weekly Quick Domain Scan, monthly review, forgotten-domain protection | Phase 8 |
 | Contextual-capture orchestration across domains | Phase 8 |
-| Cross-domain synthesis, full Can't Now regeneration, strategic review | Phase 8 |
+| Duplicate panel/category label resolution | Phase 8 |
+| AI review export prompt with coaching intensity | Phase 8 |
 | Quarantined legacy importer | Phase 9 |
 | Traceability generator, full browser matrix, startup measurement, release artifacts | Phase 10 |
 
@@ -249,16 +230,15 @@ records), ADR-0008 (the five-panel cap on Now), and the Prompt 8A framework cont
 **None blocking Prompt 8E.** Two owner decisions carried forward, neither blocking:
 
 1. **Measure cached startup on the Samsung phone** and say if it exceeds three seconds.
-2. **Decide whether to purge a child's first name from commit `b5ffe54`.** HEAD is clean,
-   and this slice adds no name anywhere. A history rewrite and force-push would remove the
-   historical occurrence entirely.
+2. **Decide whether to purge a child's first name from commit `b5ffe54`.** HEAD is clean
+   and nothing since has added a name anywhere.
 
 ## Next permitted prompt
 
 **PROMPT 8E — Phase 7 domain slice: Emotional state, social, and relationships.**
 
-Three slices have now run through the shared framework and answered its central question
-three different ways: health refused a meter for want of a denominator, career earned one,
-and fatherhood refused one that would have computed. 8E inherits the contextual-capture
-contract, which is where its hardest problem lives — a question about a relationship
-arriving at the wrong moment is worse than not asking it.
+It inherits everything this bridge established: contextual-capture metadata, the
+scan-page-versus-guided-flow separation, structured controls before free text, and
+sensitive-topic permissions. That last one is where its hardest problem lives — a
+question about a relationship arriving at the wrong moment is worse than not asking it,
+and Private Pattern content must never surface unasked.

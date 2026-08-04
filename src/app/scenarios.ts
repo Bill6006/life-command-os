@@ -1075,6 +1075,26 @@ export const SCENARIOS: readonly Scenario[] = [
   ),
 
   build(
+    'fatherhood-learning-map',
+    'A learning map with a progression waiting',
+    'One skill set to needs support, with three occasions across separate days pointing higher. Expect a suggestion the owner must approve, and no number anywhere.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('fatherhood', 'enabled'),
+      fatherState('father:age-band', 'Around 2–3 years', -40 * DAY),
+      skill('taking-turns', 'Needs support', -30 * DAY),
+      fatherState('father:skill-evidence:taking-turns', 'Doing sometimes', -15 * DAY),
+      fatherState('father:skill-evidence:taking-turns', 'Doing sometimes', -11 * DAY),
+      fatherState('father:skill-evidence:taking-turns', 'Doing often', -6 * DAY),
+      skill('naming-feelings', 'Practising with daddy', -3 * DAY),
+      milestone('points-to-show', 'yes', -20 * DAY),
+      fatherState('father:together', 'Yes', -1 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
     'fatherhood-concern',
     'Something noticed weeks ago',
     'A concern recorded a month back and still on record. Expect the app to stop having a view and name who should.',
