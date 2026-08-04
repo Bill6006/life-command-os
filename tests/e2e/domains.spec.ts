@@ -50,8 +50,12 @@ test.describe('a switched-off framework changes nothing', () => {
     await goTo(page, 'Direction');
 
     const main = page.getByRole('main');
-    await expect(main).not.toContainText('Areas of life');
+    // No domain panel, and nothing that only makes sense once one is on.
+    await expect(page.getByRole('region', { name: 'Areas of life' })).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'Career and learning' })).toHaveCount(0);
     await expect(main).not.toContainText('Look at one area');
+    // The control that would switch one on is there, and it is the only mention.
+    await expect(page.getByRole('region', { name: 'Manage areas' })).toBeVisible();
     // The category overview is untouched.
     await expect(main).toContainText('Career, work & learning');
   });
@@ -83,13 +87,10 @@ test.describe('one area switched on', () => {
     await expect(panel).toContainText('What is the exact next step, and what is blocking it?');
     await expect(panel).toContainText('Trajectory:');
     await expect(panel).toContainText('Active bottleneck');
-    // Career has questions of its own since Prompt 8C, so it is updatable. The
-    // readable-but-not-updatable state is still real and still reachable — Money has
-    // no slice, and says so rather than offering a button onto an empty guide.
+    // Every panel on screen has a working way to update its area. That is a guarantee
+    // now rather than a flag: a panel exists only for an area the owner could switch
+    // on, and switching on requires the questions to exist.
     await expect(panel.getByRole('button', { name: 'Update this area' })).toHaveCount(1);
-    await expect(page.getByRole('region', { name: 'Money' })).toContainText(
-      'can be read but not yet updated',
-    );
 
     // No score wall (`OWN-010`, gate). No percentage, no x/100, no meters.
     const text = (await page.getByRole('main').textContent()) ?? '';
@@ -104,7 +105,7 @@ test.describe('one area switched on', () => {
     await open(page, 'domain-enabled');
     await goTo(page, 'Direction');
 
-    const panel = page.getByRole('region', { name: 'Money' });
+    const panel = page.getByRole('region', { name: 'Health, recovery, and energy' });
     await expect(panel).toBeVisible();
     await expect(panel).toContainText(/Deprioritised/);
     await expect(panel).toContainText(/deliberately silent/);
@@ -113,15 +114,18 @@ test.describe('one area switched on', () => {
     await expect(panel).not.toContainText('Optional move');
   });
 
-  test('an area that is off does not appear at all', async ({ page }) => {
+  test('an area that is off has no panel, only a row in Manage areas', async ({ page }) => {
     await open(page, 'domain-enabled');
     await goTo(page, 'Direction');
 
-    const main = page.getByRole('main');
-    // Five of the seven were never switched on.
-    await expect(main).not.toContainText('Fatherhood');
-    await expect(main).not.toContainText('Faith and meaning');
-    await expect(main).not.toContainText('Home and environment');
+    // The five unbuilt areas are named honestly — and only inside Manage areas.
+    const manage = page.getByRole('region', { name: 'Manage areas' });
+    await expect(manage).toContainText('Fatherhood');
+    await expect(manage).toContainText('Faith and meaning');
+
+    await expect(page.getByRole('region', { name: 'Fatherhood' })).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'Faith and meaning' })).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'Home and environment' })).toHaveCount(0);
   });
 
   test('manual focus is labelled as the owner’s choice', async ({ page }) => {
@@ -139,6 +143,48 @@ test.describe('one area switched on', () => {
 
     await focus.getByRole('button', { name: 'Career and learning' }).click();
     await expect(focus).toContainText(/an answer, not an empty screen/);
+  });
+
+  test('the control reports the state each area is actually in', async ({ page }) => {
+    await open(page, 'domain-enabled');
+    await goTo(page, 'Direction');
+
+    const manage = page.getByRole('region', { name: 'Manage areas' });
+    // Career is enabled and health is deprioritised in this scenario — both are on,
+    // so both offer to switch off rather than on.
+    for (const label of ['career and learning', 'health, recovery, and energy']) {
+      const button = manage.getByRole('button', { name: `Switch off ${label}` });
+      await expect(button).toHaveCount(1);
+      await expect(button).toHaveAttribute('aria-pressed', 'true');
+    }
+  });
+
+  test('switching an area off from the control removes its panel', async ({ page }) => {
+    await open(page, 'domain-enabled');
+    await goTo(page, 'Direction');
+
+    await expect(page.getByRole('region', { name: 'Career and learning' })).toBeVisible();
+    await page
+      .getByRole('region', { name: 'Manage areas' })
+      .getByRole('button', { name: 'Switch off career and learning' })
+      .click();
+
+    await expect(page.getByRole('region', { name: 'Career and learning' })).toHaveCount(0);
+
+    // The records it was reading are all still in storage.
+    const kept = await page.evaluate(async () => {
+      const bridge = globalThis.__lifeCommandOsDiagnostics;
+      if (bridge === undefined) throw new Error('Test bridge is not installed');
+      const records = await bridge.listAllRecords();
+      return {
+        goals: records.filter((record) => record.recordType === 'goal').length,
+        preferences: records.filter((record) => record.recordType === 'domain-preference')
+          .length,
+      };
+    });
+    expect(kept.goals).toBeGreaterThan(0);
+    // Two decisions from the scenario, and the one just made. None replaced in place.
+    expect(kept.preferences).toBe(3);
   });
 
   test('no horizontal overflow with a domain panel on a phone', async ({ page }) => {

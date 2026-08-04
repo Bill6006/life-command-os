@@ -772,13 +772,27 @@ export const SCENARIOS: readonly Scenario[] = [
   build(
     'domain-enabled',
     'One area switched on',
-    'Career and learning turned on by the owner, and money deprioritised. Expect one full panel, one readable-and-silent panel, and a Now that has not changed at all.',
+    'Career and learning turned on by the owner, and health deprioritised. Expect one full panel, one readable-and-silent panel, and a Now that has not changed at all.',
     [
       star(),
       goal('Goal One', 'career-work-learning', 11),
       ...decliningWeeks(),
       domainPreference('career-and-learning', 'enabled'),
-      domainPreference('money', 'deprioritised', 'Not this season'),
+      // Deprioritised has to be an area that exists, now that an area with no slice
+      // behind it produces no panel at all.
+      domainPreference('health-recovery-energy', 'deprioritised', 'Not this season'),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'areas-all-off',
+    'Nothing switched on',
+    'A profile with records and no area enabled. Expect Manage Areas offering the two built areas, the five unbuilt ones named as unavailable, and no domain panel.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 11),
+      ...decliningWeeks(),
       context({ minutes: 40, capacity: 'moderate' }),
     ],
   ),

@@ -187,7 +187,7 @@ export function DomainPanelView({
         <GraphFigure graph={graph} key={graph.id} />
       ))}
 
-      {onUpdate !== undefined && !quiet && panel.updateAvailable ? (
+      {onUpdate !== undefined && !quiet ? (
         <>
           <div className="actions">
             <button
@@ -207,8 +207,8 @@ export function DomainPanelView({
         </>
       ) : (
         <p className="fine">
-          This area can be read but not yet updated — its own questions arrive with its slice.
-          Nothing here is asked anywhere else in the meantime.
+          This area is deliberately silent while it is deprioritised. It stays readable and asks
+          nothing.
         </p>
       )}
     </Panel>

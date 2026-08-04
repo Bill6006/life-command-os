@@ -10,8 +10,7 @@ import type {
 } from '../types';
 import type { VisualSpec } from '../visuals/eligibility';
 import type { Graph } from '../learning/insights';
-import { ALL_PROMPTS } from '../../domain/prompts/definitions';
-import { resolveDomains, type ResolvedDomain } from './registry';
+import { visibleDomains, type ResolvedDomain } from './registry';
 
 /**
  * The shared domain intelligence panel contract (Prompt 8A task 2, `OWN-013`).
@@ -63,16 +62,17 @@ export interface DomainPanel {
   readonly strongestEvidence: readonly string[];
   /** 10. At most one optional move, always subordinate to the global decision. */
   readonly move: DomainMove | undefined;
-  /** 11. The prompt that owns updating this area. */
-  readonly updatePromptId: string;
   /**
-   * False until the slice that owns this area has written its questions.
+   * 11. The prompt that owns updating this area.
    *
-   * A domain can be readable before it is updatable — 8A enables the panel, each slice
-   * adds the questions. Offering a button that opens an empty guide would be worse
-   * than saying plainly that this area cannot be updated yet.
+   * Always answerable. A panel exists only for a domain the owner was allowed to switch
+   * on, and a domain is only switchable once the prompt named here exists — so "the
+   * button opens an empty guide" is not a state this contract can reach. It used to be:
+   * 8A could enable a domain with no questions behind it, and the panel carried an
+   * `updateAvailable` flag to say so. The Manage Areas control replaced that flag with a
+   * guarantee, and a flag that can no longer be false is worse than no flag.
    */
-  readonly updateAvailable: boolean;
+  readonly updatePromptId: string;
   /** 12. Visuals this domain's evidence has earned. Often none. */
   readonly visuals: readonly VisualSpec[];
   /**
@@ -167,9 +167,6 @@ export function buildDomainPanel(
           }
         : undefined,
     updatePromptId: definition.updatePromptId,
-    updateAvailable: ALL_PROMPTS.some(
-      (prompt) => prompt.promptId === definition.updatePromptId,
-    ),
     visuals: contribution.visuals ?? [],
     graphs: contribution.graphs ?? [],
     metrics: contribution.metrics ?? [],
@@ -241,9 +238,10 @@ export function defaultContribution(
 /**
  * Panels for every domain the owner can see.
  *
- * Returns an empty array when no domain is enabled, which is the current state and the
- * correct one: no slice exists yet, so nothing new appears on any surface. Enabling one
- * produces a panel built from shared evidence — never a per-domain store.
+ * Empty until the owner switches something on, which is where every profile starts.
+ * `visibleDomains` applies availability as well as state, so a preference naming an
+ * area this build has not implemented produces no panel — the guarantee that the owner
+ * is never shown a frame with nothing behind it holds here, not only at the control.
  */
 export function buildDomainPanels(
   records: readonly CanonicalRecord[],
@@ -251,14 +249,12 @@ export function buildDomainPanels(
   whatChanged: readonly MaterialChange[],
   contributions: ReadonlyMap<DomainId, DomainContribution> = new Map(),
 ): DomainPanel[] {
-  return resolveDomains(records)
-    .filter((domain) => domain.state !== 'disabled')
-    .map((domain) =>
-      buildDomainPanel(
-        domain,
-        contributions.get(domain.definition.id) ?? defaultContribution(domain, categories),
-        // A deprioritised domain is readable and silent — including about what changed.
-        domain.state === 'enabled' ? whatChanged : [],
-      ),
-    );
+  return visibleDomains(records).map((domain) =>
+    buildDomainPanel(
+      domain,
+      contributions.get(domain.definition.id) ?? defaultContribution(domain, categories),
+      // A deprioritised domain is readable and silent — including about what changed.
+      domain.state === 'enabled' ? whatChanged : [],
+    ),
+  );
 }

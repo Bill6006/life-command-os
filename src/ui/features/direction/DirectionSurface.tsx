@@ -2,6 +2,9 @@ import { KeyValues, Panel } from '../../components/primitives';
 import { GraphFigure } from '../../components/GraphFigure';
 import { DomainPanelView } from './DomainPanelView';
 import type { DomainId } from '../../../domain/domains/definitions';
+import type { DomainState } from '../../../domain/records/domains';
+import { resolveDomains } from '../../../intelligence/domains/registry';
+import { ManageAreasView } from './ManageAreasView';
 import { ManualFocusView } from './ManualFocusView';
 import type { EpisodeResult } from '../../../intelligence';
 import type { CanonicalRecord } from '../../../domain/records';
@@ -26,15 +29,24 @@ import {
 export function DirectionSurface({
   episode,
   records,
+  busy = false,
   onUpdateArea,
+  onSetAreaState,
 }: {
   episode: EpisodeResult;
   records: readonly CanonicalRecord[];
+  busy?: boolean;
   /** Opens Update This Area for one domain. Owned here and nowhere else. */
   onUpdateArea?: ((domainId: DomainId) => void) | undefined;
+  /** Switches one area on or off. The only route to a domain preference. */
+  onSetAreaState?: ((domainId: DomainId, state: DomainState) => void) | undefined;
 }): React.JSX.Element {
   const star = records.find((record) => record.recordType === 'north-star');
   const goals = records.filter((record) => record.recordType === 'goal');
+
+  const areaStates = new Map<DomainId, DomainState>(
+    resolveDomains(records).map((domain) => [domain.definition.id, domain.state]),
+  );
 
   return (
     <div className="grid">
@@ -63,9 +75,11 @@ export function DirectionSurface({
       {/*
         Domains, when any are switched on. Every one uses the shared panel contract, so
         an area of life cannot acquire its own layout or its own standard of evidence.
-        Nothing renders here today: no slice exists yet, and a domain is off until the
-        owner turns it on.
+        The control that switches them on lives here and nowhere else.
       */}
+      {onSetAreaState === undefined ? null : (
+        <ManageAreasView states={areaStates} busy={busy} onSetState={onSetAreaState} />
+      )}
       {episode.domains.length > 0 ? (
         <Panel label="Areas of life" tone="quiet" wide>
           <p className="fine">

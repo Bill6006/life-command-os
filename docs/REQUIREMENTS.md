@@ -587,6 +587,29 @@ themselves, and "Were you afraid?" is exactly that. The visible labels say what 
 "It looked like more than I had in me", "I kept wanting to prepare more first" — which is
 observable, answerable, and produces evidence rather than a guess.
 
+### 3h.1 Manage Areas — the control that made the slices reachable
+
+| ID | Implementation | Test IDs | Notes |
+|---|---|---|---|
+| `OWN-008` | `ManageAreasView` on Direction, and nowhere else | production `offers exactly the two that exist` | The only route to a domain preference |
+| `ARCH-001` | `application/commands/domainPreference.ts` → `writeRecord` | `switching an area on` (4) | No UI path to storage; the record is validated like every other |
+| `STORE-001` | The decision is a `DomainPreferenceRecord`, not a setting | `writes a canonical record that is there after a reload` | It belongs in a backup. A settings blob would be dropped by the recovery path Phase 6 proved |
+| `DATA-002` | Each change carries `supersedesRecordId` | `one preference per area` (4) | Exactly one current preference per area, however many times it changes; every earlier decision is still readable |
+| Phase 7 gate | Switching off appends; nothing is deleted | `hides the panel and deletes nothing`; production `switches one off without losing anything` | Record count rises by exactly one, and the same reading returns when it is switched back on |
+| `LEAN-001` | `domain/domains/availability.ts` — availability derived from the prompt catalogue | `only areas with a slice behind them can be switched on` (4) | Enforced in the command *and* the registry, so a preference restored from a later build cannot produce an empty panel |
+
+**Availability is derived, never declared.** A domain is switchable exactly when the prompt
+that owns updating it exists. A slice's first obligation is to define what its area asks,
+so this is not a proxy for "implemented" — it is the same fact. The alternative, a boolean
+on each definition, is a second list that must agree with the first, and its failure mode
+is silent: a flag left behind after a revert offers the owner a switch onto an empty room.
+
+**The `updateAvailable` flag was removed.** 8A could enable a domain with no questions
+behind it, so the panel carried a flag saying it could be read but not updated. With this
+control a panel exists only for an area the owner was allowed to switch on, which requires
+the prompt — so the flag can no longer be false, and a flag that can no longer be false is
+worse than no flag. The guarantee is now structural and is asserted directly.
+
 ### A claim is recorded, never adjudicated
 
 `SkillClaimRecord` stores what the owner would say about themselves. It does not store

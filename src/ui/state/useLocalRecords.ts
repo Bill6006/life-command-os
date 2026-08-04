@@ -22,7 +22,7 @@ export type LoadStatus = 'loading' | 'empty' | 'ready' | 'error';
 export interface LocalRecordsState {
   readonly status: LoadStatus;
   readonly records: readonly CanonicalRecord[];
-  readonly episode: EpisodeResult | undefined;
+  readonly episode: EpisodeResult;
   readonly error: string | undefined;
   /** Set when a write did not commit. Drives the recovery surface. */
   readonly writeFailure: string | undefined;
@@ -58,11 +58,14 @@ export function useLocalRecords(): LocalRecordsState {
   /*
    * One engine run per load. `now` is captured with the records so the episode is a
    * consistent snapshot rather than shifting under a re-render.
+   *
+   * It runs on an empty store too. The engine has a real answer for no records — "not
+   * enough recorded yet to recommend anything" — and returning `undefined` instead was
+   * a shortcut that made every surface needing an episode unreachable on a fresh
+   * profile, including the control that switches an area on. Whether Now shows its
+   * empty state is decided by `status`, not by the absence of an episode.
    */
-  const episode = useMemo(
-    () => (records.length === 0 ? undefined : runEpisode(records, now)),
-    [records, now],
-  );
+  const episode = useMemo(() => runEpisode(records, now), [records, now]);
 
   return {
     status,

@@ -35,6 +35,7 @@ import {
   suggestedGuide,
 } from '../../../intelligence/guides/planGuide';
 import { isLockEnabled, unlock } from '../../../application/commands/appLock';
+import { setDomainState } from '../../../application/commands/domainPreference';
 import type { DomainId } from '../../../domain/domains/definitions';
 import { onDatabaseSuperseded } from '../../../application/queries/storageInfo';
 import { LockScreen } from '../data-privacy/LockScreen';
@@ -192,7 +193,7 @@ export function AppShell(): React.JSX.Element {
   };
 
   const respond = (label: string): void => {
-    if (episode === undefined) return;
+    if (records.length === 0) return;
     if (label === 'Start') {
       void run(() => startRecommendation(episode, new Date()));
       return;
@@ -211,7 +212,7 @@ export function AppShell(): React.JSX.Element {
   };
 
   const weeklyRespond = (label: string): void => {
-    if (episode === undefined) return;
+    if (records.length === 0) return;
     const week = 7 * 24 * 60 * 60 * 1000;
     const response: WeeklyResponse =
       label === 'Confirm'
@@ -249,7 +250,7 @@ export function AppShell(): React.JSX.Element {
   };
 
   const decline = (reason: DeclineReason): void => {
-    if (episode === undefined) return;
+    if (records.length === 0) return;
     void run(() => declineRecommendation(episode, reason, new Date()));
   };
 
@@ -298,7 +299,7 @@ export function AppShell(): React.JSX.Element {
       );
     }
 
-    if (mode.kind === 'decline' && episode?.output.kind === 'action') {
+    if (mode.kind === 'decline' && episode.output.kind === 'action') {
       return (
         <DeclineSurface
           statement={episode.output.candidate.statement}
@@ -441,7 +442,7 @@ export function AppShell(): React.JSX.Element {
         <main className="body" id="main" tabIndex={-1}>
           <header className="head">
             <span className="clock">
-              {destination === 'now' && episode !== undefined ? episode.clock : activeLabel}
+              {destination === 'now' && records.length > 0 ? episode.clock : activeLabel}
             </span>
             <h1 className="headline">{destination === 'now' ? 'Now' : activeLabel}</h1>
           </header>
@@ -449,9 +450,9 @@ export function AppShell(): React.JSX.Element {
           {flow ??
             (destination === 'now' ? (
               <NowSurface
-                episode={episode ?? EMPTY_EPISODE}
+                episode={episode}
                 view={nowView}
-                interfaceState={episode === undefined ? interfaceState : 'engine'}
+                interfaceState={records.length === 0 ? interfaceState : 'engine'}
                 offline={offline}
                 busy={busy}
                 guideEntry={GUIDE_ENTRY[suggested]}
@@ -491,19 +492,23 @@ export function AppShell(): React.JSX.Element {
           {flow === undefined && destination === 'timeline' ? (
             <TimelineSurface records={records} />
           ) : null}
-          {flow === undefined && destination === 'direction' && episode !== undefined ? (
+          {flow === undefined && destination === 'direction' ? (
             <DirectionSurface
               episode={episode}
               records={records}
+              busy={busy}
               onUpdateArea={(domainId) => {
                 setMode({ kind: 'guide', guide: 'update-area', depth: 'full', domainId });
+              }}
+              onSetAreaState={(domainId, state) => {
+                void run(() => setDomainState(records, { domainId, state }, new Date()));
               }}
             />
           ) : null}
           {flow === undefined && destination === 'commitments' ? (
             <CommitmentsSurface records={records} />
           ) : null}
-          {flow === undefined && destination === 'learning' && episode !== undefined ? (
+          {flow === undefined && destination === 'learning' && records.length > 0 ? (
             <LearningSurface episode={episode} />
           ) : null}
           {flow === undefined && destination === 'data-privacy' ? (
@@ -514,27 +519,3 @@ export function AppShell(): React.JSX.Element {
     </>
   );
 }
-
-/**
- * A placeholder for the surfaces that need an episode shape before one exists.
- *
- * Never rendered as content: whenever it is passed, `interfaceState` is loading,
- * empty, error, or recovery, and `NowSurface` returns before touching it. It exists so
- * the empty and error states can be reached without making every field optional.
- */
-const EMPTY_EPISODE = {
-  episodeId: '',
-  at: '',
-  clock: '',
-  state: {
-    readings: [],
-    availableMinutes: { status: 'unknown' as const },
-    capacity: { status: 'unknown' as const },
-    protectedContexts: [],
-    contradictions: [],
-    unknowns: [],
-    staleAttributes: [],
-    basisRecordIds: [],
-    confidence: { label: 'insufficient-evidence' as const, why: '', dimensions: [] },
-  },
-} as unknown as Parameters<typeof NowSurface>[0]['episode'];

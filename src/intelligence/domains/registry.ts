@@ -8,6 +8,7 @@ import {
   type DomainDefinition,
   type DomainId,
 } from '../../domain/domains/definitions';
+import { isImplemented } from '../../domain/domains/availability';
 import { currentOfType } from '../support';
 
 /**
@@ -32,6 +33,16 @@ export interface ResolvedDomain {
   /** The record that set it, when the owner has expressed a preference. */
   readonly setBy: string | undefined;
   readonly reason: string | undefined;
+  /**
+   * Whether a slice exists behind this domain.
+   *
+   * Kept beside the state rather than folded into it, because the two say different
+   * things: `state` is what the owner asked for and belongs to them, `available` is
+   * what this build can honour. A preference for an unbuilt area — from an older
+   * backup, or a record written by hand — stays exactly as the owner wrote it and is
+   * simply not acted on.
+   */
+  readonly available: boolean;
 }
 
 /** Off unless the owner says otherwise. */
@@ -62,13 +73,22 @@ export function resolveDomains(records: readonly CanonicalRecord[]): ResolvedDom
       state: preference?.state ?? DEFAULT_DOMAIN_STATE,
       setBy: preference?.recordId,
       reason: preference?.reason,
+      available: isImplemented(definition),
     };
   });
 }
 
-/** Domains that may generate a candidate and show a panel. */
+/**
+ * Domains that may generate a candidate and show a panel.
+ *
+ * Availability is checked here rather than only at the control that writes the
+ * preference, so a record saying an unbuilt area is on — restored from a backup taken
+ * by a later build, say — cannot put an empty panel on screen.
+ */
 export function enabledDomains(records: readonly CanonicalRecord[]): ResolvedDomain[] {
-  return resolveDomains(records).filter((domain) => domain.state === 'enabled');
+  return resolveDomains(records).filter(
+    (domain) => domain.available && domain.state === 'enabled',
+  );
 }
 
 /**
@@ -78,9 +98,12 @@ export function enabledDomains(records: readonly CanonicalRecord[]): ResolvedDom
  * focus. It is readable and it never interrupts (`OWN-008`).
  */
 export function visibleDomains(records: readonly CanonicalRecord[]): ResolvedDomain[] {
-  return resolveDomains(records).filter((domain) => domain.state !== 'disabled');
+  return resolveDomains(records).filter(
+    (domain) => domain.available && domain.state !== 'disabled',
+  );
 }
 
+/** What the owner asked for, whether or not this build can honour it. */
 export function domainState(
   records: readonly CanonicalRecord[],
   domainId: DomainId,
@@ -96,5 +119,5 @@ export function mayGenerateCandidate(
   records: readonly CanonicalRecord[],
   domainId: DomainId,
 ): boolean {
-  return domainState(records, domainId) === 'enabled';
+  return enabledDomains(records).some((domain) => domain.definition.id === domainId);
 }

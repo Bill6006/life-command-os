@@ -4,15 +4,15 @@
 
 - Repository: life-command-os (https://github.com/Bill6006/life-command-os)
 - Plan version: 3.0 Final
-- Current phase: **Phase 7 — framework and two domain slices complete.** Slices 8D–8H
-  outstanding.
-- Current prompt: PROMPT 8C (complete)
+- Current phase: **Phase 7 — framework and two domain slices complete, and reachable.**
+  Slices 8D–8H outstanding.
+- Current prompt: PROMPT 8C (complete, including the Manage Areas follow-up)
 
 ## Gate status
 
-- Status: **YELLOW.** Every Prompt 8C requirement is met and tested. The qualifier is not
-  a defect in this slice: **no domain can be switched on from the shipped app**, so
-  neither the career panel nor the health panel is reachable by the owner. See below.
+- Status: **GREEN.** Every Prompt 8C requirement is met, and the YELLOW qualifier is
+  resolved: both built areas can be switched on, updated, switched off, and restored from
+  a fresh production profile, verified through the real interface at 375×812.
 - Private local use: **READY** (unchanged from Prompt 7B).
 - Gate evidence:
   - *Uses shared canonical records* — career reads the category it has always read. One
@@ -33,21 +33,22 @@
   - *Absent from Now when irrelevant* — nothing about a domain reaches Now.
   - *Synthetic tests added* — five career scenarios, 39 unit and 14 browser tests.
 
-### The qualifier, stated plainly
+### The qualifier that was open, and how it closed
 
-A domain becomes visible when a `DomainPreferenceRecord` says the owner switched it on.
-**Nothing in the application writes one.** The only writer is `src/app/scenarios.ts`, which
-is compile-time stripped from the production bundle along with the test bridge.
+A domain becomes visible when a `DomainPreferenceRecord` says the owner switched it on, and
+nothing in the application wrote one — the only writer was the synthetic scenario builder,
+which is stripped from the production bundle. Two finished slices passed every test against
+a seeded corpus while being unreachable on the shipped app.
 
-So every domain test runs through the real UI against a seeded corpus, and on the deployed
-build `Direction` shows the three category overviews and no domain panel at all — verified
-live on commit `9a63aa4` at 375×812.
+**Manage Areas, on Direction, is the fix.** It writes the record through the application
+command layer, refuses areas that have not been built, and is exercised on the production
+build from a genuinely fresh profile.
 
-This is an 8A framework gap, not an 8C one, and it has been true since Prompt 8B shipped;
-the 8B report said health "appears only after the owner enables it" without checking that
-the owner could. Both slices are complete and correct behind it. **The missing piece is a
-switch-on control, which is framework scope and was not part of Prompt 8C's task list.**
-It is listed under Blockers for a decision.
+The deeper problem was the evidence, not the code. Seeded state answers "does the panel
+render"; only the production build from an empty profile answers "can the owner get to it".
+`tests/e2e/production-areas.spec.ts` exists so that question is asked of every owner-facing
+control from now on, and the testing progression in the architecture overview records it as
+a standing stage rather than a one-off.
 
 ## GitHub Pages owner preview
 
@@ -93,6 +94,23 @@ reach the rung one lab does.
 - **The AI export names claims and what stands behind them**, under a header that says a
   claim is never exported as true.
 
+### Manage Areas, added to close the gate
+
+- **Two areas can be switched on**, health and career, and the other five are named as not
+  yet built with no control beside them.
+- **Availability is derived from the prompt catalogue**, so a slice makes its area
+  switchable by writing its questions and cannot do it any other way. No second list.
+- **Enforced twice** — the command refuses an unbuilt area, and the registry ignores a
+  preference for one, so a backup from a later build cannot produce an empty panel.
+- **Switching off appends and deletes nothing.** The panel goes, every record stays, and
+  switching back on returns the same reading. The screen says so, because an owner who is
+  unsure whether "off" means "gone" will never press it.
+- **One current preference per area**, through supersession, however many times it changes.
+- **The engine now runs on an empty store.** It always had a real answer for no records —
+  "not enough recorded yet" — and returning `undefined` instead made every surface that
+  needs an episode unreachable on a fresh profile, including this control. Now is unchanged:
+  its empty state is chosen by load status, not by the absence of an episode.
+
 ### Decisions worth naming
 
 - **Career earns a meter; health refused one.** Same eligibility rules, opposite answer.
@@ -118,22 +136,31 @@ reach the rung one lab does.
 
 ## Files created or modified
 
-Created (7): `src/domain/career/ladder.ts`; `src/domain/records/career.ts`;
+Created (11): `src/domain/career/ladder.ts`; `src/domain/records/career.ts`;
 `src/intelligence/domains/career/{index,assessCareer,careerCandidate}.ts`;
-`tests/unit/career.test.ts`; `tests/e2e/career.spec.ts`
+`src/domain/domains/availability.ts`;
+`src/application/commands/domainPreference.ts`;
+`src/ui/features/direction/ManageAreasView.tsx`;
+`tests/unit/{career,areas}.test.ts`; `tests/e2e/career.spec.ts`;
+`tests/e2e/production-areas.spec.ts`
 
 Modified: `domain/records/{index,scales}.ts`; `domain/prompts/definitions.ts`;
 `domain/domains/definitions.ts`; `intelligence/index.ts`;
-`intelligence/domains/captureRouting.ts`; `intelligence/visuals/eligibility.ts`;
-`application/queries/aiExport.ts`; `ui/features/direction/DomainPanelView.tsx`;
-`app/scenarios.ts`; `tests/fixtures/records.ts`; `tests/unit/{records,prompts}.test.ts`;
+`intelligence/domains/{captureRouting,registry,domainPanel}.ts`;
+`intelligence/visuals/eligibility.ts`; `application/queries/aiExport.ts`;
+`ui/state/useLocalRecords.ts`; `ui/features/shell/AppShell.tsx`;
+`ui/features/direction/{DirectionSurface,DomainPanelView}.tsx`;
+`ui/design-system/console.css`; `app/scenarios.ts`; `playwright.config.ts`;
+`tests/fixtures/records.ts`; `tests/unit/{records,prompts,domains}.test.ts`;
 `tests/e2e/domains.spec.ts`;
 `docs/{REQUIREMENTS,architecture/ARCHITECTURE_OVERVIEW}.md`
 
 ## Tests and evidence
 
-- **Unit: 379 passed**, up from 339. 40 new for the slice.
-- **Browser: 348 passed**, up from 320. 28 new — 14 tests across desktop and mobile.
+- **Unit: 395 passed**, up from 339. 40 new for the slice, 12 for Manage Areas, and four
+  more asserting that only built areas can be switched on.
+- **Browser: 359 passed**, up from 320. 28 for career across desktop and mobile, 7 on the
+  **production** build from a fresh profile, and 2 for the control against seeded state.
 - Covers: a claim family with no truth field, asserted by parse failure; the ladder
   climbing only on cited evidence; nine study sessions never reaching the rung one lab
   does; one Work Win reaching six surfaces from one record; the five-branch candidate
@@ -151,10 +178,13 @@ Modified: `domain/records/{index,scales}.ts`; `domain/prompts/definitions.ts`;
   refusal — and wrong the moment a domain earned a meter, which would have reached the
   screen under the refusal heading. `VisualSpec` now carries what a meter or stage path
   draws with, and the panel renders each kind as itself.
-- Three older assertions were correct failures: the scale list, the family count, and the
-  8A claim that career was readable-but-not-updatable. The last is what 8C changes, so the
-  test now asserts the opposite and keeps the readable-but-not-updatable state covered
-  through Money, which still has no slice.
+- Three older assertions were correct failures during the slice: the scale list, the family
+  count, and the 8A claim that career was readable-but-not-updatable.
+- **The readable-but-not-updatable state no longer exists.** Adding the control removed it:
+  a panel is only reachable for an area the owner could switch on, which requires that
+  area's questions. `updateAvailable` went with it, and the registry tests that used Money
+  as a stand-in domain were rewritten around the two real ones — Money is now correctly
+  refused rather than usable as a generic example.
 
 ## Privacy status
 
@@ -211,14 +241,28 @@ the Prompt 8A framework contracts.
 - Why smaller was insufficient: an earned meter with no data reached the screen under the
   refusal heading, which said the opposite of what it meant.
 
+**5. `domain/domains/availability.ts`** — which areas may be switched on.
+- Active requirement: `LEAN-001`, and the gate qualifier this closed.
+- Why smaller was insufficient: the rule is needed by the command, the registry, and the
+  control. A boolean on each definition would be a second list to keep in step, and its
+  failure mode is a switch onto an empty room.
+
+**6. `application/commands/domainPreference.ts`** — the only writer of the record.
+- Active requirement: `ARCH-001`, `STORE-001`, `DATA-002`.
+- Why smaller was insufficient: writing the record from the component would have put an
+  unvalidated write and the supersession rule in the interface layer, which is the
+  boundary ADR-0004 exists to hold.
+
 ## Known limitations
 
 - **Five domains remain unimplemented.** Fatherhood (8D), emotional and relationships
   (8E), faith (8F), home (8G), money (8H). Each is readable-but-not-updatable until its
   slice lands, and says so.
-- **Career is switched off by default**, like every domain — and, until a switch-on
-  control exists, it cannot be switched on from the shipped app at all. See the gate
-  qualifier.
+- **Career is switched off by default**, like every domain. It appears once the owner
+  switches it on from Manage Areas.
+- **Deprioritised is not offered by the control.** The state exists in the model, is
+  honoured everywhere, and is exercised by tests — but Manage Areas offers on and off only.
+  A third option needs a clear owner-facing meaning before it earns a button.
 - **The claim meter counts evidence, not adequacy.** One study session puts something
   behind a claim here; it may not support that claim in an interview. The visual says so
   in its own uncertainty declaration, but it is a real limit of the reading.
@@ -250,17 +294,10 @@ the Prompt 8A framework contracts.
 
 ## Blockers
 
-**None blocking Prompt 8D.** Three owner decisions are open, one of them affecting whether
-the last two slices are usable.
+**None blocking Prompt 8D.** Two owner decisions carried forward, neither blocking:
 
-1. **Where the switch-on control goes.** Two slices are complete and neither can be reached
-   on the shipped build. It is a small piece of work — one command writing a
-   `DomainPreferenceRecord`, and a place to put it — but it is framework scope, and where
-   it lives (Data & Privacy, Direction, or a first-run step) is a product decision rather
-   than a technical one. Recommended as the first item of Prompt 8D, or as a short
-   framework prompt before it.
-2. **Measure cached startup on the Samsung phone** and say if it exceeds three seconds.
-3. **Decide whether to purge a child's first name from commit `b5ffe54`.** HEAD is clean.
+1. **Measure cached startup on the Samsung phone** and say if it exceeds three seconds.
+2. **Decide whether to purge a child's first name from commit `b5ffe54`.** HEAD is clean.
    A history rewrite and force-push would remove it entirely; leaving it means one file in
    one historical commit contains it.
 
@@ -272,3 +309,8 @@ Two slices have now run through the shared framework, and the useful result is t
 disagreed: health refused a meter and career earned one, on the same rules. 8D is the
 hardest test of those rules so far — a domain where almost nothing is countable and where
 a meter would be actively harmful.
+
+It also inherits a working switch. Fatherhood becomes available to switch on the moment its
+update prompt exists, with no separate list to remember, and
+`tests/e2e/production-areas.spec.ts` will hold it to being reachable rather than merely
+implemented.

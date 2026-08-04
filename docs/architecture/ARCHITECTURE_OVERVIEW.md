@@ -252,6 +252,17 @@ A domain slice may add at most one content family, and only where the content is
 irreducible in this sense. Everything else a domain shows still comes from the shared
 records, which is what stops seven domains becoming seven databases.
 
+### 4.3 Which domains exist, and which can be switched on
+
+Seven are defined; two are built. **Availability is derived from the prompt catalogue** —
+a domain is switchable exactly when the prompt that owns updating it exists — so a slice
+makes its area available by doing the work and cannot make it available any other way.
+
+The rule is enforced twice, deliberately. The command that writes a `DomainPreferenceRecord`
+refuses an unbuilt area, and the registry ignores a preference for one. The second check is
+not redundant: a backup taken by a later build, restored onto an earlier one, would
+otherwise put a panel on screen with nothing behind it.
+
 ## 5. Projection layer
 
 Projections are rebuildable, deletable, and **never canonical truth** (`STORE-002`). They
@@ -406,6 +417,7 @@ officially supported GitHub Actions approach.
 | Learning and graphs (5) | Outcome windows; execution fidelity; forecast evaluation; recommendation-effect evaluation; unresolved outcomes; expected-versus-actual views; belief changes; chart accessibility and missing data |
 | Private alpha and release (6, 10) | Encrypted backup and restore; corruption and interruption; fresh-profile recovery; app lock; accessibility; responsive behavior; performance; browser matrix; deployment and rollback; full traceability |
 | Domain slices (7) | The shared panel contract; one candidate per domain; visual eligibility earned **and refused**; Update This Area owning its own questions while the morning stays unchanged; each domain's own prohibited vocabulary asserted against the rendered surface |
+| Reachability (7) | Every owner-facing control exercised on the **production** build from a fresh profile, with no test bridge and no seeding. Added after two finished slices passed every seeded test while being unreachable on the shipped app |
 
 Coverage percentage is a signal, not the goal. Critical behavior must be covered
 (`TEST-001`).

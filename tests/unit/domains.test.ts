@@ -23,11 +23,17 @@ import {
 } from '../../src/domain/records';
 import {
   DEFAULT_DOMAIN_STATE,
+  domainState,
   enabledDomains,
   mayGenerateCandidate,
   resolveDomains,
   visibleDomains,
 } from '../../src/intelligence/domains/registry';
+import {
+  implementedDomains,
+  isImplemented,
+  unimplementedDomains,
+} from '../../src/domain/domains/availability';
 import {
   buildDomainPanels,
   defaultContribution,
@@ -138,26 +144,32 @@ describe('enablement is the owner’s, and disabling never deletes', () => {
   });
 
   it('turns one on without touching the others', () => {
-    const records = [aDomainPreference({ domainId: 'money', state: 'enabled' })];
+    const records = [aDomainPreference({ domainId: 'career-and-learning', state: 'enabled' })];
     const enabled = enabledDomains(records);
 
     expect(enabled).toHaveLength(1);
-    expect(required(enabled[0], 'the enabled domain').definition.id).toBe('money');
-    expect(mayGenerateCandidate(records as CanonicalRecord[], 'money')).toBe(true);
-    expect(mayGenerateCandidate(records as CanonicalRecord[], 'fatherhood')).toBe(false);
+    expect(required(enabled[0], 'the enabled domain').definition.id).toBe(
+      'career-and-learning',
+    );
+    expect(mayGenerateCandidate(records as CanonicalRecord[], 'career-and-learning')).toBe(
+      true,
+    );
+    expect(mayGenerateCandidate(records as CanonicalRecord[], 'health-recovery-energy')).toBe(
+      false,
+    );
   });
 
   it('lets a newer preference supersede an older one, keeping both records', () => {
-    const first = aDomainPreference({ domainId: 'money', state: 'enabled' });
+    const first = aDomainPreference({ domainId: 'career-and-learning', state: 'enabled' });
     const second = aDomainPreference({
-      domainId: 'money',
+      domainId: 'career-and-learning',
       state: 'disabled',
       supersedesRecordId: first.recordId,
       reason: 'Not this season',
     });
     const records = [first, second] as CanonicalRecord[];
 
-    expect(mayGenerateCandidate(records, 'money')).toBe(false);
+    expect(mayGenerateCandidate(records, 'career-and-learning')).toBe(false);
     // Nothing was removed. History of it having been on survives.
     expect(records).toHaveLength(2);
   });
@@ -171,12 +183,73 @@ describe('enablement is the owner’s, and disabling never deletes', () => {
 
   it('makes deprioritised readable and silent', () => {
     const records = [
-      aDomainPreference({ domainId: 'money', state: 'deprioritised' }),
+      aDomainPreference({ domainId: 'career-and-learning', state: 'deprioritised' }),
     ] as CanonicalRecord[];
 
     expect(enabledDomains(records)).toEqual([]);
     expect(visibleDomains(records)).toHaveLength(1);
-    expect(mayGenerateCandidate(records, 'money')).toBe(false);
+    expect(mayGenerateCandidate(records, 'career-and-learning')).toBe(false);
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+
+describe('only areas with a slice behind them can be switched on', () => {
+  it('counts an area as available exactly when its update prompt exists', () => {
+    // Derived, not listed. A slice makes its area available by writing its questions,
+    // and there is no other way to make one available.
+    for (const definition of DOMAIN_LIST) {
+      const hasPrompt = ALL_PROMPTS.some(
+        (prompt) => prompt.promptId === definition.updatePromptId,
+      );
+      expect(isImplemented(definition), definition.id).toBe(hasPrompt);
+    }
+  });
+
+  it('offers exactly the two built areas today', () => {
+    expect(implementedDomains().map((definition) => definition.id)).toEqual([
+      'health-recovery-energy',
+      'career-and-learning',
+    ]);
+    expect(unimplementedDomains().map((definition) => definition.id)).toEqual([
+      'fatherhood',
+      'emotional-and-relationships',
+      'faith-and-meaning',
+      'home-and-environment',
+      'money',
+    ]);
+  });
+
+  it('ignores a preference that says an unbuilt area is on', () => {
+    // The record is not rewritten and not rejected — it stays exactly as the owner (or
+    // an older build, or a restored backup) wrote it. It is simply not acted on, which
+    // is what stops a frame with nothing behind it reaching the screen.
+    const records = [
+      aDomainPreference({ domainId: 'fatherhood', state: 'enabled' }),
+    ] as CanonicalRecord[];
+
+    expect(domainState(records, 'fatherhood')).toBe('enabled');
+    expect(enabledDomains(records)).toEqual([]);
+    expect(visibleDomains(records)).toEqual([]);
+    expect(mayGenerateCandidate(records, 'fatherhood')).toBe(false);
+    expect(buildDomainPanels(records, [], [])).toEqual([]);
+  });
+
+  it('gives every panel a working way to update the area', () => {
+    // The old `updateAvailable` flag is gone because it can no longer be false: a panel
+    // exists only for an area the owner could switch on, and that requires the prompt.
+    for (const definition of implementedDomains()) {
+      const panels = buildDomainPanels(
+        [aDomainPreference({ domainId: definition.id, state: 'enabled' })] as CanonicalRecord[],
+        [],
+        [],
+      );
+      const panel = required(panels[0], `${definition.id} panel`);
+      expect(
+        ALL_PROMPTS.some((prompt) => prompt.promptId === panel.updatePromptId),
+        panel.updatePromptId,
+      ).toBe(true);
+    }
   });
 });
 
@@ -382,6 +455,7 @@ describe('the panel contract is the same for every domain', () => {
         state: 'enabled',
         setBy: undefined,
         reason: undefined,
+        available: false,
       },
       [],
     );
@@ -391,7 +465,9 @@ describe('the panel contract is the same for every domain', () => {
 
   it('never offers a move from a deprioritised domain', () => {
     const panels = buildDomainPanels(
-      [aDomainPreference({ domainId: 'money', state: 'deprioritised' })] as CanonicalRecord[],
+      [
+        aDomainPreference({ domainId: 'career-and-learning', state: 'deprioritised' }),
+      ] as CanonicalRecord[],
       [],
       [{ change: 'something', detail: '', when: 'today', altered: 'state', recordIds: [] }],
     );
@@ -406,12 +482,14 @@ describe('the panel contract is the same for every domain', () => {
 
   it('marks every domain move subordinate, with no way to unset it', () => {
     const panels = buildDomainPanels(
-      [aDomainPreference({ domainId: 'money', state: 'enabled' })] as CanonicalRecord[],
+      [
+        aDomainPreference({ domainId: 'career-and-learning', state: 'enabled' }),
+      ] as CanonicalRecord[],
       [],
       [],
       new Map([
         [
-          'money',
+          'career-and-learning',
           {
             condition: 'Steady',
             trajectory: 'stable' as const,
