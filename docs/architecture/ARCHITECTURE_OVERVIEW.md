@@ -60,6 +60,7 @@ life-command-os/
       policies/
       prompts/          # Phase 6 — the behaviour-first question boundary
       domains/          # Phase 7 — domain metadata, no domain content
+      health/           # Prompt 8B — the closed health action set
     application/
       commands/
       queries/
@@ -73,6 +74,7 @@ life-command-os/
       learning/
       guides/           # Phase 6 — deterministic guide planning
       domains/          # Phase 7 — the shared domain framework
+        health/         # Prompt 8B — the first slice
       visuals/          # Phase 7 — which representation evidence has earned
       change-detection/
       questioning/
@@ -140,6 +142,15 @@ requires (`ARCH-001`).
   could carry it, and every domain defaults to disabled, so deleting both directories
   leaves the canonical records valid, the engine running, and every surface working. A
   test asserts the global decision is identical with a domain switched on.
+- **`domain/health/actions.ts` is a closed set, not a generator.** Health is the first
+  domain that can hurt someone by being helpful, so every action it can propose is
+  written out in full and reviewed as text. There is no template, and therefore no code
+  path that could compose a sentence about a symptom. `intelligence/domains/health/`
+  chooses among them; it never writes one.
+- **A slice activates its category through its own contract.** Prompt 8B added
+  `health-recovery-energy` to `ENABLED_CATEGORIES`, which `categories.ts` has always
+  said is how a category arrives. The health domain reads the new category *and* the
+  one its data used to live in, so nothing recorded earlier is stranded.
 
 ### 2.2 The importer boundary is a rule, not a directory
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SCENARIOS, scenarioById } from '../../src/app/scenarios';
-import { parseCanonicalRecord } from '../../src/domain/records';
+import { ENABLED_CATEGORIES, parseCanonicalRecord } from '../../src/domain/records';
 import { runEpisode, INTELLIGENCE_CONTRACTS } from '../../src/intelligence';
 
 /**
@@ -280,7 +280,8 @@ describe('weekly direction', () => {
 describe('categories', () => {
   it('summarises every enabled category with the six required elements', () => {
     const episode = run('action');
-    expect(episode.categories).toHaveLength(3);
+    // Every enabled category, whichever they currently are — health joined in 8B.
+    expect(episode.categories).toHaveLength(ENABLED_CATEGORIES.length);
 
     for (const category of episode.categories) {
       expect(category.condition.length).toBeGreaterThan(0);

@@ -1,5 +1,6 @@
 import { KeyValues, Panel } from '../../components/primitives';
 import { EvidenceSummary } from '../../components/visuals';
+import { GraphFigure } from '../../components/GraphFigure';
 import type { DomainPanel } from '../../../intelligence';
 import { CAPABILITY_EFFECT_LABELS, CAPABILITY_LABELS } from '../../../domain/capabilities';
 import { confidenceLabel, freshnessLabel, trajectoryLabel } from '../../view-models/present';
@@ -16,7 +17,13 @@ import { confidenceLabel, freshnessLabel, trajectoryLabel } from '../../view-mod
  * quantities the engine counted with their units attached. Seven of these panels side
  * by side is a summary; seven scores side by side is the wall the gate forbids.
  */
-export function DomainPanelView({ panel }: { readonly panel: DomainPanel }): React.JSX.Element {
+export function DomainPanelView({
+  panel,
+  onUpdate,
+}: {
+  readonly panel: DomainPanel;
+  readonly onUpdate?: ((domainId: DomainPanel['domainId']) => void) | undefined;
+}): React.JSX.Element {
   const quiet = panel.state === 'deprioritised';
 
   return (
@@ -116,30 +123,51 @@ export function DomainPanelView({ panel }: { readonly panel: DomainPanel }): Rea
         </>
       )}
 
-      {panel.visuals.length === 0 ? null : (
-        <EvidenceSummary
-          spec={
-            panel.visuals[0] ?? {
-              kind: 'evidence-summary',
-              decisionQuestion: panel.question,
-              source: 'Shared canonical records',
-              window: 'All time',
-              units: 'none',
-              missingData: 'Absent periods are shown as absent.',
-              uncertainty: 'Qualitative.',
-              location: 'direction',
-              decisionValue: 'Shows what this area rests on.',
-            }
-          }
-          label="Strongest evidence"
-          points={panel.strongestEvidence}
-        />
-      )}
+      {/*
+        Every declared visual, not just the first.
 
-      <p className="fine">
-        Updating this area is owned by one place: {panel.updatePromptId}. Nothing else will ask
-        you the same thing.
-      </p>
+        The later ones are usually **refusals** — a meter considered and rejected, with
+        the reason. Rendering only the first meant the refusal existed in the data and
+        never reached the screen, which made "the absence of a percentage is a decision
+        on the record" true of the record and not of the page.
+      */}
+      {panel.visuals.map((spec, index) => (
+        <EvidenceSummary
+          key={spec.decisionQuestion}
+          spec={spec}
+          label={index === 0 ? 'Strongest evidence' : 'Not shown here'}
+          points={index === 0 ? panel.strongestEvidence : []}
+        />
+      ))}
+
+      {panel.graphs.map((graph) => (
+        <GraphFigure graph={graph} key={graph.id} />
+      ))}
+
+      {onUpdate !== undefined && !quiet && panel.updateAvailable ? (
+        <>
+          <div className="actions">
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => {
+                onUpdate(panel.domainId);
+              }}
+            >
+              Update this area
+            </button>
+          </div>
+          <p className="fine">
+            One place owns updating this area, and it is this button. Nothing else asks you
+            these questions — switching an area on never makes your morning longer.
+          </p>
+        </>
+      ) : (
+        <p className="fine">
+          This area can be read but not yet updated — its own questions arrive with its slice.
+          Nothing here is asked anywhere else in the meantime.
+        </p>
+      )}
     </Panel>
   );
 }

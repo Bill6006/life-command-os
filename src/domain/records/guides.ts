@@ -29,6 +29,14 @@ export const GUIDE_KINDS = [
   'weekly',
   /** The ad-hoc check-in behind "Update state" (LEG-018). Shortest of them all. */
   'quick-check-in',
+  /**
+   * Update This Area — one domain's own questions, on demand (`XDS-034`).
+   *
+   * Its own kind because it is owned by the domain panel rather than by the clock, and
+   * because keeping it separate is what stops a switched-on area adding questions to
+   * the morning. Turning a domain on must never make the daily check-in longer.
+   */
+  'update-area',
 ] as const;
 export type GuideKind = (typeof GUIDE_KINDS)[number];
 

@@ -83,7 +83,10 @@ test.describe('one area switched on', () => {
     await expect(panel).toContainText('What is the exact next step, and what is blocking it?');
     await expect(panel).toContainText('Trajectory:');
     await expect(panel).toContainText('Active bottleneck');
-    await expect(panel).toContainText('update-area:career-and-learning');
+    // Career has no slice yet, so it is readable and not updatable — and says so
+    // rather than offering a button that would open an empty guide.
+    await expect(panel).toContainText('can be read but not yet updated');
+    await expect(panel.getByRole('button', { name: 'Update this area' })).toHaveCount(0);
 
     // No score wall (`OWN-010`, gate). No percentage, no x/100, no meters.
     const text = (await page.getByRole('main').textContent()) ?? '';

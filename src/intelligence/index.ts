@@ -26,6 +26,7 @@ import type { EpisodeCore } from './types';
 
 import { buildDomainPanels, type DomainPanel } from './domains/domainPanel';
 import { enforceOneCandidatePerDomain } from './domains/candidateLimit';
+import { assessHealth, generateHealthCandidate, healthContribution } from './domains/health';
 
 export * from './types';
 export * from './contracts';
@@ -87,9 +88,18 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
    * domain that offers two gets one compared and one reported — so a slice's mistake
    * shows up as a rejection rather than as a menu reaching the surface (`XDS-015`).
    */
-  const candidates = enforceOneCandidatePerDomain(
-    generateCandidates(records, state, now),
-  ).accepted;
+  /*
+   * Domains offer into the same comparison as the core engine. Health's candidate wins
+   * on its merits or loses on them — there is no health lane, and nothing about health
+   * reaches Now unless it was the single best move available.
+   */
+  const healthEvidence = assessHealth(records, now);
+  const health = generateHealthCandidate(records, healthEvidence, state, now);
+
+  const candidates = enforceOneCandidatePerDomain([
+    ...generateCandidates(records, state, now),
+    ...(health.candidate === undefined ? [] : [health.candidate]),
+  ]).accepted;
   const effects = candidates.map((candidate) => predictEffects(candidate, state));
 
   const { output, rejected } = selectOutput(records, state, candidates, effects, forecast);
@@ -160,7 +170,17 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
     output,
     weeklyDirection,
     learning: { forecastEvaluations, effectiveness, beliefs, graphs, continuity, absence },
-    domains: buildDomainPanels(records, categories, whatChanged.changes),
+    domains: buildDomainPanels(
+      records,
+      categories,
+      whatChanged.changes,
+      new Map([
+        [
+          'health-recovery-energy',
+          healthContribution(records, healthEvidence, health, state, now),
+        ],
+      ]),
+    ),
     internal: { candidates, effects, rejected },
   };
 }

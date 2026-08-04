@@ -1,7 +1,9 @@
 import type { CanonicalRecord, ExecutionRecord } from '../../domain/records';
 import { assessFreshness } from '../../domain/records';
 import type { GuideDepth, GuideKind } from '../../domain/records/guides';
+import { domainDefinition, type DomainId } from '../../domain/domains/definitions';
 import {
+  ALL_PROMPTS,
   CONTEXT_PROMPTS,
   FOOD_PROMPTS,
   OUTCOME_PROMPTS,
@@ -221,6 +223,8 @@ export function planGuide(
   depth: GuideDepth,
   records: readonly CanonicalRecord[],
   now: Date,
+  /** Required for `update-area`, ignored otherwise. */
+  domainId?: DomainId,
 ): GuidePlan {
   const omitted: OmittedStep[] = [];
   const steps: GuideStep[] = [];
@@ -230,7 +234,7 @@ export function planGuide(
    * question out there — the whole reason they pressed it is that the current answer
    * is no longer current.
    */
-  const askRegardless = kind === 'quick-check-in';
+  const askRegardless = kind === 'quick-check-in' || kind === 'update-area';
 
   const consider = (
     prompt: CapturePrompt,
@@ -277,6 +281,28 @@ export function planGuide(
 
   if (kind === 'afternoon' || kind === 'quick-check-in') {
     for (const promptId of AFTERNOON_ORDER) consider(promptById(promptId));
+  }
+
+  /*
+   * Update This Area asks one domain's own questions, and only that domain's.
+   *
+   * The prompts are found by namespace rather than listed here, so a slice adds its
+   * questions by naming them and this planner never needs to know a domain exists.
+   */
+  if (kind === 'update-area' && domainId !== undefined) {
+    const definition = domainDefinition(domainId);
+    const owned = ALL_PROMPTS.filter(
+      (prompt) =>
+        prompt.promptId === definition.updatePromptId ||
+        (definition.captureNamespace !== undefined &&
+          prompt.promptId.startsWith(`${definition.captureNamespace}:`)),
+    );
+    // The entry question first — it is the one that can change what may be suggested.
+    const entry = owned.find((prompt) => prompt.promptId === definition.updatePromptId);
+    if (entry !== undefined) consider(entry);
+    for (const prompt of owned) {
+      if (prompt.promptId !== definition.updatePromptId) consider(prompt);
+    }
   }
 
   if (kind === 'evening') {

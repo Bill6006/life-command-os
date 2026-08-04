@@ -12,6 +12,7 @@ import {
   type CategoryFreshness,
   type OpenCommitment,
 } from '../../src/application/projections';
+import { ENABLED_CATEGORIES } from '../../src/domain/records';
 import { openDatabase } from '../../src/infrastructure/database/connection';
 import { listProjectionNames } from '../../src/infrastructure/database/projectionStore';
 import { resetDatabase } from '../support/database';
@@ -152,7 +153,7 @@ describe('projections', () => {
     await writeRecord(anObservation({ category: 'time-attention-capacity' }));
 
     const freshness = (await getProjection('category-freshness', NOW)) as CategoryFreshness[];
-    expect(freshness).toHaveLength(3);
+    expect(freshness).toHaveLength(ENABLED_CATEGORIES.length);
 
     const withEvidence = freshness.find((f) => f.category === 'time-attention-capacity');
     expect(withEvidence?.evidence.status).toBe('known');

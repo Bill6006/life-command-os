@@ -58,6 +58,21 @@ export function ownerOf(prompt: CapturePrompt): PromptOwner | undefined {
   if (id.startsWith('update-area:')) return 'update-this-area';
   if (id.startsWith('review:')) return 'review';
   if (id.startsWith('privacy:')) return 'data-privacy';
+
+  /*
+   * A domain's own questions belong to Update This Area, so that switching an area on
+   * never adds a question to the morning. The namespace is declared once, on the
+   * domain, rather than in a second list here that would drift out of step with it.
+   */
+  if (
+    DOMAIN_LIST.some(
+      (definition) =>
+        definition.captureNamespace !== undefined &&
+        id.startsWith(`${definition.captureNamespace}:`),
+    )
+  ) {
+    return 'update-this-area';
+  }
   // State, context, sleep, food, and capture are all collected by a guide or the
   // quick check-in behind "Update state".
   if (

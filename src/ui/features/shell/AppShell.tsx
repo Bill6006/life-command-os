@@ -35,6 +35,7 @@ import {
   suggestedGuide,
 } from '../../../intelligence/guides/planGuide';
 import { isLockEnabled, unlock } from '../../../application/commands/appLock';
+import type { DomainId } from '../../../domain/domains/definitions';
 import { onDatabaseSuperseded } from '../../../application/queries/storageInfo';
 import { LockScreen } from '../data-privacy/LockScreen';
 import '../../design-system/console.css';
@@ -61,7 +62,13 @@ type Destination =
 /** What the owner is doing right now. Only one flow is ever open. */
 type Mode =
   | { readonly kind: 'console' }
-  | { readonly kind: 'guide'; readonly guide: GuideKind; readonly depth: GuideDepth }
+  | {
+      readonly kind: 'guide';
+      readonly guide: GuideKind;
+      readonly depth: GuideDepth;
+      /** Set only for update-area, which asks one domain's own questions. */
+      readonly domainId?: DomainId | undefined;
+    }
   | { readonly kind: 'decline' }
   | { readonly kind: 'outcome'; readonly episode: OpenEpisode }
   | { readonly kind: 'capture' };
@@ -85,6 +92,7 @@ const GUIDE_ENTRY: Record<GuideKind, string> = {
   evening: 'Evening — close any loops that are open.',
   weekly: 'Sunday — one direction proposed for the week.',
   'quick-check-in': 'A quick update on where things stand.',
+  'update-area': 'Updating one area of life.',
 };
 
 function useIsOffline(): boolean {
@@ -268,13 +276,13 @@ export function AppShell(): React.JSX.Element {
   /* --- Flows that take over the main region -------------------------------- */
   const flow = ((): React.JSX.Element | undefined => {
     if (mode.kind === 'guide') {
-      const plan = planGuide(mode.guide, mode.depth, records, now);
+      const plan = planGuide(mode.guide, mode.depth, records, now, mode.domainId);
       return (
         <GuideSurface
           plan={plan}
           depth={mode.depth}
           onDepthChange={(depth) => {
-            setMode({ kind: 'guide', guide: mode.guide, depth });
+            setMode({ kind: 'guide', guide: mode.guide, depth, domainId: mode.domainId });
           }}
           onFinish={(outcome, answers, skippedPromptIds) => {
             finishGuide(mode.guide, mode.depth, outcome, answers, skippedPromptIds);
@@ -484,7 +492,13 @@ export function AppShell(): React.JSX.Element {
             <TimelineSurface records={records} />
           ) : null}
           {flow === undefined && destination === 'direction' && episode !== undefined ? (
-            <DirectionSurface episode={episode} records={records} />
+            <DirectionSurface
+              episode={episode}
+              records={records}
+              onUpdateArea={(domainId) => {
+                setMode({ kind: 'guide', guide: 'update-area', depth: 'full', domainId });
+              }}
+            />
           ) : null}
           {flow === undefined && destination === 'commitments' ? (
             <CommitmentsSurface records={records} />

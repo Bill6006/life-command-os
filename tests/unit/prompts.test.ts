@@ -196,8 +196,9 @@ describe('the shipped catalogue', () => {
 });
 
 describe('the approved anchored scales', () => {
-  it('defines all seven with the approved anchors', () => {
+  it('defines the seven Blueprint scales, plus the three the Health slice added', () => {
     expect([...SCALE_IDS]).toEqual([
+      // Blueprint §4.4, unchanged.
       'energy',
       'mood',
       'stress',
@@ -205,6 +206,11 @@ describe('the approved anchored scales', () => {
       'overwhelm',
       'sleep-recovery',
       'readiness',
+      // Prompt 8B. The energy split is asked from Update This Area, not the morning,
+      // and pain is measured as interference rather than as a clinical intensity.
+      'physical-energy',
+      'mental-energy',
+      'pain-interference',
     ]);
     expect(SCALES.energy.anchors.map((a) => a.label)).toEqual([
       'Drained',

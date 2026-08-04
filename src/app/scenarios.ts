@@ -134,6 +134,39 @@ function domainPreference(
   } as unknown as CanonicalRecord;
 }
 
+/** An anchored health reading — the same scales the guides collect. */
+function healthScale(
+  scaleId: 'physical-energy' | 'mental-energy' | 'pain-interference' | 'sleep-recovery',
+  ordinal: number,
+  label: string,
+  occurredMs = -30 * MINUTE,
+): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'health',
+    category: 'health-recovery-energy',
+    attribute: `state:${scaleId}`,
+    value: { kind: 'anchored-scale', scaleId, scaleVersion: 1, ordinal, label },
+  } as unknown as CanonicalRecord;
+}
+
+/** A plain health answer, such as hydration or how long something has been going on. */
+function healthState(
+  attribute: string,
+  state: string,
+  occurredMs = -30 * MINUTE,
+): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'health',
+    category: 'health-recovery-energy',
+    attribute,
+    value: { kind: 'state', state },
+  } as unknown as CanonicalRecord;
+}
+
 function star(): CanonicalRecord {
   return {
     ...envelope('north-star', -30 * DAY),
@@ -672,6 +705,103 @@ export const SCENARIOS: readonly Scenario[] = [
       ...decliningWeeks(),
       domainPreference('career-and-learning', 'enabled'),
       domainPreference('money', 'deprioritised', 'Not this season'),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  /* --- Prompt 8B: Health, recovery, and energy ---------------------------- */
+
+  build(
+    'health-enabled',
+    'Health switched on',
+    'Health on, with ordinary readings and nothing wrong. Expect a full panel, a recovery chart, and no health move — silence is the normal case.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 11),
+      ...decliningWeeks(),
+      domainPreference('health-recovery-energy', 'enabled'),
+      healthScale('sleep-recovery', 4, 'Good', -10 * HOUR),
+      healthScale('sleep-recovery', 3, 'Mixed', -34 * HOUR),
+      healthScale('physical-energy', 3, 'Functional'),
+      healthScale('mental-energy', 3, 'Functional'),
+      healthScale('pain-interference', 1, 'Not at all'),
+      healthState('health:hydration', 'Plenty'),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'health-constrained',
+    'Something is in the way',
+    'Something physical is significantly in the way today. Expect the smallest protective action and no opinion about what it is.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 11),
+      ...decliningWeeks(),
+      domainPreference('health-recovery-energy', 'enabled'),
+      healthScale('pain-interference', 4, 'A lot'),
+      healthState('health:persistence', 'Today only'),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'health-persistent',
+    'In the way for weeks',
+    'The same interference, going on for weeks. Expect the app to stop having an opinion and say who might.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 11),
+      ...decliningWeeks(),
+      domainPreference('health-recovery-energy', 'enabled'),
+      healthScale('pain-interference', 4, 'A lot'),
+      healthState('health:persistence', 'Longer than a month'),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'health-energy-split',
+    'Body ahead of head',
+    'Physical energy well ahead of mental. Expect movement rather than a focus block — the split is the only reason that is visible.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 11),
+      ...decliningWeeks(),
+      domainPreference('health-recovery-energy', 'enabled'),
+      healthScale('physical-energy', 4, 'Good'),
+      healthScale('mental-energy', 2, 'Low'),
+      healthScale('pain-interference', 1, 'Not at all'),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'health-contradictory',
+    'Two health readings disagree',
+    'Two recovery readings minutes apart, two steps apart. Expect the disagreement surfaced and confidence lowered, not a winner picked.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 11),
+      ...decliningWeeks(),
+      domainPreference('health-recovery-energy', 'enabled'),
+      healthScale('sleep-recovery', 2, 'Poor', -30 * MINUTE),
+      healthScale('sleep-recovery', 4, 'Good', -35 * MINUTE),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'health-stale',
+    'Health evidence has gone stale',
+    'The last health reading was three days ago. Expect it marked stale rather than trusted.',
+    [
+      star(),
+      goal('Goal One', 'career-work-learning', 11),
+      ...decliningWeeks(),
+      domainPreference('health-recovery-energy', 'enabled'),
+      healthScale('physical-energy', 4, 'Good', -3 * DAY),
+      healthScale('sleep-recovery', 4, 'Good', -3 * DAY),
       context({ minutes: 40, capacity: 'moderate' }),
     ],
   ),

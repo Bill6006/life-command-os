@@ -15,6 +15,16 @@ export const ENABLED_CATEGORIES = [
   'time-attention-capacity',
   'direction-and-commitments',
   'career-work-learning',
+  /**
+   * Activated by Prompt 8B, through the Health slice's own domain contract.
+   *
+   * Until now sleep, food, and readiness were filed under `time-attention-capacity`
+   * because no better home existed — capacity is what they informed. That was a
+   * category error waiting to compound: reflux is not "time, attention and capacity".
+   * The slice that gives them a real home is the moment to fix it, and the health
+   * domain reads **both** categories so nothing recorded before today is stranded.
+   */
+  'health-recovery-energy',
 ] as const;
 export type LifeCategory = (typeof ENABLED_CATEGORIES)[number];
 

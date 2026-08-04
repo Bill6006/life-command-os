@@ -9,6 +9,8 @@ import type {
   MaterialChange,
 } from '../types';
 import type { VisualSpec } from '../visuals/eligibility';
+import type { Graph } from '../learning/insights';
+import { ALL_PROMPTS } from '../../domain/prompts/definitions';
 import { resolveDomains, type ResolvedDomain } from './registry';
 
 /**
@@ -63,8 +65,25 @@ export interface DomainPanel {
   readonly move: DomainMove | undefined;
   /** 11. The prompt that owns updating this area. */
   readonly updatePromptId: string;
+  /**
+   * False until the slice that owns this area has written its questions.
+   *
+   * A domain can be readable before it is updatable — 8A enables the panel, each slice
+   * adds the questions. Offering a button that opens an empty guide would be worse
+   * than saying plainly that this area cannot be updated yet.
+   */
+  readonly updateAvailable: boolean;
   /** 12. Visuals this domain's evidence has earned. Often none. */
   readonly visuals: readonly VisualSpec[];
+  /**
+   * Renderable charts, where the evidence supports one.
+   *
+   * Separate from `visuals` because a `VisualSpec` is a declaration — what a
+   * representation would have to state to be allowed — while a `Graph` carries the
+   * points as well. A domain with a chart supplies both; a domain with only an
+   * evidence summary supplies just the declaration.
+   */
+  readonly graphs: readonly Graph[];
 
   /** Real quantities the engine counted. Never a 0–100 anything. */
   readonly metrics: readonly { readonly label: string; readonly value: string }[];
@@ -101,6 +120,7 @@ export interface DomainContribution {
   readonly strongestEvidence?: readonly string[] | undefined;
   readonly move?: CandidateAction | undefined;
   readonly visuals?: readonly VisualSpec[] | undefined;
+  readonly graphs?: readonly Graph[] | undefined;
   readonly metrics?: readonly { readonly label: string; readonly value: string }[] | undefined;
   readonly capabilityEffects?: readonly CapabilityEffect[] | undefined;
   readonly northStarContribution?: string | undefined;
@@ -147,7 +167,11 @@ export function buildDomainPanel(
           }
         : undefined,
     updatePromptId: definition.updatePromptId,
+    updateAvailable: ALL_PROMPTS.some(
+      (prompt) => prompt.promptId === definition.updatePromptId,
+    ),
     visuals: contribution.visuals ?? [],
+    graphs: contribution.graphs ?? [],
     metrics: contribution.metrics ?? [],
     capabilityEffects: contribution.capabilityEffects ?? [],
   };

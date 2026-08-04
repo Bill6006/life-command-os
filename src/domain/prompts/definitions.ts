@@ -1,5 +1,6 @@
 import type { LifeCategory } from '../records/categories';
 import type { PrivacyClass } from '../records/envelope';
+import { MEDITATION_PURPOSE_LABELS, MEDITATION_PURPOSES } from '../health/actions';
 import { SCALE_LIST, scaleAttribute, type ScaleId } from '../records/scales';
 import { assertPromptCatalogue, type PromptDefinition } from './policy';
 
@@ -31,9 +32,13 @@ export interface CapturePrompt extends PromptDefinition {
   readonly attribute: string;
   readonly category: LifeCategory;
   /**
-   * Sensitivity of the answer, independent of category. Sleep and food are captured
-   * under `time-attention-capacity` because that is the decision they inform today,
-   * but their content is health data and is classified as such.
+   * Sensitivity of the answer, decided independently of category.
+   *
+   * The two answer different questions: privacy is *how sensitive is this*, category
+   * is *which area of life owns it*. A capacity question about free time is `general`
+   * data owned by time-and-capacity; a pain question is `health` data owned by health.
+   * Collapsing them would mean either over-classifying ordinary facts or leaking
+   * sensitive ones.
    */
   readonly privacy: PrivacyClass;
 }
@@ -56,6 +61,21 @@ function choice(options: readonly string[]): PromptInput {
  * attribute cannot drift apart, and so adding a scale cannot forget to add its
  * question.
  */
+/**
+ * Scales whose content is health data, and which are therefore filed and classified
+ * as health however useful they are for a capacity decision.
+ *
+ * Privacy and category are decided separately and on purpose. Pain interference is
+ * health data wherever it is stored; where it is *stored* is a question about which
+ * area of life owns it.
+ */
+const HEALTH_SCALES = new Set<ScaleId>([
+  'sleep-recovery',
+  'physical-energy',
+  'mental-energy',
+  'pain-interference',
+]);
+
 export const STATE_PROMPTS: readonly CapturePrompt[] = SCALE_LIST.map((scale) => ({
   promptId: `state:${scale.scaleId}`,
   text: scale.prompt,
@@ -65,8 +85,10 @@ export const STATE_PROMPTS: readonly CapturePrompt[] = SCALE_LIST.map((scale) =>
   whatItCouldChange: ['state-interpretation', 'candidate-eligibility', 'recommendation'],
   input: { kind: 'scale', scaleId: scale.scaleId },
   attribute: scaleAttribute(scale.scaleId),
-  category: 'time-attention-capacity',
-  privacy: scale.scaleId === 'sleep-recovery' ? 'health' : 'general',
+  category: HEALTH_SCALES.has(scale.scaleId)
+    ? 'health-recovery-energy'
+    : 'time-attention-capacity',
+  privacy: HEALTH_SCALES.has(scale.scaleId) ? 'health' : 'general',
 }));
 
 /* -------------------------------------------------------------------------- */
@@ -276,7 +298,7 @@ export const SLEEP_PROMPTS: readonly CapturePrompt[] = [
     whatItCouldChange: ['state-interpretation'],
     input: { kind: 'clock-time' },
     attribute: 'sleep:bedtime',
-    category: 'time-attention-capacity',
+    category: 'health-recovery-energy',
     privacy: 'health',
   },
   {
@@ -288,7 +310,7 @@ export const SLEEP_PROMPTS: readonly CapturePrompt[] = [
     whatItCouldChange: ['state-interpretation', 'confidence'],
     input: { kind: 'minutes' },
     attribute: 'sleep:onset-minutes',
-    category: 'time-attention-capacity',
+    category: 'health-recovery-energy',
     privacy: 'health',
   },
   {
@@ -300,7 +322,7 @@ export const SLEEP_PROMPTS: readonly CapturePrompt[] = [
     whatItCouldChange: ['state-interpretation'],
     input: { kind: 'clock-time' },
     attribute: 'sleep:wake-time',
-    category: 'time-attention-capacity',
+    category: 'health-recovery-energy',
     privacy: 'health',
   },
   {
@@ -312,7 +334,7 @@ export const SLEEP_PROMPTS: readonly CapturePrompt[] = [
     whatItCouldChange: ['state-interpretation'],
     input: { kind: 'count' },
     attribute: 'sleep:awakenings',
-    category: 'time-attention-capacity',
+    category: 'health-recovery-energy',
     privacy: 'health',
   },
   {
@@ -324,7 +346,7 @@ export const SLEEP_PROMPTS: readonly CapturePrompt[] = [
     whatItCouldChange: ['safety', 'candidate-eligibility'],
     input: choice(['Not sleepy', 'A little sleepy', 'Quite sleepy', 'Fighting sleep']),
     attribute: 'sleep:sleepiness',
-    category: 'time-attention-capacity',
+    category: 'health-recovery-energy',
     privacy: 'health',
   },
   {
@@ -336,7 +358,7 @@ export const SLEEP_PROMPTS: readonly CapturePrompt[] = [
     whatItCouldChange: ['state-interpretation'],
     input: { kind: 'text', maxLength: 500 },
     attribute: 'sleep:disruption-note',
-    category: 'time-attention-capacity',
+    category: 'health-recovery-energy',
     privacy: 'health',
   },
 ];
@@ -375,7 +397,7 @@ export const FOOD_PROMPTS: readonly CapturePrompt[] = [
     whatItCouldChange: ['state-interpretation'],
     input: { kind: 'clock-time' },
     attribute: 'food:time',
-    category: 'time-attention-capacity',
+    category: 'health-recovery-energy',
     privacy: 'health',
   },
   {
@@ -387,7 +409,7 @@ export const FOOD_PROMPTS: readonly CapturePrompt[] = [
     whatItCouldChange: ['state-interpretation', 'confidence'],
     input: choice(FOOD_TAGS),
     attribute: 'food:tags',
-    category: 'time-attention-capacity',
+    category: 'health-recovery-energy',
     privacy: 'health',
   },
   {
@@ -399,7 +421,7 @@ export const FOOD_PROMPTS: readonly CapturePrompt[] = [
     whatItCouldChange: ['state-interpretation', 'confidence'],
     input: choice(['Worse', 'About the same', 'Better', UNSURE]),
     attribute: 'food:energy-after',
-    category: 'time-attention-capacity',
+    category: 'health-recovery-energy',
     privacy: 'health',
   },
   {
@@ -411,7 +433,7 @@ export const FOOD_PROMPTS: readonly CapturePrompt[] = [
     whatItCouldChange: ['safety', 'state-interpretation'],
     input: choice(YES_NO),
     attribute: 'food:digestive-response',
-    category: 'time-attention-capacity',
+    category: 'health-recovery-energy',
     privacy: 'health',
   },
   {
@@ -423,7 +445,137 @@ export const FOOD_PROMPTS: readonly CapturePrompt[] = [
     whatItCouldChange: ['state-interpretation'],
     input: { kind: 'text', maxLength: 500 },
     attribute: 'food:detail-note',
-    category: 'time-attention-capacity',
+    category: 'health-recovery-energy',
+    privacy: 'health',
+  },
+];
+
+/* -------------------------------------------------------------------------- */
+/* Health, recovery, and energy (Prompt 8B)                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Update This Area, for health (`OWN-013`, `XDS-034`).
+ *
+ * The entry question is pain interference rather than a menu, because it is the one
+ * health answer that can change what the app is allowed to suggest. Everything else
+ * follows from it.
+ *
+ * Read the wording: not one of these asks the owner to interpret a symptom, rate pain
+ * on a clinical scale, or explain why their body is doing something. They ask what is
+ * observable — whether it is in the way, how long it has been going on, whether the
+ * thing happened.
+ */
+export const HEALTH_PROMPTS: readonly CapturePrompt[] = [
+  {
+    promptId: 'update-area:health-recovery-energy',
+    text: 'Is anything physical getting in the way right now?',
+    kind: 'state',
+    answers: ['Not at all', 'Slightly', 'Noticeably', 'A lot', 'Cannot work around it'],
+    allowsUnknown: true,
+    whatItCouldChange: ['safety', 'candidate-eligibility', 'recommendation'],
+    input: { kind: 'scale', scaleId: 'pain-interference' },
+    attribute: scaleAttribute('pain-interference'),
+    category: 'health-recovery-energy',
+    privacy: 'health',
+  },
+  {
+    /**
+     * The escalation trigger, and it asks about **duration** rather than severity.
+     *
+     * How long something has been going on is a fact the owner can state. How bad it
+     * is on a scale of ten is a clinical judgement, and asking for one would be this
+     * product pretending to a role it has explicitly refused.
+     */
+    promptId: 'health:persistence',
+    text: 'How long has it been going on?',
+    kind: 'observable',
+    answers: ['Today only', 'A few days', 'A couple of weeks', 'Longer than a month', UNSURE],
+    allowsUnknown: true,
+    whatItCouldChange: ['safety', 'recommendation'],
+    input: choice([
+      'Today only',
+      'A few days',
+      'A couple of weeks',
+      'Longer than a month',
+      UNSURE,
+    ]),
+    attribute: 'health:persistence',
+    category: 'health-recovery-energy',
+    privacy: 'health',
+  },
+  {
+    promptId: 'health:hydration',
+    text: 'Have you had much to drink today?',
+    kind: 'observable',
+    answers: ['Barely anything', 'Some', 'Plenty', UNSURE],
+    allowsUnknown: true,
+    whatItCouldChange: ['state-interpretation', 'recommendation'],
+    input: choice(['Barely anything', 'Some', 'Plenty', UNSURE]),
+    attribute: 'health:hydration',
+    category: 'health-recovery-energy',
+    privacy: 'health',
+  },
+  {
+    promptId: 'health:food-need',
+    text: 'Are you hungry right now?',
+    kind: 'state',
+    answers: ['Not at all', 'A little', 'Very', UNSURE],
+    allowsUnknown: true,
+    whatItCouldChange: ['state-interpretation', 'recommendation'],
+    input: choice(['Not at all', 'A little', 'Very', UNSURE]),
+    attribute: 'health:food-need',
+    category: 'health-recovery-energy',
+    privacy: 'health',
+  },
+  {
+    /**
+     * Movement, recorded as what happened.
+     *
+     * Broad kinds and nothing else — no sets, no reps, no distance, no plan. The
+     * Blueprint forbids workout programming, and a capture that asked for a rep count
+     * would be the first half of one.
+     */
+    promptId: 'health:movement',
+    text: 'Did you move today, beyond getting about?',
+    kind: 'observable',
+    answers: ['No', 'A walk', 'Something gentle', 'Something hard', UNSURE],
+    allowsUnknown: true,
+    whatItCouldChange: ['state-interpretation', 'confidence'],
+    input: choice(['No', 'A walk', 'Something gentle', 'Something hard', UNSURE]),
+    attribute: 'health:movement',
+    category: 'health-recovery-energy',
+    privacy: 'health',
+  },
+  {
+    promptId: 'health:movement-after',
+    text: 'Energy since moving',
+    kind: 'state',
+    answers: ['Worse', 'About the same', 'Better', UNSURE],
+    allowsUnknown: true,
+    whatItCouldChange: ['state-interpretation', 'confidence'],
+    input: choice(['Worse', 'About the same', 'Better', UNSURE]),
+    attribute: 'health:movement-after',
+    category: 'health-recovery-energy',
+    privacy: 'health',
+  },
+  {
+    /**
+     * Meditation is captured by **purpose**, never by frequency (Blueprint §9.9).
+     *
+     * "Did you meditate today" is the question this product refuses to ask, because it
+     * turns a tool into a duty and produces a streak nobody asked for. What the app
+     * needs is what it was for, so it can ask the right observable question afterwards.
+     */
+    promptId: 'health:meditation-purpose',
+    text: 'What was the quiet time for?',
+    kind: 'observable',
+    answers: MEDITATION_PURPOSES.map((purpose) => MEDITATION_PURPOSE_LABELS[purpose]),
+    allowsUnknown: true,
+    whatItCouldChange: ['confidence', 'recommendation'],
+    input: choice(MEDITATION_PURPOSES.map((purpose) => MEDITATION_PURPOSE_LABELS[purpose])),
+    attribute: 'health:meditation-purpose',
+    category: 'health-recovery-energy',
     privacy: 'health',
   },
 ];
@@ -482,6 +634,7 @@ export const ALL_PROMPTS: readonly CapturePrompt[] = [
   ...OUTCOME_PATTERN_IDS.map((id) => OUTCOME_PROMPTS[id]),
   ...SLEEP_PROMPTS,
   ...FOOD_PROMPTS,
+  ...HEALTH_PROMPTS,
   ...QUICK_CAPTURE_PROMPTS,
 ];
 

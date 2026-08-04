@@ -30,6 +30,25 @@ export const SCALE_IDS = [
   'overwhelm',
   'sleep-recovery',
   'readiness',
+  /**
+   * Physical and mental energy, split (Prompt 8B task 1, LEG-106, `AT-008`).
+   *
+   * The general `energy` scale stays, and stays the default: most of the time one
+   * question is enough and two would be a tax. These are asked from Update This Area,
+   * when the difference is the thing that decides — a body that can lift and a mind
+   * that cannot concentrate need different actions, and averaging them into "moderate"
+   * loses exactly the information that would have chosen between them.
+   */
+  'physical-energy',
+  'mental-energy',
+  /**
+   * Pain interference, not pain intensity.
+   *
+   * "How much does it hurt, 1 to 10" is a clinical instrument this product has no
+   * business imitating. What a decision actually needs is whether it is in the way,
+   * which is observable and which the owner can answer without grading themselves.
+   */
+  'pain-interference',
 ] as const;
 export type ScaleId = (typeof SCALE_IDS)[number];
 
@@ -119,6 +138,25 @@ export const SCALES: Record<ScaleId, ScaleDefinition> = {
     'Ten minutes possible',
     'Can lift',
   ]),
+  'physical-energy': scale(
+    'physical-energy',
+    'Physical energy right now',
+    'more physical energy',
+    ['Drained', 'Low', 'Functional', 'Good', 'Strong'],
+  ),
+  'mental-energy': scale('mental-energy', 'Mental energy right now', 'more mental energy', [
+    'Drained',
+    'Low',
+    'Functional',
+    'Good',
+    'Strong',
+  ]),
+  'pain-interference': scale(
+    'pain-interference',
+    'Is anything physical getting in the way right now?',
+    'more interference',
+    ['Not at all', 'Slightly', 'Noticeably', 'A lot', 'Cannot work around it'],
+  ),
 };
 
 export const SCALE_LIST: readonly ScaleDefinition[] = SCALE_IDS.map((id) => SCALES[id]);

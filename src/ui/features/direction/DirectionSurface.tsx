@@ -1,6 +1,7 @@
 import { KeyValues, Panel } from '../../components/primitives';
 import { GraphFigure } from '../../components/GraphFigure';
 import { DomainPanelView } from './DomainPanelView';
+import type { DomainId } from '../../../domain/domains/definitions';
 import { ManualFocusView } from './ManualFocusView';
 import type { EpisodeResult } from '../../../intelligence';
 import type { CanonicalRecord } from '../../../domain/records';
@@ -25,9 +26,12 @@ import {
 export function DirectionSurface({
   episode,
   records,
+  onUpdateArea,
 }: {
   episode: EpisodeResult;
   records: readonly CanonicalRecord[];
+  /** Opens Update This Area for one domain. Owned here and nowhere else. */
+  onUpdateArea?: ((domainId: DomainId) => void) | undefined;
 }): React.JSX.Element {
   const star = records.find((record) => record.recordType === 'north-star');
   const goals = records.filter((record) => record.recordType === 'goal');
@@ -72,7 +76,7 @@ export function DirectionSurface({
       ) : null}
       <ManualFocusView panels={episode.domains} />
       {episode.domains.map((panel) => (
-        <DomainPanelView panel={panel} key={panel.domainId} />
+        <DomainPanelView panel={panel} key={panel.domainId} onUpdate={onUpdateArea} />
       ))}
 
       {episode.categories.map((category) => (

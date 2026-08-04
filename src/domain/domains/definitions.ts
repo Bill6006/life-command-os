@@ -56,6 +56,14 @@ export interface DomainDefinition {
   readonly legacyIds: readonly string[];
   /** The prompt that owns updating this area (`XDS-034`). */
   readonly updatePromptId: string;
+  /**
+   * The prefix this domain's own prompts and captures use.
+   *
+   * Prompt ownership is derived from the id, so a namespace is how a slice claims its
+   * questions without a second list to keep in step. `undefined` until a slice
+   * activates the domain and defines what it asks.
+   */
+  readonly captureNamespace?: string | undefined;
   /** Which prompt slice activates it. Nothing enables a domain before then. */
   readonly activatedBy: string;
   /** Boundaries the slice must not cross, carried from the Blueprint. */
@@ -74,8 +82,14 @@ export const DOMAIN_DEFINITIONS: Record<DomainId, DomainDefinition> = {
     id: 'health-recovery-energy',
     label: 'Health, recovery, and energy',
     question: 'What is my capacity today, and what protects it?',
-    reads: ['time-attention-capacity'],
+    /*
+     * Both, on purpose. `health-recovery-energy` is where sleep, pain, food, and
+     * movement are filed from Prompt 8B onwards; `time-attention-capacity` is where
+     * they were filed before it existed, and nothing recorded then is stranded.
+     */
+    reads: ['health-recovery-energy', 'time-attention-capacity'],
     privacy: 'health',
+    captureNamespace: 'health',
     channels: ['energy-and-recovery', 'focus-and-clarity', 'emotional-regulation'],
     legacyIds: ['LEG-090', 'LEG-091', 'LEG-092', 'LEG-096', 'LEG-097', 'LEG-100'],
     updatePromptId: 'update-area:health-recovery-energy',

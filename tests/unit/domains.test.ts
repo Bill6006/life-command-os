@@ -16,6 +16,7 @@ import {
 } from '../../src/domain/prompts/ownership';
 import { ALL_PROMPTS } from '../../src/domain/prompts/definitions';
 import {
+  ENABLED_CATEGORIES,
   RECORD_TYPES,
   parseCanonicalRecord,
   type CanonicalRecord,
@@ -116,11 +117,8 @@ describe('domain metadata describes without implementing', () => {
   });
 
   it('reads only categories that actually exist', () => {
-    const active = [
-      'time-attention-capacity',
-      'direction-and-commitments',
-      'career-work-learning',
-    ];
+    // Against the constant, so activating a category cannot silently orphan this.
+    const active: readonly string[] = ENABLED_CATEGORIES;
     for (const definition of DOMAIN_LIST) {
       for (const category of definition.reads) {
         expect(active, definition.id).toContain(category);

@@ -2,7 +2,7 @@
 
 **Status:** Controlling
 **Plan version:** 3.0 Final
-**Current phase:** Phase 7 — Prompt 8A complete; domain slices 8B–8H outstanding
+**Current phase:** Phase 7 — Prompts 8A and 8B complete; slices 8C–8H outstanding
 
 **Controlling artifacts from v3.0.** The Final Product Blueprint, Updated Requirements
 Register v2, Final Acceptance Test Matrix, and Final Legacy Decisions map now supply the
@@ -498,6 +498,50 @@ is your energy". Without an ownership rule each adds it, and the owner is asked 
 times in a morning by four features that each believe they asked once. That is how the
 legacy app became a wall of checkboxes — not by decision, but by nobody owning the
 question.
+
+---
+
+## 3g. Active requirement records — Phase 7, Prompt 8B (Health, recovery, energy)
+
+| ID | Implementation | Test IDs | Notes |
+|---|---|---|---|
+| Category activation | `health-recovery-energy` added to `ENABLED_CATEGORIES` | `health.test.ts` → `activates a category rather than a store` | Through the slice's own contract, as `categories.ts` requires |
+| `AT-008` (task 1) | `physical-energy` and `mental-energy` scales; the split changes which action fits | `physical and mental energy stay apart` (3) | No combined figure exists on the reading. Asked from Update This Area, never the morning |
+| `OWN-043` (task 2) | Sleep, recovery, sleepiness, readiness — existing captures, refiled to health | `reads sleep recorded before the category existed` | The domain reads both categories, so nothing recorded before 8B is stranded |
+| Task 3 | `pain-interference` scale + `health:persistence` | `the safety boundary is structural` (5) | Interference, not intensity. Duration, not severity |
+| Task 4 | `health:hydration`, `health:food-need` | candidate ordering tests | The cheapest ordinary explanations, ruled out before anything elaborate |
+| `OWN-044` (task 5) | `food:*` captures refiled to health; digestive response in the drivers | `classifies everything it captures as health data` | Broad tags only — no macros, no calories |
+| Task 6 | `health:movement`, `health:movement-after` | catalogue assertions | Broad kinds. No sets, reps, distance, or plan |
+| Task 7 | `timeOfDayPattern` + `health-time-of-day` bar comparison | `visuals are earned or refused` | Parts of day with no readings are absent, never shown as low |
+| `XDS-015` (tasks 8–9) | `generateHealthCandidate` — zero or one, by strict order | `silence is the normal case` (3) | An order, not a score: no benefit can outrank a safety concern |
+| `OWN-013` `XDS-034` (task 10) | `update-area` guide kind; `planGuide(..., domainId)`; the panel's own button | `Update This Area` (3 unit, 2 browser) | Switching an area on never lengthens the morning — asserted both ways |
+| `OWN-051` `AT-081` (task 11) | `healthVisuals` records the meter **refusal** with its reason | `refuses a meter, and records why` | "Health 72%" is what the eligibility rules exist to prevent |
+| `OWN-042` (task 12) | `MEDITATION_PURPOSES`; captured by purpose | `meditation is a shared action, not a practice` (3) | No page, no streak, no daily target — asserted against the rendered surface |
+| `OBS-001`–`OBS-003` (task 13) | Every health prompt is observable or anchored | `asks nothing clinical either` | And no 1-to-10 pain scale, the instrument this is most tempted to copy |
+| `SAFE-001` | `HEALTH_ACTIONS` closed set; `FORBIDDEN_HEALTH_VOCABULARY` | `uses no clinical or programming vocabulary` | Not filtered — **absent**. There is no code path that composes a sentence about a symptom |
+
+### The safety decision, stated plainly
+
+This is the first domain that can hurt someone by being helpful. A health engine that
+composes its own advice will eventually compose advice about a symptom, and the distance
+between "try a short walk" and "that sounds like it might be…" is one plausible-looking
+template.
+
+So there is no template. Every action the domain can produce is written out in full in
+`domain/health/actions.ts` and reviewed as text. If an action is not in that list the
+domain cannot propose it — not because a filter catches it, but because no code path
+constructs one.
+
+**And the domain knows when to stop having an opinion.** Something significantly in the
+way for weeks produces `seek-human-support`, which is not advice about a symptom: it is
+the app declining to have a view and saying who might. That branch exists because the
+honest answer to a persistent problem is not a self-care tip.
+
+### Prohibited by the Blueprint, and absent rather than filtered
+
+No diagnosis, treatment claim, medication, dose, supplement, workout programme, rep
+count, calorie, or macro. `FORBIDDEN_HEALTH_VOCABULARY` is asserted against the action
+set, the prompt catalogue, and the rendered panel.
 
 ---
 

@@ -4,29 +4,35 @@
 
 - Repository: life-command-os (https://github.com/Bill6006/life-command-os)
 - Plan version: 3.0 Final
-- Current phase: **Phase 7 — shared domain framework complete.** Domain slices 8B–8H
-  outstanding.
-- Current prompt: PROMPT 8A (complete)
+- Current phase: **Phase 7 — framework and the first domain slice complete.** Slices
+  8C–8H outstanding.
+- Current prompt: PROMPT 8B (complete)
 
 ## Gate status
 
-- Status: **GREEN.** Every Prompt 8A gate requirement is met.
+- Status: **GREEN.** Every Prompt 8B requirement is met.
 - Private local use: **READY** (unchanged from Prompt 7B).
 - Gate evidence:
-  - *No parallel database exists* — seven domains, one `records` store. The only domain
-    record family is `domain-preference`, which holds a preference and no content.
-  - *No domain content is duplicated across canonical records* — a capture writes one
-    event and `projectionsFor` returns **surfaces**, never records, so duplication is
-    unrepresentable rather than merely discouraged.
-  - *No domain can emit more than one candidate* — the limit is applied before
-    comparison, and a rejected second candidate is reported rather than dropped.
-  - *Now remains compact* — five panels maximum, decision first, and nothing about a
-    domain reaches Now at all. Asserted with a domain switched on.
-  - *No category score wall appears* — `DomainPanel` has no numeric field, and a test
-    walks every field of a live panel asserting none is a number.
-  - *Shared framework can be removed without breaking core records* — every domain
-    defaults to off, `originDomainId` is optional everywhere, and the global decision is
-    identical with a domain enabled.
+  - *Uses shared canonical records* — health activated a **category**, not a store. The
+    domain reads the new category and the one its data used to live in, so nothing
+    recorded before this slice is stranded.
+  - *One domain intelligence panel* — the shared 8A contract, unchanged.
+  - *Zero or one candidate* — chosen by a strict order, not a score, so no benefit can
+    outrank a safety concern.
+  - *Observable outcomes defined* — every action carries a behaviour-first follow-up
+    and a stopping point.
+  - *One optional domain move, subordinate* — asserted.
+  - *Update This Area supported* — its own guide kind, owned by the panel, and it never
+    lengthens the morning check-in. Asserted from both directions.
+  - *Disable and deprioritise without deleting history* — unchanged from 8A.
+  - *What Changed exposed* — through the shared contract.
+  - *Only valid representations* — a line trend and a bar comparison earned; a **meter
+    refused**, with the reason recorded and rendered.
+  - *Privacy and safety boundaries preserved* — everything the slice captures is
+    classified `health`; no diagnosis, treatment, programming, or macro vocabulary
+    exists anywhere in it.
+  - *Absent from Now when irrelevant* — nothing about a domain reaches Now.
+  - *Synthetic tests added* — safety, missing, stale, contradictory, Can't Now, silence.
 
 ## GitHub Pages owner preview
 
@@ -36,108 +42,101 @@
 - Hosted build contains synthetic content only: **YES** — and no data at all; the app
   starts empty and the scenario corpus is not in the production bundle.
 
-> **Service-worker note.** A returning visitor may see the previous build once; reload again.
+## The decision this slice turned on
 
-## What Prompt 8A changed, and what it deliberately did not
+Health is the first domain that can hurt someone by being helpful. A health engine that
+composes its own advice will eventually compose advice about a symptom, and the distance
+between "try a short walk" and "that sounds like it might be…" is one plausible-looking
+template.
 
-It built the architecture seven areas of life will share, and switched none of them on.
+**So there is no template.** Every action the domain can propose is written out in full
+in `domain/health/actions.ts` and reviewed as text. If an action is not in that list the
+domain cannot produce it — not because a filter catches it, but because no code path
+constructs one.
 
-**Nothing visible changed.** `Direction` shows exactly what it showed before, `Now` is
-untouched, and the deployed app behaves identically. That is the correct outcome: a
-definition is not an implementation, and enabling a domain before its slice exists would
-put an empty panel in front of the owner and call it a feature. Each slice from Prompt 8B
-switches on its own domain when it has something to say.
+And the domain knows when to stop. Something significantly in the way *for weeks*
+produces one output: worth raising with someone qualified. That is not advice about a
+symptom; it is the app declining to have a view and saying who might.
 
 ## Work completed
 
-- **Domain metadata for the seven approved areas** — `domain/domains/definitions.ts`.
-  What each reads, how it classifies its content, which capability channels it touches,
-  which legacy capabilities it inherits, and what it must never build. No candidate
-  generator, no panel content, no record family.
-- **`DomainPreferenceRecord`** — the twenty-third canonical family. Whether an area is
-  on is the owner's decision with a date and a reason, so it belongs in a backup. It
-  carries no domain content, and it has no destructive state: turning a domain off
-  appends a record and deletes nothing.
-- **The shared panel contract** — twelve fields, one component, every domain. North Star
-  contribution, condition, trajectory, confidence, freshness, drivers, bottleneck, what
-  changed, strongest evidence, one optional move, Update This Area, and visuals.
-- **The final candidate contract** — `intendedOutcome` and `observableFollowUp` are now
-  **required** on `candidateActionRecord`, plus origin domain, bottleneck, North Star
-  link, and capability effects.
-- **One candidate per domain**, enforced before comparison and reported when exceeded.
-- **Capability channels** — ten channels, six words, and no numeric field anywhere.
-- **Prompt ownership** — exactly one surface owns each question, derived from the prompt
-  id and checked.
-- **Manual Domain Focus shell** — the owner's constraint, labelled as theirs.
-- **Quick Capture plumbing** — one event, many projections, with duplicate detection.
-- **Visual eligibility** — meter, line, bar, stage, timeline, evidence summary, each
-  with a rule that can refuse, and eight declarations every visual must carry.
-- **Legacy provenance** on the envelope, whose `evidenceClass` is the literal
-  `legacy-heuristic` with no branch that promotes it.
+- **`health-recovery-energy` activated as a life category**, through the slice's own
+  contract — which is what `categories.ts` has said since Phase 2 is the only way a
+  category may arrive. Sleep and food captures moved to it; the domain reads both, so
+  records written before today still count.
+- **Physical and mental energy as separate scales**, asked from Update This Area rather
+  than the morning. They change which action fits, and there is no combined figure
+  anywhere on the reading.
+- **Pain as interference, not intensity**, and persistence as duration, not severity.
+  Both are things the owner can answer without grading themselves.
+- **Hydration, food need, movement, and movement response** — broad answers only.
+- **Time-of-day energy patterns**, as a bar comparison whose empty buckets are absent
+  rather than shown as low.
+- **One health candidate**, by a six-step order ending in silence.
+- **Update This Area** — its own guide kind, entered from the panel, asking that
+  domain's questions and nothing else.
+- **Meditation as a shared action captured by purpose** — no page, no streak, no target.
+- **A recovery trend** whose unrecorded nights are gaps, and a **refused meter** whose
+  refusal is recorded and rendered.
 
 ### Decisions worth naming
 
-- **A domain is a reading, not a store.** Every fact a domain shows comes from the same
-  canonical records everything else uses, filtered by category. That is the single
-  decision this whole prompt exists to make, and it is what stops the rebuild
-  reproducing the twelve-tab app it replaced.
-- **The capability effect type has nowhere to put a number.** Strict object, closed word
-  sets, and no function anywhere that totals them. The moment such a function exists
-  something will render it, and a wall of seven numbers is the score wall the gate
-  forbids.
-- **Routing returns surfaces, never records.** A function that returned records would be
-  one refactor away from returning copies of them, which is exactly how the legacy app
-  ended up with a work win stored in three places.
-- **A rejected second candidate is loud.** A domain quietly losing half its output looks
-  like a domain with nothing to say — the hardest kind of bug to notice.
-- **Manual focus is labelled as the owner's choice.** Without the label, choosing a
-  domain and receiving a recommendation is indistinguishable from the system
-  recommending it — except the system judged it best *within a constraint the owner
-  imposed*. The label is the feature.
-- **A meter that cannot refuse is a meter that will render "Fatherhood 68%".** The
-  eligibility rules exist for what they reject, not for what they allow.
-- **`intendedOutcome` is required rather than optional.** An optional intended outcome is
-  one most candidates eventually get written without, and an engine full of those learns
-  nothing while appearing to.
+- **An order, not a score.** A scored health candidate would let a large enough expected
+  benefit outrank a safety concern. Six ordered branches cannot.
+- **The escalation asks how long, not how bad.** Duration is a fact the owner can state.
+  Severity on a scale of ten is a clinical judgement, and asking for one would be this
+  product pretending to a role it has explicitly refused.
+- **Update This Area is its own owner.** If health questions joined the morning guide,
+  switching an area on would make the daily check-in longer — and after seven slices the
+  check-in would be the checkbox wall this rebuild exists to end. A test asserts the
+  morning is unchanged.
+- **Sleep and food moved category, not home.** They were filed under time-and-capacity
+  because that was the decision they informed. That was a category error waiting to
+  compound; the slice that gives them a real home is the moment to fix it.
+- **The meter refusal is rendered, not just computed.** "Health 72%" is exactly what the
+  eligibility rules exist to prevent, so the panel says a meter was considered and why
+  it was rejected.
 
 ## Files created or modified
 
-Created (10): `src/domain/capabilities.ts`; `src/domain/domains/definitions.ts`;
-`src/domain/records/domains.ts`; `src/domain/prompts/ownership.ts`;
-`src/intelligence/domains/{registry,domainPanel,candidateLimit,manualFocus,captureRouting}.ts`;
-`src/intelligence/visuals/eligibility.ts`; `src/ui/components/visuals.tsx`;
-`src/ui/features/direction/{DomainPanelView,ManualFocusView}.tsx`;
-`tests/unit/domains.test.ts`; `tests/e2e/domains.spec.ts`
+Created (5): `src/domain/health/actions.ts`;
+`src/intelligence/domains/health/{index,assessHealth,healthCandidate}.ts`;
+`tests/unit/health.test.ts`; `tests/e2e/health.spec.ts`
 
-Modified: `domain/records/{index,envelope,decision}.ts`;
-`intelligence/{index,types}.ts`; `intelligence/intervention/candidateActions.ts`;
-`application/commands/{decisionEpisode,guideSession}.ts`; `app/scenarios.ts`;
-`ui/features/direction/DirectionSurface.tsx`; `ui/design-system/console.css`;
-`tests/fixtures/records.ts`; `tests/unit/records.test.ts`;
+Modified: `domain/records/{categories,scales,guides}.ts`;
+`domain/prompts/{definitions,ownership}.ts`; `domain/domains/definitions.ts`;
+`intelligence/{index}.ts`; `intelligence/state/categorySummaries.ts`;
+`intelligence/guides/planGuide.ts`; `intelligence/domains/domainPanel.ts`;
+`ui/features/direction/{DirectionSurface,DomainPanelView}.tsx`;
+`ui/features/shell/AppShell.tsx`; `ui/features/guides/GuideSurface.tsx`;
+`app/scenarios.ts`; four unit tests; `tests/e2e/domains.spec.ts`;
 `docs/{REQUIREMENTS,architecture/ARCHITECTURE_OVERVIEW}.md`
 
 ## Tests and evidence
 
-- **Unit: 306 passed**, up from 259. 46 new for the framework.
-- **Browser: 298 passed**, up from 284. 14 new across desktop and mobile.
-- Covers: the seven domains registering no content family; every domain starting off; a
-  newer preference superseding an older one with both records kept; no destructive
-  preference state; deprioritised being readable and silent; a second domain candidate
-  rejected and reported; a candidate record with no intended outcome failing validation;
-  a numeric field on a capability effect failing to parse; benefits and costs partitioned
-  without netting; the full twelve-field panel with no numeric field anywhere; a domain
-  that reads nothing abstaining instead of inventing a condition; every domain move
-  marked subordinate; manual focus labelled as the owner's; one capture routed to five
-  surfaces as one record; duplicate captures detected; a meter refused over a construct
-  with no denominator; the evidence summary never refusing; and the global decision being
-  identical with a domain switched on.
-- **One real defect found and fixed rather than tested around:** the candidate contract
-  change made `intendedOutcome` and `observableFollowUp` required, which correctly broke
-  the fixture and the persisted-decision path. Both were updated to supply real values
-  rather than the requirement being softened to optional.
-- Two older assertions were correct failures and were updated: the family count moved to
-  23, and the "no domain-specific family" test was tightened to say *content* family and
-  given an extra probe, since `domain-preference` is deliberately not one.
+- **Unit: 339 passed**, up from 306. 33 new for the slice.
+- **Browser: 318 passed**, up from 298. 20 new across desktop and mobile.
+- Covers: the closed action set; no clinical or programming vocabulary in the actions,
+  the prompts, or the rendered panel; no 1-to-10 pain scale; deferral to a person after
+  weeks with no interpretation of the symptom; only stopping proposed while something is
+  significantly in the way; physical and mental energy read separately and changing which
+  action fits; every unreported reading left undefined; three-day-old readings marked
+  stale; a disagreement surfaced rather than resolved; silence as the normal case; health
+  absent from Now; the full panel contract with no numeric field; a recovery trend whose
+  gaps are gaps; a meter refused with its reason; Update This Area asking only health
+  questions; the morning check-in unchanged; meditation captured by purpose with no
+  streak anywhere; and Can't Now behaving identically for a health action.
+- **One real defect found and fixed rather than tested around:** the 8A domain panel
+  rendered only the *first* declared visual, so the meter refusal existed in the data and
+  never reached the screen. That made "the absence of a percentage is a decision on the
+  record" true of the record and false of the page. The panel now renders every
+  declaration.
+- **One improvement the tests prompted:** career offered an "Update this area" button
+  with no prompts behind it, which would have opened an empty guide. A domain can now be
+  readable before it is updatable, and says so plainly instead.
+- Four older assertions were correct failures and were updated to read from
+  `ENABLED_CATEGORIES` and `SCALE_IDS` rather than hard-coded counts, so activating the
+  next category or scale cannot break them again.
 
 ## Privacy status
 
@@ -145,15 +144,15 @@ Modified: `domain/records/{index,envelope,decision}.ts`;
 - Real personal data detected in tracked content: **NO**
 - Commit identity: GitHub noreply address only.
 - Dependency audit: `npm audit` — **0 vulnerabilities**.
-- Domain-level privacy: every domain declares a default class, and captures inherit it —
-  a fatherhood capture is `child` data whatever else it is.
+- Everything the health slice captures is classified `health` and excluded from AI
+  exports unless explicitly included.
 - Runtime private-data readiness: **READY.** See `docs/PRIVATE_ALPHA.md`.
 
 ## Architecture decisions
 
-No new ADRs. Prompt 8A is an application of decisions already recorded: ADR-0004
-(boundaries), ADR-0005 (append-oriented records), ADR-0008 (the Console's five-panel cap,
-which is why nothing about a domain reaches Now).
+No new ADRs. The slice applies decisions already recorded: ADR-0005 (append-oriented
+records), ADR-0008 (the Console's five-panel cap, which is why no domain reaches Now),
+and the Prompt 8A framework contracts.
 
 ## New dependencies
 
@@ -161,52 +160,46 @@ which is why nothing about a domain reaches Now).
 
 ## New abstractions or infrastructure
 
-**1. `domain/domains/` and `intelligence/domains/`** — the framework.
-- Active requirement: `OWN-013`, `XDS-073`, Prompt 8A tasks 1–8.
-- Why smaller was insufficient: seven areas either share one architecture or grow seven,
-  and the second happens by default. The framework is the thing that has to exist before
-  the first slice, not after the third.
+**1. `domain/health/actions.ts`** — a closed action set, not a generator.
+- Active requirement: `SAFE-001`, Blueprint §9.2, tasks 8–9 and 12.
+- Why smaller was insufficient: a filter over generated text catches the phrasings you
+  thought of. A closed set has no code path that produces the ones you did not.
 
-**2. `domain/capabilities.ts`** — ten channels, no scores.
-- Active requirement: `OWN-014`, `CI-015`, task 5.
-- Why smaller was insufficient: cross-domain comparison needs shared vocabulary, and
-  shared vocabulary without a structural ban on numbers becomes a score within a phase.
+**2. `intelligence/domains/health/`** — reading, candidate, and contribution.
+- Active requirement: tasks 1–11.
+- Why smaller was insufficient: the reading is used by both the category summary and
+  the panel, and a second copy would drift from the first within a phase.
 
-**3. `intelligence/visuals/eligibility.ts`** — what a representation has earned.
-- Active requirement: `OWN-051`–`OWN-054`, `UX-003`, tasks 9–10.
-- Why smaller was insufficient: the rules exist to *refuse*. A helper that only rendered
-  charts would not have prevented a single one of the failures it is there to prevent.
-
-**4. `DomainPreferenceRecord`** — the twenty-third family.
-- Active requirement: task 1, Phase 7 gate ("one domain may be disabled without
-  corrupting history").
-- Why smaller was insufficient: enablement in a settings blob is data a restore drops.
+**3. The `update-area` guide kind.**
+- Active requirement: `XDS-034`, task 10.
+- Why smaller was insufficient: folding domain questions into an existing guide is
+  precisely how the daily check-in grows into a form.
 
 ## Known limitations
 
-- **No domain is implemented.** Seven definitions, zero slices — by design, and the app
-  looks identical because of it. Prompt 8B onwards.
-- **The default panel contribution is deliberately thin.** With no slice, a switched-on
-  domain summarises the shared category evidence it reads. That is honest and it is not
-  domain intelligence; a slice replaces it.
-- **`update-area:*` prompts do not exist yet.** Each arrives with its slice, and a test
-  reports any enabled domain that lacks one — so a slice cannot ship an area the owner
-  can read and cannot correct.
-- **`legacyProvenance` is defined and unwritten.** Phase 9 writes it.
-- **Fatherhood reads no category yet**, because no fatherhood category exists. It
-  abstains rather than borrowing another area's records.
-- **Cached startup is still unmeasured.** Bundle is ~160 kB gzipped, up from ~158 kB.
+- **Six domains remain unimplemented.** Career (8C), fatherhood (8D), emotional and
+  relationships (8E), faith (8F), home (8G), money (8H). Each is readable-but-not-updatable
+  until its slice lands, and says so.
+- **Health is switched off by default**, like every domain. It appears only after the
+  owner enables it.
+- **The energy split is only asked from Update This Area.** That is deliberate — adding
+  it to the morning would cost two questions a day for a distinction that matters
+  occasionally — but it means the split is often absent and the general scale is used.
+- **Time-of-day patterns need readings across the day** to say anything, and a check-in
+  habit clustered at one hour will produce one bucket.
+- **No cross-domain synthesis yet.** Health competes in the same comparison as
+  everything else; genuine tradeoff reasoning between areas is Phase 8.
+- **Cached startup is still unmeasured.** Bundle is ~163 kB gzipped, up from ~160 kB.
 - Carried forward: the local database is not encrypted at rest; the app lock hides the
   screen only; notifications do not exist; the regression suite runs against a
-  bridge-enabled build with production covered by 14 dedicated tests;
-  `frame-ancestors` unenforceable on Pages; Chromium-only matrix; no router;
-  service-worker staleness; deletion semantics undecided.
+  bridge-enabled build with production covered by 14 dedicated tests; `frame-ancestors`
+  unenforceable on Pages; Chromium-only matrix; no router; service-worker staleness;
+  deletion semantics undecided.
 
 ## Deferred work
 
 | Deferred | Activates |
 | --- | --- |
-| Health, recovery, and energy | Prompt 8B |
 | Career, Azure, and learning | Prompt 8C |
 | Fatherhood and Adaya | Prompt 8D |
 | Emotional state, social, and relationships | Prompt 8E |
@@ -219,15 +212,16 @@ which is why nothing about a domain reaches Now).
 
 ## Blockers
 
-**None blocking Prompt 8B.**
+**None blocking Prompt 8C.**
 
 One non-blocking owner action carried forward: **measure cached startup on the Samsung
 phone** and say if it exceeds three seconds.
 
 ## Next permitted prompt
 
-**PROMPT 8B — Phase 7 domain slice: Health, recovery, and energy.**
+**PROMPT 8C — Phase 7 domain slice: Career, Azure, and learning.**
 
-It is the right one to go first: sleep, food, and readiness are already being captured
-under time-and-capacity and classified as health data, so 8B gives evidence that already
-exists a proper home rather than starting from nothing.
+The framework has now been through one real slice and held: health added a category, a
+panel, a candidate, and its own questions without touching the global decision, the
+Now surface, or any other area's records. 8C is where it gets tested against a domain
+with genuinely different evidence — proof and progression rather than state and capacity.

@@ -6,6 +6,7 @@ import {
   currentObservations,
   openCommitments,
 } from '../support';
+import { assessHealth, summariseHealthCategory } from '../domains/health';
 import type { CategorySummary, StateAssessment, TrajectoryResult } from '../types';
 
 /**
@@ -144,6 +145,13 @@ export function summariseCategories(
         ],
         wouldChangeIt: 'Unblocking a waiting commitment, or agreeing to drop it.',
       });
+      continue;
+    }
+
+    if (category === 'health-recovery-energy') {
+      // Delegated to the Health slice so the reading exists in exactly one place.
+      // A second copy here would drift from the panel within a phase.
+      summaries.push(summariseHealthCategory(assessHealth(records, now), state));
       continue;
     }
 

@@ -48,6 +48,7 @@ const GUIDE_TITLES: Record<GuidePlan['kind'], string> = {
   evening: 'Evening',
   weekly: 'This week',
   'quick-check-in': 'Update',
+  'update-area': 'Update this area',
 };
 
 export function GuideSurface({
