@@ -1,7 +1,7 @@
 # Architecture Overview
 
 **Status:** Controlling (subordinate to the [Product Constitution](../PRODUCT_CONSTITUTION.md))
-**Plan version:** 2.6 Lean Execution
+**Plan version:** 3.1 Contextual Capture Amendment
 **Scope:** the approved technical shape of Life Command OS
 
 This document records decisions that are expensive to reverse. It is deliberately concise.

@@ -62,7 +62,7 @@ export default defineConfig({
     }),
   ],
   define: {
-    __BUILD_PLAN_VERSION__: JSON.stringify('3.0 Final'),
+    __BUILD_PLAN_VERSION__: JSON.stringify('3.1 Contextual Capture'),
     __BUILD_PHASE__: JSON.stringify('Phase 7'),
     __BUILD_COMMIT__: JSON.stringify(resolveCommit()),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),

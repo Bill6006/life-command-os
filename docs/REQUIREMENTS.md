@@ -1,8 +1,8 @@
 # Core Requirements Registry
 
 **Status:** Controlling
-**Plan version:** 3.0 Final
-**Current phase:** Phase 7 — Prompts 8A and 8B complete; slices 8C–8H outstanding
+**Plan version:** 3.1 Contextual Capture Amendment (supersedes v3.0 for remaining work)
+**Current phase:** Phase 7 — Prompts 8A–8D complete; slices 8E–8H outstanding
 
 **Controlling artifacts from v3.0.** The Final Product Blueprint, Updated Requirements
 Register v2, Final Acceptance Test Matrix, and Final Legacy Decisions map now supply the
