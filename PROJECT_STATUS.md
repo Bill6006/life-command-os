@@ -10,7 +10,9 @@
 
 ## Gate status
 
-- Status: **GREEN.** Every Prompt 8C requirement is met.
+- Status: **YELLOW.** Every Prompt 8C requirement is met and tested. The qualifier is not
+  a defect in this slice: **no domain can be switched on from the shipped app**, so
+  neither the career panel nor the health panel is reachable by the owner. See below.
 - Private local use: **READY** (unchanged from Prompt 7B).
 - Gate evidence:
   - *Uses shared canonical records* — career reads the category it has always read. One
@@ -30,6 +32,22 @@
     classified `workplace` and withheld from AI exports unless explicitly included.
   - *Absent from Now when irrelevant* — nothing about a domain reaches Now.
   - *Synthetic tests added* — five career scenarios, 39 unit and 14 browser tests.
+
+### The qualifier, stated plainly
+
+A domain becomes visible when a `DomainPreferenceRecord` says the owner switched it on.
+**Nothing in the application writes one.** The only writer is `src/app/scenarios.ts`, which
+is compile-time stripped from the production bundle along with the test bridge.
+
+So every domain test runs through the real UI against a seeded corpus, and on the deployed
+build `Direction` shows the three category overviews and no domain panel at all — verified
+live on commit `9a63aa4` at 375×812.
+
+This is an 8A framework gap, not an 8C one, and it has been true since Prompt 8B shipped;
+the 8B report said health "appears only after the owner enables it" without checking that
+the owner could. Both slices are complete and correct behind it. **The missing piece is a
+switch-on control, which is framework scope and was not part of Prompt 8C's task list.**
+It is listed under Blockers for a decision.
 
 ## GitHub Pages owner preview
 
@@ -198,7 +216,9 @@ the Prompt 8A framework contracts.
 - **Five domains remain unimplemented.** Fatherhood (8D), emotional and relationships
   (8E), faith (8F), home (8G), money (8H). Each is readable-but-not-updatable until its
   slice lands, and says so.
-- **Career is switched off by default**, like every domain.
+- **Career is switched off by default**, like every domain — and, until a switch-on
+  control exists, it cannot be switched on from the shipped app at all. See the gate
+  qualifier.
 - **The claim meter counts evidence, not adequacy.** One study session puts something
   behind a claim here; it may not support that claim in an interview. The visual says so
   in its own uncertainty declaration, but it is a real limit of the reading.
@@ -230,14 +250,19 @@ the Prompt 8A framework contracts.
 
 ## Blockers
 
-**None blocking Prompt 8D.**
+**None blocking Prompt 8D.** Three owner decisions are open, one of them affecting whether
+the last two slices are usable.
 
-Two non-blocking owner decisions carried forward:
-
-1. **Measure cached startup on the Samsung phone** and say if it exceeds three seconds.
-2. **Decide whether to purge a child's first name from commit `b5ffe54`.** HEAD is clean.
-   A history rewrite and force-push would remove it entirely; leaving it means one commit
-   message-adjacent file in history contains it.
+1. **Where the switch-on control goes.** Two slices are complete and neither can be reached
+   on the shipped build. It is a small piece of work — one command writing a
+   `DomainPreferenceRecord`, and a place to put it — but it is framework scope, and where
+   it lives (Data & Privacy, Direction, or a first-run step) is a product decision rather
+   than a technical one. Recommended as the first item of Prompt 8D, or as a short
+   framework prompt before it.
+2. **Measure cached startup on the Samsung phone** and say if it exceeds three seconds.
+3. **Decide whether to purge a child's first name from commit `b5ffe54`.** HEAD is clean.
+   A history rewrite and force-push would remove it entirely; leaving it means one file in
+   one historical commit contains it.
 
 ## Next permitted prompt
 
