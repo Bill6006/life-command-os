@@ -71,24 +71,24 @@ describe('switching an area on', () => {
     expect(required(panels[0], 'the panel').domainId).toBe('career-and-learning');
   });
 
-  it('refuses an area that has not been built, and writes nothing', async () => {
+  it('refuses an area this build does not know, and writes nothing', async () => {
+    /*
+     * Every approved area is built as of Prompt 8H, so the refusal now guards the case it
+     * will guard from here on: a domain id arriving from a later build's backup, or by
+     * hand. The command refuses it rather than writing a preference for a panel that
+     * cannot exist.
+     */
     const records = await seed('areas-all-off');
-    const result = await setDomainState(records, { domainId: 'money', state: 'enabled' }, NOW);
+    const result = await setDomainState(
+      records,
+      { domainId: 'crypto-portfolio' as never, state: 'enabled' },
+      NOW,
+    );
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.issues.join(' ')).toMatch(/has not been built yet/);
       expect(result.issues.join(' ')).toMatch(/Nothing has been changed/);
-    }
-    expect(preferences(await listAllRecords())).toEqual([]);
-  });
-
-  it('refuses every unbuilt area, not just the one that was tried', async () => {
-    const records = await seed('areas-all-off');
-    for (const domainId of ['money'] as const) {
-      expect((await setDomainState(records, { domainId, state: 'enabled' }, NOW)).ok).toBe(
-        false,
-      );
     }
     expect(preferences(await listAllRecords())).toEqual([]);
   });

@@ -46,6 +46,17 @@ export const PROTECTED_TOPICS = [
    * has no view on that at all.
    */
   'faith-struggle',
+  /**
+   * Amounts and balances (Prompt 8H).
+   *
+   * The plan defers "detailed account, transaction, bill, debt, credit, and portfolio
+   * machinery **unless separately activated**", and this is the separate activation. The
+   * money domain works fully without it: pressure, resilience, avoidance, what the money
+   * is for, and the decisions taken are all bands and words. Switching this on adds
+   * exactly one capability — a figure against one goal — and with it the only earned
+   * percentage in the product.
+   */
+  'money-figures',
 ] as const;
 export type ProtectedTopic = (typeof PROTECTED_TOPICS)[number];
 
@@ -55,6 +66,7 @@ export const PROTECTED_TOPIC_LABELS: Record<ProtectedTopic, string> = {
   'conflict-detail': 'Conflict detail',
   dating: 'Dating',
   'faith-struggle': 'Doubt and struggle',
+  'money-figures': 'Amounts and balances',
 };
 
 /**

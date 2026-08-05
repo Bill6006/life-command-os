@@ -14,6 +14,7 @@ import { assertPromptCatalogue, type PromptDefinition } from './policy';
 import { EMOTIONAL_PROMPTS } from './emotional';
 import { FAITH_PROMPTS } from './faith';
 import { HOME_PROMPTS } from './home';
+import { MONEY_PROMPTS } from './money';
 
 /**
  * Every question this product asks in a normal flow.
@@ -73,22 +74,20 @@ function choice(options: readonly string[]): PromptInput {
  * question.
  */
 /**
- * Scales whose content is health data, and which are therefore filed and classified
- * as health however useful they are for a capacity decision.
+ * One prompt per scale, classified by the scale itself.
  *
- * Privacy and category are decided separately and on purpose. Pain interference is
- * health data wherever it is stored; where it is *stored* is a question about which
- * area of life owns it.
+ * This used to consult a `HEALTH_SCALES` set and a ternary, which could answer only "is
+ * this health data". Prompt 8H needed a third answer — a money reading is neither general
+ * capacity nor health — and a set that must grow a branch per classification is a lookup
+ * table pretending to be a rule. The classification now travels with the scale, so a new
+ * scale cannot be filed under the wrong area by omission.
+ *
+ * The **prompt id** follows the scale's namespace, which is what decides the owning
+ * surface. The **stored attribute** does not: it stays `state:<id>` for every scale, so
+ * one reading has exactly one canonical home whichever surface collected it.
  */
-const HEALTH_SCALES = new Set<ScaleId>([
-  'sleep-recovery',
-  'physical-energy',
-  'mental-energy',
-  'pain-interference',
-]);
-
 export const STATE_PROMPTS: readonly CapturePrompt[] = SCALE_LIST.map((scale) => ({
-  promptId: `state:${scale.scaleId}`,
+  promptId: `${scale.promptNamespace}:${scale.scaleId}`,
   text: scale.prompt,
   kind: 'state' as const,
   answers: scale.anchors.map((anchor) => anchor.label),
@@ -96,10 +95,8 @@ export const STATE_PROMPTS: readonly CapturePrompt[] = SCALE_LIST.map((scale) =>
   whatItCouldChange: ['state-interpretation', 'candidate-eligibility', 'recommendation'],
   input: { kind: 'scale', scaleId: scale.scaleId },
   attribute: scaleAttribute(scale.scaleId),
-  category: HEALTH_SCALES.has(scale.scaleId)
-    ? 'health-recovery-energy'
-    : 'time-attention-capacity',
-  privacy: HEALTH_SCALES.has(scale.scaleId) ? 'health' : 'general',
+  category: scale.category,
+  privacy: scale.privacy,
 }));
 
 /* -------------------------------------------------------------------------- */
@@ -964,7 +961,7 @@ export const QUICK_CAPTURE_PROMPTS: readonly CapturePrompt[] = [
 /* -------------------------------------------------------------------------- */
 
 /** Every prompt in the product, in one list. */
-export { EMOTIONAL_PROMPTS, FAITH_PROMPTS, HOME_PROMPTS };
+export { EMOTIONAL_PROMPTS, FAITH_PROMPTS, HOME_PROMPTS, MONEY_PROMPTS };
 
 export const ALL_PROMPTS: readonly CapturePrompt[] = [
   ...STATE_PROMPTS,
@@ -978,6 +975,7 @@ export const ALL_PROMPTS: readonly CapturePrompt[] = [
   ...EMOTIONAL_PROMPTS,
   ...FAITH_PROMPTS,
   ...HOME_PROMPTS,
+  ...MONEY_PROMPTS,
   ...QUICK_CAPTURE_PROMPTS,
 ];
 

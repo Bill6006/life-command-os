@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import type { LifeCategory } from './categories';
+import type { PrivacyClass } from './envelope';
 
 /**
  * The approved anchored state scales (`OWN-026`–`OWN-032`, Blueprint §4.4).
@@ -66,6 +68,20 @@ export const SCALE_IDS = [
    * scale asks what is true right now rather than auditing a social calendar.
    */
   'loneliness',
+  /**
+   * Financial pressure, as a present state (Prompt 8H).
+   *
+   * A scale rather than a figure because the useful reading is how much money is on his
+   * mind, which moves week to week and is answerable in a second. It is **not** a measure
+   * of how much money there is: someone can be under heavy pressure with savings and none
+   * with an overdraft, and the scale asks what is true right now rather than auditing an
+   * account.
+   *
+   * Deliberately **not** read by the shared state assessment. A hard month with money is
+   * not the same as low capacity, and quietly suggesting less because of it would be the
+   * app deciding somebody is fragile.
+   */
+  'financial-pressure',
 ] as const;
 export type ScaleId = (typeof SCALE_IDS)[number];
 
@@ -82,6 +98,26 @@ export interface ScaleDefinition {
   /** What a higher ordinal means, so the direction cannot silently invert. */
   readonly higherMeans: string;
   readonly anchors: readonly ScaleAnchor[];
+  /**
+   * Which area of life owns the reading, and how sensitive it is.
+   *
+   * Carried on the scale so the generated prompt cannot be classified by a lookup table
+   * kept somewhere else. This replaced a `HEALTH_SCALES` set in Prompt 8H: a set answers
+   * "is this health data" and there are now three answers, not two. A scale that is
+   * neither general capacity nor health has to be able to say so.
+   */
+  readonly category: LifeCategory;
+  readonly privacy: PrivacyClass;
+  /**
+   * The prompt-id prefix, which decides which surface owns the question.
+   *
+   * `state:` for the scales a guide collects. A domain that owns its own reading names
+   * its namespace here, and the generated prompt id follows — so a money question cannot
+   * end up owned by "whichever guide asks first", which is what the prefix rule exists to
+   * prevent. The stored attribute is unaffected: it stays `state:<id>` for every scale, so
+   * one reading has one canonical home whatever asks for it.
+   */
+  readonly promptNamespace: string;
 }
 
 function scale(
@@ -89,6 +125,11 @@ function scale(
   prompt: string,
   higherMeans: string,
   labels: readonly string[],
+  classification?: {
+    readonly category?: LifeCategory;
+    readonly privacy?: PrivacyClass;
+    readonly promptNamespace?: string;
+  },
 ): ScaleDefinition {
   return {
     scaleId,
@@ -96,6 +137,9 @@ function scale(
     prompt,
     higherMeans,
     anchors: labels.map((label, index) => ({ ordinal: index + 1, label })),
+    category: classification?.category ?? 'time-attention-capacity',
+    privacy: classification?.privacy ?? 'general',
+    promptNamespace: classification?.promptNamespace ?? 'state',
   };
 }
 
@@ -142,13 +186,13 @@ export const SCALES: Record<ScaleId, ScaleDefinition> = {
     'Overwhelmed',
     'Flooded',
   ]),
-  'sleep-recovery': scale('sleep-recovery', 'Last night’s recovery', 'better recovery', [
-    'Very poor',
-    'Poor',
-    'Mixed',
-    'Good',
-    'Restorative',
-  ]),
+  'sleep-recovery': scale(
+    'sleep-recovery',
+    'Last night’s recovery',
+    'better recovery',
+    ['Very poor', 'Poor', 'Mixed', 'Good', 'Restorative'],
+    { category: 'health-recovery-energy', privacy: 'health' },
+  ),
   readiness: scale('readiness', 'What is possible right now', 'more capacity available', [
     'Need recovery',
     'Two minutes possible',
@@ -160,14 +204,15 @@ export const SCALES: Record<ScaleId, ScaleDefinition> = {
     'Physical energy right now',
     'more physical energy',
     ['Drained', 'Low', 'Functional', 'Good', 'Strong'],
+    { category: 'health-recovery-energy', privacy: 'health' },
   ),
-  'mental-energy': scale('mental-energy', 'Mental energy right now', 'more mental energy', [
-    'Drained',
-    'Low',
-    'Functional',
-    'Good',
-    'Strong',
-  ]),
+  'mental-energy': scale(
+    'mental-energy',
+    'Mental energy right now',
+    'more mental energy',
+    ['Drained', 'Low', 'Functional', 'Good', 'Strong'],
+    { category: 'health-recovery-energy', privacy: 'health' },
+  ),
   loneliness: scale('loneliness', 'Connection right now', 'more lonely', [
     'Connected',
     'Mostly fine',
@@ -186,6 +231,14 @@ export const SCALES: Record<ScaleId, ScaleDefinition> = {
     'Is anything physical getting in the way right now?',
     'more interference',
     ['Not at all', 'Slightly', 'Noticeably', 'A lot', 'Cannot work around it'],
+    { category: 'health-recovery-energy', privacy: 'health' },
+  ),
+  'financial-pressure': scale(
+    'financial-pressure',
+    'Money on your mind right now',
+    'more pressure',
+    ['None right now', 'A bit', 'Noticeable', 'Heavy', 'Constant'],
+    { category: 'money', privacy: 'money', promptNamespace: 'money' },
   ),
 };
 

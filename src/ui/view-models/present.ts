@@ -120,6 +120,19 @@ const CATEGORY_LABELS: Record<LifeCategory, string> = {
   'emotional-and-relationships': 'Emotional state & relationships',
   'faith-and-meaning': 'Faith & meaning',
   'home-and-environment': 'Home & environment',
+  /*
+   * Not simply "Money", which is the **domain panel's** label.
+   *
+   * Direction renders a category summary beside a domain panel, and for every other area
+   * the two names merely resemble each other ("Faith & meaning" against "Faith and
+   * meaning"). Here they were identical, which put two regions with the same accessible
+   * name on one screen — indistinguishable to anyone navigating by landmark, and a strict
+   * ambiguity that the browser tests caught immediately.
+   *
+   * The general duplication is Phase 8's to resolve. This keeps Prompt 8H from making it
+   * worse, and the name is accurate: the summary's headline reading is the pressure.
+   */
+  money: 'Money & pressure',
 };
 
 export function categoryLabel(category: string): string {

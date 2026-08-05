@@ -40,6 +40,7 @@ import {
 } from './domains/emotional';
 import { assessFaith, faithContribution, generateFaithCandidate } from './domains/faith';
 import { assessHome, generateHomeCandidate, homeContribution } from './domains/home';
+import { assessMoney, generateMoneyCandidate, moneyContribution } from './domains/money';
 
 export * from './types';
 export * from './contracts';
@@ -118,6 +119,8 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
   const faith = generateFaithCandidate(records, faithEvidence);
   const homeEvidence = assessHome(records, now);
   const home = generateHomeCandidate(records, homeEvidence);
+  const moneyEvidence = assessMoney(records, now);
+  const money = generateMoneyCandidate(records, moneyEvidence);
 
   const candidates = enforceOneCandidatePerDomain([
     ...generateCandidates(records, state, now),
@@ -127,6 +130,7 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
     ...(emotional.candidate === undefined ? [] : [emotional.candidate]),
     ...(faith.candidate === undefined ? [] : [faith.candidate]),
     ...(home.candidate === undefined ? [] : [home.candidate]),
+    ...(money.candidate === undefined ? [] : [money.candidate]),
   ]).accepted;
   const effects = candidates.map((candidate) => predictEffects(candidate, state));
 
@@ -215,6 +219,7 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
         ],
         ['faith-and-meaning', faithContribution(faithEvidence, faith)],
         ['home-and-environment', homeContribution(homeEvidence, home)],
+        ['money', moneyContribution(moneyEvidence, money)],
       ]),
     ),
     internal: { candidates, effects, rejected },

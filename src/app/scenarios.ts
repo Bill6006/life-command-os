@@ -450,6 +450,92 @@ function homeNote(attribute: string, text: string, occurredMs = -1 * DAY): Canon
   } as unknown as CanonicalRecord;
 }
 
+/* --- Prompt 8H: money ------------------------------------------------------ */
+
+const PRESSURE_ANCHORS = [
+  'None right now',
+  'A bit',
+  'Noticeable',
+  'Heavy',
+  'Constant',
+] as const;
+
+function moneyPressure(ordinal: number, occurredMs = -1 * DAY): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'money',
+    category: 'money',
+    attribute: 'state:financial-pressure',
+    value: {
+      kind: 'anchored-scale',
+      scaleId: 'financial-pressure',
+      scaleVersion: 1,
+      ordinal,
+      label: PRESSURE_ANCHORS[ordinal - 1],
+    },
+  } as unknown as CanonicalRecord;
+}
+
+function moneyState(attribute: string, state: string, occurredMs = -1 * DAY): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'money',
+    category: 'money',
+    attribute,
+    value: { kind: 'state', state },
+  } as unknown as CanonicalRecord;
+}
+
+function moneyNote(attribute: string, text: string, occurredMs = -1 * DAY): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'money',
+    category: 'money',
+    attribute,
+    value: { kind: 'note', text },
+  } as unknown as CanonicalRecord;
+}
+
+function moneyFigure(
+  attribute: string,
+  amount: number,
+  occurredMs = -1 * DAY,
+): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'money',
+    category: 'money',
+    attribute,
+    value: { kind: 'quantity', amount, unit: 'towards it' },
+  } as unknown as CanonicalRecord;
+}
+
+function moneyPurpose(statement: string, occurredMs = -30 * DAY): CanonicalRecord {
+  return {
+    ...envelope('goal', occurredMs),
+    ...OBSERVED,
+    privacy: 'money',
+    statement,
+    category: 'money',
+    state: 'active',
+  } as unknown as CanonicalRecord;
+}
+
+function figuresOn(occurredMs = -20 * DAY): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'money',
+    category: 'money',
+    attribute: 'privacy:topic-enabled:money-figures',
+    value: { kind: 'state', state: 'On' },
+  } as unknown as CanonicalRecord;
+}
+
 function star(): CanonicalRecord {
   return {
     ...envelope('north-star', -30 * DAY),
@@ -1264,6 +1350,94 @@ export const SCENARIOS: readonly Scenario[] = [
       homeState('home:change-made', 'Yes', -19 * DAY),
       homeFriction('Too loud', 'focused-work', -4 * DAY),
       homeState('home:friction-outcome', 'Still happening', -2 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'money-pressure-no-figures',
+    'Money area switched on, amounts off',
+    'Pressure and cover recorded, no figures anywhere. Expect a stage path for cover, a pressure trend, the meter refused, and the tradeoff refused as a chart.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('money', 'enabled'),
+      moneyState('money:last-looked', 'This week', -2 * DAY),
+      moneyState('money:resilience', 'Several months', -3 * DAY),
+      moneyPressure(4, -1 * DAY),
+      moneyPressure(3, -9 * DAY),
+      moneyPressure(2, -16 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'money-figures-on',
+    'Amounts switched on',
+    'The one place a percentage is valid. Expect a real meter, and everything else identical to the scenario without figures.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('money', 'enabled'),
+      figuresOn(),
+      moneyPurpose('Placeholder purpose written by the owner'),
+      moneyState('money:last-looked', 'Today or yesterday', -1 * DAY),
+      moneyState('money:resilience', 'A month or two', -3 * DAY),
+      moneyPressure(3, -1 * DAY),
+      moneyPressure(3, -9 * DAY),
+      moneyFigure('money:goal-target', 7500, -20 * DAY),
+      moneyFigure('money:goal-current', 4200, -2 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'money-not-looked',
+    'Not looked at in a while',
+    'He said so himself. Expect two minutes and one number, and nothing that reads as a telling-off.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('money', 'enabled'),
+      moneyState('money:last-looked', 'I have been putting it off', -1 * DAY),
+      moneyPressure(4, -2 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'money-thin-cover',
+    'Thin cover, and nothing to suggest',
+    'Under a week of cover with low pressure. Expect the reading shown plainly and no suggestion at all, because there is none worth giving.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('money', 'enabled'),
+      moneyState('money:last-looked', 'This week', -1 * DAY),
+      moneyState('money:resilience', 'Under a week', -2 * DAY),
+      moneyPressure(2, -1 * DAY),
+      moneyPressure(2, -8 * DAY),
+      moneyPurpose('Placeholder purpose written by the owner'),
+      moneyState('money:pressure-since', 'About the same', -3 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'money-decision-settled',
+    'A decision made, and what moved after it',
+    'Pressure recorded before and after a settled decision. Expect a two-bar comparison labelled as change rather than cause.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('money', 'enabled'),
+      moneyState('money:last-looked', 'This week', -1 * DAY),
+      moneyState('money:resilience', 'A few weeks', -30 * DAY),
+      moneyPressure(5, -30 * DAY),
+      moneyNote('money:decision-named', 'Placeholder decision written by the owner', -29 * DAY),
+      moneyState('money:decision-made', 'Did it', -28 * DAY),
+      moneyPressure(3, -2 * DAY),
+      moneyState('money:pressure-since', 'Less', -2 * DAY),
       context({ minutes: 40, capacity: 'moderate' }),
     ],
   ),

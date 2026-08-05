@@ -47,6 +47,7 @@ import { LearningMapView } from '../direction/LearningMapView';
 import { EmotionalAreaView } from '../direction/EmotionalAreaView';
 import { FaithAreaView } from '../direction/FaithAreaView';
 import { HomeAreaView } from '../direction/HomeAreaView';
+import { MoneyAreaView } from '../direction/MoneyAreaView';
 import {
   nameFaithAnchor,
   recordFaithObservation,
@@ -59,8 +60,16 @@ import {
   recordFriction,
   recordHomeState,
 } from '../../../application/commands/home';
+import {
+  nameMoneyDecision,
+  nameMoneyPurpose,
+  recordFinancialPressure,
+  recordGoalFigure,
+  recordMoneyState,
+} from '../../../application/commands/money';
 import { assessFaith } from '../../../intelligence/domains/faith';
 import { assessHome } from '../../../intelligence/domains/home';
+import { assessMoney } from '../../../intelligence/domains/money';
 import {
   recordBoundary,
   recordEmotionalObservation,
@@ -122,7 +131,9 @@ type Mode =
   /** The faith area page: his words, and what he recorded against them. */
   | { readonly kind: 'faith-area' }
   /** The home area page: what got in the way, and the one change. */
-  | { readonly kind: 'home-area' };
+  | { readonly kind: 'home-area' }
+  /** The money area page: pressure, cover, and the one decision. */
+  | { readonly kind: 'money-area' };
 
 const PRIMARY: readonly { id: Destination; label: string }[] = [
   { id: 'now', label: 'Now' },
@@ -595,6 +606,73 @@ export function AppShell(): React.JSX.Element {
       );
     }
 
+    if (mode.kind === 'money-area') {
+      const evidence = assessMoney(records, now);
+      return (
+        <MoneyAreaView
+          state={{
+            pressureLabel: evidence.pressure?.label,
+            resilience: evidence.resilience,
+            lastLooked: evidence.lastLooked,
+            openDecision: evidence.openDecision,
+            decisionStatement: evidence.decisionStatement,
+            decisionMade: evidence.decisionMade,
+            pressureSince: evidence.pressureSince,
+            purpose: evidence.purpose?.statement,
+            figuresEnabled: evidence.figuresEnabled,
+            goalTarget: evidence.goalTarget,
+            goalCurrent: evidence.goalCurrent,
+          }}
+          busy={busy}
+          onPressure={(ordinal) => {
+            void run(() => recordFinancialPressure(ordinal, new Date()), { stay: true });
+          }}
+          onRecord={(attribute, value) => {
+            void run(() => recordMoneyState({ attribute, state: value }, new Date()), {
+              stay: true,
+            });
+          }}
+          onNameDecision={(statement) => {
+            void run(() => nameMoneyDecision(statement, new Date()), { stay: true });
+          }}
+          onNamePurpose={(statement) => {
+            void run(() => nameMoneyPurpose(statement, new Date()), { stay: true });
+          }}
+          onFigure={(which, amount, unit) => {
+            void run(
+              () =>
+                recordGoalFigure(
+                  { which, amount, unit, figuresEnabled: evidence.figuresEnabled },
+                  new Date(),
+                ),
+              { stay: true },
+            );
+          }}
+          onSetFiguresEnabled={(enabled) => {
+            void run(
+              () =>
+                setTopicEnabled('money-figures', enabled, new Date(), {
+                  category: 'money',
+                  privacy: 'money',
+                }),
+              { stay: true },
+            );
+          }}
+          onOpenGuided={() => {
+            setMode({
+              kind: 'guide',
+              guide: 'update-area',
+              depth: 'full',
+              domainId: 'money',
+            });
+          }}
+          onClose={() => {
+            setMode({ kind: 'console' });
+          }}
+        />
+      );
+    }
+
     if (mode.kind === 'capture') {
       return (
         <QuickCaptureSurface
@@ -781,7 +859,9 @@ export function AppShell(): React.JSX.Element {
                         ? { kind: 'faith-area' }
                         : domainId === 'home-and-environment'
                           ? { kind: 'home-area' }
-                          : { kind: 'guide', guide: 'update-area', depth: 'full', domainId },
+                          : domainId === 'money'
+                            ? { kind: 'money-area' }
+                            : { kind: 'guide', guide: 'update-area', depth: 'full', domainId },
                 );
               }}
               onSetAreaState={(domainId, state) => {

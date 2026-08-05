@@ -195,8 +195,14 @@ export const DOMAIN_DEFINITIONS: Record<DomainId, DomainDefinition> = {
     id: 'money',
     label: 'Money',
     question: 'What is the pressure, and what would reduce it?',
-    reads: ['direction-and-commitments'],
+    /*
+     * Both. The slice's own readings live in the new category; goals and commitments stay
+     * where they are, and the domain reads them because "what would reduce the pressure"
+     * is often something he already committed to elsewhere.
+     */
+    reads: ['money', 'direction-and-commitments'],
     privacy: 'money',
+    captureNamespace: 'money',
     channels: ['financial-freedom-and-resilience', 'emotional-regulation'],
     legacyIds: ['LEG-067', 'LEG-068', 'LEG-069', 'LEG-070'],
     updatePromptId: 'update-area:money',

@@ -207,7 +207,14 @@ The first vertical slice requires **twenty** families. All are implemented in Ph
 | 19 | `QuestionRecord` |
 | 20 | `QuestionAnswerRecord` |
 
-**Activated later** — twenty-seven families are registered as of Phase 7 Prompt 8G. The
+**Activated later** — twenty-seven families are registered as of Phase 7 Prompt 8H, which
+completes Phase 7. The last two slices added none between them: home's friction is an
+observation, and money reuses `GoalRecord` for what the money is for, `ObservationRecord`
+with a `quantity` value for the two optional figures, and `SurfacePermissionRecord` for the
+topic that gates them. Seven domains ship on twenty-seven families, which is the result the
+"one domain content family per slice, **where irreducible**" rule was written to produce.
+
+The
 count is unchanged from 8F: **the home slice added none**, because a friction is one
 observable fact with one value and the shared observation envelope already carries it. The
 activity a friction interrupted rides in the attribute (`home:friction:<purpose>`), the

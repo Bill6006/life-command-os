@@ -77,21 +77,31 @@ export function ManageAreasView({
         stays recorded, and switching it back on shows it again.
       </p>
 
-      <p className="panel-label">Not built yet</p>
-      <ul className="areas" aria-label="Areas that are not built yet">
-        {notYet.map((definition) => (
-          <li className="area" key={definition.id}>
-            <div className="area-main">
-              <span className="change-main">{definition.label}</span>
-              <span className="fine">Arrives with {definition.activatedBy}</span>
-            </div>
-          </li>
-        ))}
-      </ul>
-      <p className="fine">
-        These have no questions and nothing to read yet, so there is nothing to switch on. An
-        empty panel would be a worse answer than this sentence.
-      </p>
+      {/*
+        Omitted entirely once every area is built, rather than left as an empty list.
+        A heading over nothing is a landmark that leads somewhere blank, and "Not built
+        yet" followed by a blank space reads as a loading failure rather than as
+        completeness. As of Prompt 8H this is the normal state.
+      */}
+      {notYet.length === 0 ? null : (
+        <>
+          <p className="panel-label">Not built yet</p>
+          <ul className="areas" aria-label="Areas that are not built yet">
+            {notYet.map((definition) => (
+              <li className="area" key={definition.id}>
+                <div className="area-main">
+                  <span className="change-main">{definition.label}</span>
+                  <span className="fine">Arrives with {definition.activatedBy}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="fine">
+            These have no questions and nothing to read yet, so there is nothing to switch on.
+            An empty panel would be a worse answer than this sentence.
+          </p>
+        </>
+      )}
     </Panel>
   );
 }

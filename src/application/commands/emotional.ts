@@ -1,5 +1,7 @@
 import { newRecordId, RECORD_SCHEMA_VERSION } from '../../domain/records';
 import type { PermissibleSurface, ProtectedTopic } from '../../domain/records/permissions';
+import type { LifeCategory } from '../../domain/records/categories';
+import type { PrivacyClass } from '../../domain/records/envelope';
 import { EMOTIONAL_ATTRIBUTES } from '../../domain/emotional/social';
 import { TOPIC_ENABLED_ATTRIBUTE } from '../../domain/emotional/permissions';
 import { localTimeContextFor } from './capture';
@@ -17,7 +19,7 @@ import { writeRecord, type WriteResult } from './writeRecord';
  * pressed.
  */
 
-function envelopeFor(now: Date, privacy: 'relationship' | 'private-pattern' | 'general') {
+function envelopeFor(now: Date, privacy: PrivacyClass) {
   const instant = now.toISOString();
   return {
     schemaVersion: RECORD_SCHEMA_VERSION,
@@ -92,12 +94,21 @@ export async function setTopicEnabled(
   topic: ProtectedTopic,
   enabled: boolean,
   now: Date,
+  /*
+   * Where the decision is filed, and how sensitive it is. Defaulted to this slice's own
+   * values so Prompt 8E's callers are unchanged; Prompt 8H passes money's, because a
+   * decision about amounts is money data and belongs in the money category.
+   */
+  filing: { readonly category: LifeCategory; readonly privacy: PrivacyClass } = {
+    category: 'emotional-and-relationships',
+    privacy: 'relationship',
+  },
 ): Promise<WriteResult> {
   return writeRecord({
-    ...envelopeFor(now, 'relationship'),
+    ...envelopeFor(now, filing.privacy),
     recordId: newRecordId(),
     recordType: 'observation',
-    category: 'emotional-and-relationships',
+    category: filing.category,
     attribute: `${TOPIC_ENABLED_ATTRIBUTE}:${topic}`,
     value: { kind: 'state', state: enabled ? 'On' : 'Off' },
   });

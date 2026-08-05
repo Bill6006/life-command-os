@@ -4,35 +4,53 @@
 
 - Repository: life-command-os (https://github.com/Bill6006/life-command-os)
 - Plan version: **3.2 Coverage, Domain Scan, Learning Map, and AI Review Amendment**
-- Current phase: **Phase 7 — framework and six domain slices complete.** Slice 8H
-  outstanding.
-- Current prompt: PROMPT 8G (complete)
+- Current phase: **Phase 7 — complete.** All seven domains ship. Phase 8 is next.
+- Current prompt: PROMPT 8H (complete)
 
 ## Gate status
 
-- Status: **GREEN.** Every Prompt 8G requirement passes, and every earlier slice it was
+- Status: **GREEN.** Every Prompt 8H requirement passes, and every earlier slice it was
   required to leave alone still passes.
 - Private local use: **READY** (unchanged from Prompt 7B).
 - Gate evidence:
-  - *Functional friction* — eight kinds, every one describing what happened to an
-    activity, none describing how a room looks.
-  - *Access, setup, noise/light/privacy* — all recorded as observable answers, all
-    buttons.
-  - *Role transitions* — measured by what had to move first, never by how long anything
-    looked wrong.
-  - *Recovery, parenting, and learning environments* — five purposes the friction is
-    recorded against, and left unknown when he did not say.
-  - *One targeted change* — one open at a time, enforced in the generator and in the
-    command layer, with the text field absent while one is open.
-  - *Observable friction outcome* — whether the same thing came back, asked after a
-    fortnight rather than the next morning.
-  - *Environment candidate and visuals* — one candidate or none; a bar comparison and a
-    line graph earned, and the meter refused with its reason.
-  - *Contextual-capture metadata* — nine declarations, one triggered question, and not one
-    trigger that names an interval.
-  - *Not a cleaning, chore, calendar, or task app* — asserted by vocabulary, by the
-    single-occurrence silence, and by the one-open-change rule.
-  - *Now unchanged and compact* — five panels, the area named nowhere on it.
+  - _Financial pressure_ — a five-point anchored scale, owned by the area rather than a
+    guide, and deliberately not read by the shared state assessment.
+  - _Resilience_ — five bands answering how long he could cover things, with no figure
+    anywhere near it.
+  - _Freedom_ — what the money is for, in his words, filed as an ordinary goal.
+  - _Avoidance_ — when he last looked, in his words. The app never concludes it.
+  - _Goals, decisions and outcomes_ — one decision at a time, settled either way, with the
+    observable outcome asked a fortnight later.
+  - _Valid meters_ — the meter **earned** for the first time in the product, and refused by
+    the same domain when the figures are absent.
+  - _Trajectory and tradeoff visuals_ — a pressure trend, a stage path for cover, a
+    before-and-after comparison, and a tradeoff chart refused with its reason.
+  - _Money candidate generation_ — zero or one, four branches, and silence for thin cover.
+  - _Contextual-capture metadata_ — nine declarations, none guide-eligible, every protected
+    context excluded on every one.
+  - _Detailed account machinery deferred unless separately activated_ — `money-figures` is
+    the separate activation, and the domain works fully without it.
+  - _Now unchanged and compact_ — five panels, and no money question in any check-in.
+
+### Phase 7 final gate
+
+- All approved domains use one architecture: **yes** — every panel is `buildDomainPanel`.
+- No duplicate canonical facts: **yes** — 27 families, and the last two slices added none.
+- One domain may be disabled without corrupting history: **yes**, asserted per domain on the
+  production build.
+- Domain candidates remain subordinate to central selection: **yes** — `subordinate: true`
+  with no way to set it otherwise.
+- Now remains compact: **yes** — five panels at 375×812 with all seven areas on.
+- Every capture has contextual metadata and one canonical write path: **yes**, validated at
+  import.
+- Domain prompts have not turned the guides into a checklist: **yes** — 8F, 8G, and 8H
+  contribute one guide-eligible question between them.
+- Each domain supplies a compact scan summary: **yes**, seven of them, all unused until
+  Phase 8 builds the surface.
+- Sensitive topics cannot surface outside their explicit permissions: **yes**, and money's
+  figures are gated twice.
+- No capability, child, faith, relationship, or overall-life score wall exists: **yes** —
+  one percentage in the whole product, over the one construct with a real denominator.
 
 ## GitHub Pages owner preview
 
@@ -44,121 +62,126 @@
 
 ## The decision this slice turned on
 
-**Repetition is the entry condition.**
+**The whole domain works without a single figure.**
 
-A friction recorded once produces nothing at all — no suggestion, no nudge, no "you might
-want to look at this". One awkward morning is an event. The same thing twice is a property
-of the setup, and only the second is worth a word. A product that responds to the first
-becomes a chore generator inside a fortnight, whatever its copy says.
+The plan defers "detailed account, transaction, bill, debt, credit, and portfolio machinery
+unless separately activated". That is not a feature flag over a budgeting app — it is the
+shape of the domain. Pressure is a five-point scale. Cover is five bands. Avoidance is when
+he last looked. Freedom is a sentence. A decision is his words plus what became of it. Every
+one of those is useful to somebody who will never tell this application a balance.
 
-Two more rules make the boundary structural rather than editorial. **One open change,
-ever** — enforced in the candidate generator and again in `nameEnvironmentChange`, because
-a rule that lives only in the generator is one the interface can walk around. And
-**nothing is ever raised because time passed**: no capture trigger names an interval, and
-a test walks every trigger string to prove it.
+Resilience is the clearest case. "If money stopped coming in, how long could you cover
+things?" answered as _a few weeks_ carries the fact that matters and no account data at all.
+A budgeting app needs six months of transactions to compute a worse version of the same
+answer.
 
-The vocabulary carries the rest. Eight friction kinds, all functional, and no word anywhere
-for tidy, messy, cluttered, or clean. "Nowhere to put things" is a fact about trying to
-work at a desk; "the desk is a mess" is a judgement about a desk, and the second has no
-representation in this product.
+Switching `money-figures` on adds exactly one capability: a target and a current figure
+against one goal. **No branch of the candidate generator reads either**, and a test proves
+the suggestion is identical with amounts on and off — which is what stops the optional
+machinery quietly becoming required.
 
-**Where this differs from faith.** Prompt 8F withheld a view because the application had no
-standing to hold one. This domain is the opposite: the app has plenty of standing to say
-"that same thing has got in your way four times", because that is arithmetic over what he
-recorded. What it withholds is the task list.
+**The second decision: money is where a wrong word does the most damage.** It is the domain
+most likely to produce shame, and shame is why people stop looking — which is the actual
+problem the avoidance reading exists to catch. So the forbidden list is the longest in the
+product and bars two registers: the moralising one and the scoring one. The word
+_avoidance_ is itself on it. It is the plan's name for the deliverable, not a word this app
+may use about a person.
 
 ## Work completed
 
-- **No new record family, and that is the finding.** `EnvironmentSetupRecord` was designed
-  and discarded: a friction is one observable fact with one value, the activity it
-  interrupted rides in the attribute (`home:friction:<purpose>`, the device
-  `father:skill:<id>` established), and the link from a change to what it addresses is what
-  `provenance.derivedFromRecordIds` is for. `LEAN-001` permits a family **where
-  irreducible**; here it was not.
-- **Eight friction kinds and five purposes**, with the purpose optional everywhere and
-  never guessed — a friction recorded from a guide genuinely does not know what he was
-  doing, and filling that in would put invented context into the one chart this domain
-  draws.
-- **Four closed actions**, none of which says what to change. Three ask for his change; the
-  fourth names a *time* rather than a thing — set the space up before you need it — which
-  holds whatever the space contains.
-- **A bar comparison earned**, and it is the chart Prompt 8F refused. The difference is
-  what the bars are of: friction kinds are properties of a house, and nobody reads "nowhere
-  to put things: 4" as a verdict on themselves.
-- **A line graph over six weeks**, with a week he recorded nothing kept as a **gap** rather
-  than a zero. Collapsing the two would draw friction falling away every time he stopped
-  using the app.
-- **The meter refused.** Friction removed over friction recorded divides cleanly, and the
-  result is a readiness percentage for somebody's home with zero as the implied target.
-- **A category that may read `declining`** — unlike faith, because a fortnight with more
-  friction than the one before is a fact about a setup.
-- **A domain-owned scan summary** that quotes the change he named, which is the deliberate
-  contrast with the faith scan.
+- **The first earned percentage in the product.** Six domains refused a meter, each for a
+  fact about the construct rather than the evidence. A debt paid down is different: 4,200 of
+  7,500 is a fraction of a real total. The same domain refuses the same meter when the
+  figures are absent, so which one he sees depends on a decision he made about how much to
+  tell it.
+- **The tradeoff given as a sentence.** Pressure and cover move independently and are the
+  useful pair, but bars side by side would claim an ordinal about a state of mind and an
+  ordinal about a length of time are comparable. The chart is refused with
+  `discrete: false`; the tension is stated in words.
+- **A before-and-after comparison** of the pressure reading at a decision and the reading
+  now — same scale, two moments, and labelled as what changed rather than what the decision
+  caused.
+- **Thin cover produces no suggestion.** There is no action that helps, and offering one to
+  somebody short of money is the cruellest kind of useless. The reading stays on the panel;
+  the advice is withheld and the app says why.
+- **Nine captures, none guide-eligible, every protected context excluded on every one** —
+  including `family` and `caregiving`, which the home and faith slices left off. A money
+  question in front of the people it affects is worse than not asking.
+- **No new record family**, for the second slice running. Money reuses `GoalRecord`,
+  `ObservationRecord` with a `quantity` value, and `SurfacePermissionRecord`.
 
 ### Decisions worth naming
 
-- **Success is whether the same thing came back, never completion.** A change filed as a
-  commitment would report "done" as success, when the question is whether the friction
-  stopped. The outcome question waits a fortnight, because asking the next morning collects
-  an opinion.
-- **A change that did not hold is offered a second attempt, once, and it is not a
-  telling-off.** Knowing a change failed is worth as much as knowing one worked.
-- **The one triggered question earns its interruption.** Whether the room is too loud
-  decides whether a focus block is worth suggesting at all — the same test emotional
-  interference passed in 8E.
-- **Discretion is applied where the content warrants it.** The scan and the candidate
-  reason both quote the change he named; the faith equivalents quote nothing. A charger on
-  a desk is not a confession, and blanket redaction would make the weekly scan useless
-  without making anything safer.
+- **Financial pressure is not capacity.** The scale exists and the shared state assessment
+  deliberately does not read it. A hard month with money is not low capacity, and quietly
+  suggesting less because of it would be the app deciding somebody is fragile.
+- **Deciding against it is deciding it.** The decision outcomes are `Did it`,
+  `Decided against it`, and `Still deciding`, and nothing reads the second as a failure.
+- **The gentlest question opens the area.** "When did you last look at it?" comes before the
+  pressure scale, because it can be answered honestly on a bad month without admitting
+  anything, and because readings from somebody who has not looked in six weeks are
+  recollections.
+- **Discretion is settled by classification, not habit.** Faith withholds its repair, home
+  quotes its change, money withholds its decision. Three slices, one rule.
 
 ## Files created or modified
 
-Created (9): `src/domain/home/{environment,capture}.ts`; `src/domain/prompts/home.ts`;
-`src/application/commands/home.ts`;
-`src/intelligence/domains/home/{index,assessHome,homeCandidate,scan}.ts`;
-`src/ui/features/direction/HomeAreaView.tsx`; `tests/unit/home.test.ts`;
-`tests/e2e/{home,production-home}.spec.ts`
+Created (9): `src/domain/money/{strategy,capture}.ts`; `src/domain/prompts/money.ts`;
+`src/application/commands/money.ts`;
+`src/intelligence/domains/money/{index,assessMoney,moneyCandidate,scan}.ts`;
+`src/ui/features/direction/MoneyAreaView.tsx`; `tests/unit/money.test.ts`;
+`tests/e2e/{money,production-money}.spec.ts`
 
-Modified: `domain/records/categories.ts`; `domain/domains/definitions.ts`;
-`domain/prompts/definitions.ts`; `domain/capture/registry.ts`; `intelligence/index.ts`;
+Modified: `domain/records/{scales,categories,permissions}.ts`;
+`domain/prompts/definitions.ts`; `domain/domains/definitions.ts`;
+`domain/capture/registry.ts`; `domain/emotional/permissions.ts`;
+`application/commands/emotional.ts`; `intelligence/index.ts`;
 `intelligence/state/categorySummaries.ts`; `ui/features/shell/AppShell.tsx`;
-`ui/view-models/present.ts`; `app/scenarios.ts`; `playwright.config.ts`;
-`playwright.deployed.config.ts`; `tests/unit/{domains,areas}.test.ts`;
+`ui/features/direction/ManageAreasView.tsx`; `ui/view-models/present.ts`; `app/scenarios.ts`;
+`playwright.config.ts`; `playwright.deployed.config.ts`;
+`tests/unit/{domains,areas,emotional,prompts}.test.ts`;
 `tests/e2e/production-areas.spec.ts`;
 `docs/{REQUIREMENTS,architecture/ARCHITECTURE_OVERVIEW}.md`
 
 ## Tests and evidence
 
-- **Unit: 598 passed**, up from 567. 31 new for the slice.
-- **Browser: 549 passed** across both builds in 6.0 minutes, including 15 new specs against
-  seeded state and 10 new on the production build, all in isolated contexts.
+- **Unit: 630 passed**, up from 598. 32 new for the slice.
+- **Browser: 595 passed** across both builds in 6.4 minutes, including 17 new specs against
+  seeded state and 12 new on the production build, all in isolated contexts.
 - **Deployed: verified against Pages** with `playwright.deployed.config.ts`.
-- Covers: no aesthetic vocabulary anywhere in the domain or on any rendered surface in any
-  of four states; a single friction producing no candidate, no bottleneck, and no move; a
-  change offered only on the second occurrence; the one-open-change rule at both
-  enforcement points; a purpose left unknown rather than defaulted; a week with no records
-  kept as a gap; the comparison earned and the meter refused with their reasons; no capture
-  trigger naming an interval; no home question reaching a daily check-in; the scan quoting
-  the change; a free-text note staying off Now; and Now unchanged and compact.
-- **No defect found in existing code this slice.** The general no-`note`-on-Now rule
-  introduced in Prompt 8F held for the new domain without being touched, which is what it
-  was generalised for — the previous two slices each had to extend a list.
-- Four older assertions were correct failures from activating the domain: the
-  implemented-domain list, the unbuilt-area list, and both Manage Areas counts.
-- Three failures were mine rather than the code's. Two were the disavowal trap: `tidy`
-  appeared in an action's stopping point and `every week` in the panel's North Star line,
-  both there to say the app is *not* that — and a disavowal is still a mention, which is
-  exactly how the career slice tripped over "study more". Both were reworded to carry the
-  meaning without the word. The third was a regex that did not match its own copy.
-- Two type errors reached only `npm run build`, not `vitest`: the unit runner does not
-  typecheck, so `tsc --noEmit` is the gate that catches a bad cast in a test file.
+- Covers: no moralising, scoring, or budgeting vocabulary on any surface in any of five
+  states; the word _avoidance_ absent everywhere; the meter earned and the same meter
+  refused with its reason; no percentage anywhere else; cover as a ladder with no
+  destination implied; the tradeoff refused in both directions of the tension; a
+  before-and-after comparison that claims no causation; thin cover producing no candidate;
+  the decision kept off Now; amounts withheld from the reading when the topic is off and
+  from the weekly scan until that surface is granted; no money question in any guide at any
+  depth; and financial pressure absent from the shared state assessment.
+- **Two defects found in existing code, both by the browser tests.**
+  - _An exact accessible-name collision._ Direction renders a category summary beside a
+    domain panel. For every other area the names merely resemble each other ("Faith &
+    meaning" against "Faith and meaning"); for money both were "Money" — two regions with
+    the same accessible name on one screen, indistinguishable to anyone navigating by
+    landmark. The category label is now "Money & pressure".
+  - _An empty list with a heading over it._ Manage Areas rendered "Not built yet" above
+    nothing once the last domain shipped, which reads as a loading failure rather than as
+    completeness. The block is now omitted when the list is empty.
+- **Seven older assertions were correct failures**, and four of them marked a milestone
+  rather than a change: with every domain built, the tests that pointed at "the unbuilt one"
+  had no subject left. They were rewritten to exercise the availability mechanism directly —
+  a synthetic definition with no update prompt, and a preference naming a domain this build
+  has never heard of — so the guarantee survives the last slice shipping.
+- **One near-miss worth recording.** I wrote `?? ({} as ObservationRecord)` into
+  `assessMoney` and caught it on re-reading: that exact cast shipped in Prompt 8E and
+  crashed reading `.value.kind` off an empty object. Replaced with an explicit `undefined`
+  check before it ran once.
 
 ## Privacy status
 
 - Synthetic-only repository: **YES** — scanned clean across all tracked files and the built
   bundle.
-- Every placeholder in the home tests is explicitly labelled as one. No friction, change,
-  or note text in this repository describes anybody's actual home.
+- Every placeholder in the money tests is explicitly labelled as one. No figure, decision,
+  purpose, or note in this repository describes anybody's actual finances.
 - Commit identity: GitHub noreply address only.
 - Dependency audit: `npm audit` — **0 vulnerabilities**.
 - Runtime private-data readiness: **READY.** See `docs/PRIVATE_ALPHA.md`.
@@ -166,8 +189,8 @@ Modified: `domain/records/categories.ts`; `domain/domains/definitions.ts`;
 ## Architecture decisions
 
 No new ADRs. The slice applies decisions already recorded: ADR-0005 (append-oriented
-records) and the Prompt 8A framework contracts. The repetition rule, the one-open-change
-invariant, and the earned comparison are recorded in `docs/REQUIREMENTS.md` §3m.
+records) and the Prompt 8A framework contracts. The earned meter, the refused tradeoff, and
+the figures gate are recorded in `docs/REQUIREMENTS.md` §3n.
 
 ## New dependencies
 
@@ -175,57 +198,59 @@ invariant, and the earned comparison are recorded in `docs/REQUIREMENTS.md` §3m
 
 ## New abstractions or infrastructure
 
-**1. `domain/home/environment.ts`** — the closed vocabulary and the forbidden list.
+**1. `domain/money/strategy.ts`** — the bands, the four actions, and the forbidden list.
 
-- Active requirement: `LEG-121`, `SAFE-001`, `XDS-015`.
-- Why smaller was insufficient: the device health, fatherhood, emotional, and faith already
-  use. It is load-bearing here for a specific reason — the file's most important property
-  is what it does **not** contain, and the four products this slice must not become are
-  each one aesthetic word away.
+- Active requirement: `SAFE-001`, `XDS-015`, `LEG-067`–`LEG-070`.
+- Why smaller was insufficient: the device every slice since 8B has used. It carries more
+  weight here than anywhere — the file's most important property is that no action in it is
+  financial advice, and the forbidden list is the longest in the product because this is the
+  domain where a wrong word does the most damage.
 
-**2. `frictionAttribute` / `purposeOfAttribute`** — the per-purpose attribute pair.
+**2. Scale classification on the definition** — replacing the `HEALTH_SCALES` set.
 
-- Active requirement: `LEG-121`, `OWN-024`.
-- Why smaller was insufficient: a friction needs two dimensions and an observation carries
-  one value. Encoding the purpose in the attribute reuses `father:skill:<id>` rather than
-  inventing a record family, and keeps "not recorded" distinguishable from "focused work" —
-  which a default would have destroyed silently.
+- Active requirement: `LEG-067`, `OWN-013`.
+- Why smaller was insufficient: the set could answer only "is this health data", and a money
+  reading is neither general capacity nor health. A lookup table needing a branch per
+  classification is not a rule. Category, privacy, and prompt namespace now travel with the
+  scale, so a new scale cannot be filed under the wrong area by omission — and the prompt
+  namespace is what keeps a money question from being owned by whichever guide asks first.
 
-**3. `ui/features/direction/HomeAreaView.tsx`** — the area page.
+**3. `privacy:topic-enabled`** — the domain-neutral protected-topic switch.
 
-- Active requirement: Phase 7 shared rules 21–24.
-- Why smaller was insufficient: six independently editable sections cannot be a guide, and
-  the single free-text field has to *disappear* while a change is open rather than merely
-  be ignored.
+- Active requirement: v3.2 §11.
+- Why smaller was insufficient: the attribute was `emotional:topic-enabled`, written when
+  the emotional slice owned the only protected topic. "The emotional slice owns the money
+  switch" is the kind of thing that looks like a defect forever. The old attribute is still
+  read, so no existing decision is lost.
 
 ## Known limitations
 
-- **One domain remains unimplemented.** Money (8H).
-- **The `LEG-*` row mapping in §3l and §3m is unverified.** The Final Legacy Decisions map
-  is not in the repository. No ID has been minted — every one cited is either an approved
-  cross-cutting ID or one the domain definition already declares — but which requirement
-  each table row satisfies needs the owner's confirmation. Documentation only; no code.
-- **The scan summary is built and unused.** Phase 8 owns the Weekly Quick Domain Scan.
-- **`home:conditions` is declared as a triggered question and nothing triggers it yet.**
-  The metadata says when it should appear; Phase 8 owns the orchestration that acts on it.
-  Until then it is reachable from the area page only.
-- **The trajectory abstains more often than it speaks.** Both fortnights need evidence
-  before it says anything, so a profile with sporadic recording reads
-  `insufficient-evidence` for a long time. That is correct and worth knowing before it
-  looks like a bug.
-- **No cross-domain synthesis yet.** Home competes in the same comparison as everything
-  else, and can win it.
-- **Cached startup is still unmeasured.** Bundle is ~206 kB gzipped, up from ~200 kB.
+- **Phase 7 is complete and Phase 8 has not started.** Seven domain slices exist and nothing
+  yet synthesises them: no Weekly Quick Domain Scan, no monthly review, no forgotten-domain
+  protection, no cross-domain arbitration, and no AI review prompt.
+- **Seven scan summaries are built and unused.** Every domain supplies one; the surface that
+  renders them is Phase 8's.
+- **`home:conditions` and money's triggered placement are declarations only.** The metadata
+  says when a question should appear; the orchestration that acts on it is Phase 8's.
+- **The `LEG-*` row mapping in §3l, §3m, and §3n is unverified.** The Final Legacy Decisions
+  map is not in the repository. No ID has been minted — every one cited is either an
+  approved cross-cutting ID or one the domain definition already declares — but which
+  requirement each table row satisfies needs the owner's confirmation. Documentation only.
+- **The duplicate panel/category naming is mitigated, not resolved.** Money's exact
+  collision is fixed; the general near-duplication across all seven areas is Phase 8's.
+- **Money's trajectory abstains often.** Two weeks with readings are required before it says
+  anything, and a gap is never read as calm — correct, and worth knowing before it looks
+  like a bug.
+- **Cached startup is still unmeasured.** Bundle is ~211 kB gzipped, up from ~206 kB.
 - Carried forward: the local database is not encrypted at rest; the app lock hides the
   screen only; notifications do not exist; `frame-ancestors` unenforceable on Pages;
-  Chromium-only matrix; no router; service-worker staleness; deletion semantics undecided;
-  the duplicate panel/category naming, which Phase 8 owns.
+  Chromium-only matrix; no router; service-worker staleness; deletion semantics undecided.
 
 ## Deferred work
 
 | Deferred                                                                            | Activates |
 | ----------------------------------------------------------------------------------- | --------- |
-| Money                                                                                 | Prompt 8H |
+| Cross-domain synthesis and one global decision across seven areas                     | Phase 8   |
 | Weekly Quick Domain Scan, monthly review, forgotten-domain protection                 | Phase 8   |
 | Contextual-capture orchestration across domains                                       | Phase 8   |
 | Duplicate panel/category label resolution                                             | Phase 8   |
@@ -235,32 +260,37 @@ invariant, and the earned comparison are recorded in `docs/REQUIREMENTS.md` §3m
 
 ## Blockers
 
-**None blocking Prompt 8H.** Three owner decisions carried forward, none blocking:
+**None blocking Phase 8.** Three owner decisions carried forward, none blocking:
 
 1. **Measure cached startup on the Samsung phone** and say if it exceeds three seconds.
 2. **Decide whether to purge a child's first name from commit `b5ffe54`.** HEAD is clean.
-3. **Confirm the `LEG-*` row mapping** for §3l and §3m.
+3. **Confirm the `LEG-*` row mapping** for §3l, §3m, and §3n.
 
 ## Process notes carried forward
 
 Two Playwright runs must not overlap on this repository — they bind the same preview ports.
-Recorded after Prompt 8E's 2.9-hour run. Honoured again; the full suite ran alone in 6.0
+Recorded after Prompt 8E's 2.9-hour run. Honoured again; the full suite ran alone in 6.4
 minutes.
 
 `prettier --write .` reports files as written while `prettier --check .` still fails them.
 Run the explicit glob form and re-check before committing, or CI fails the format gate and
-no deploy ever appears. Hit again this slice on four files the glob form missed.
+no deploy ever appears. Hit again this slice.
 
-New this slice: **`vitest` does not typecheck.** Two bad casts in a test file passed 31
-green unit tests and failed `npm run build`. Run `npx tsc --noEmit` before believing a test
-file.
+`vitest` does not typecheck. Run `npx tsc --noEmit` before believing a test file — recorded
+in Prompt 8G and not needed this slice, because it was run.
+
+New this slice: **a disavowal is still a mention.** Prompt 8G put `tidy` and `every week`
+into shipped copy in order to disown them, and the vocabulary tests caught both. When
+writing "this app is not X", check whether X is on the forbidden list before shipping the
+sentence.
 
 ## Next permitted prompt
 
-**PROMPT 8H — Phase 7 domain slice: Money.**
+**Phase 8 — cross-domain synthesis, learning refinement, and optional model comparison.**
 
-The last domain, and the one with the sharpest scope boundary in the plan: strategic
-pressure, resilience, freedom, avoidance, goals, and decisions — with account,
-transaction, bill, debt, credit, and portfolio machinery deferred unless separately
-activated. The failure mode there is a budgeting app, and the defence will have to be
-structural in the same way this slice's was.
+Seven domains now offer into one comparison and nothing yet reconciles them. Phase 8 owns
+the North Star eligibility gate, candidate and prompt deduplication, the Weekly Quick Domain
+Scan, forgotten-domain protection, the monthly review, and the copy-ready AI coaching
+prompt. Its gate is explicit that no capability, child, faith, relationship, or overall-life
+score wall may exist — which the one percentage this product now draws is deliberately not,
+and which Phase 8 will have to keep true while combining seven areas into one answer.

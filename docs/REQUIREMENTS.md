@@ -2,7 +2,7 @@
 
 **Status:** Controlling
 **Plan version:** 3.2 Coverage, Domain Scan, Learning Map, and AI Review Amendment
-**Current phase:** Phase 7 — Prompts 8A–8G and the 8D.2 bridge complete; slice 8H outstanding
+**Current phase:** Phase 7 — **complete**. Prompts 8A–8H and the 8D.2 bridge are GREEN; Phase 8 is next
 
 **Controlling artifacts from v3.0.** The Final Product Blueprint, Updated Requirements
 Register v2, Final Acceptance Test Matrix, and Final Legacy Decisions map now supply the
@@ -978,6 +978,104 @@ separates.
 
 ---
 
+## 3n. Active requirement records — Phase 7, Prompt 8H (Money)
+
+| ID | Implementation | Test IDs | Notes |
+|---|---|---|---|
+| `LEG-067` | `financial-pressure` — the eighth scale, owned by the domain rather than a guide | `names its own scale rather than letting a guide own it` | Deliberately not read by the shared state assessment |
+| `LEG-068` | `RESILIENCE_BANDS` — five bands, no figure | `puts cover on a ladder, with no percentage and no destination implied` | Real resilience information with zero account data |
+| `LEG-069` | `LAST_LOOKED`, and `NOT_LOOKED_RECENTLY` as his words only | `never uses the word avoidance about a person` | The app never concludes it from silence |
+| `LEG-070` | `nameMoneyPurpose` — a `GoalRecord` in the money category | `suggests exactly the same thing with amounts on and off` | Reused, not reinvented |
+| `SAFE-001` `XDS-015` | `MONEY_ACTIONS` — four, none of them financial advice | `offers four actions, none of which is financial advice` | No action to save, invest, consolidate, switch, or cancel anything |
+| `OWN-013` | `update-area:money`, `captureNamespace: 'money'` | `classifies everything it captures as money data, owned by one surface` | The gentlest question opens the area |
+| `OWN-051` `AT-081` | The meter **earned**, with `hasValidDenominator: true` | `draws a real meter once the figures exist` | The only percentage in the product |
+| `OWN-051` | The same meter **refused** when no figures exist | `refuses the same meter when there are no figures, and says why` | One domain, both answers, decided by the owner |
+| `OWN-052`–`OWN-054` | A stage path for cover, a pressure trend, a before-and-after comparison | `compares two moments around a decision without claiming it caused anything` | The tradeoff chart is refused; the tension is a sentence |
+| v3.2 §11 | `money-figures` — the second protected topic, gating both figure captures | `gates both figure captures behind the protected topic` (3) | The plan's "unless separately activated", made structural |
+| v3.2 §11 | `buildMoneyScan` checks `maySurface(..., 'weekly-scan')` for amounts | `keeps amounts off the weekly scan until that surface is separately granted` | Enabling is not permitting, applied to the one thing carrying a number |
+| Shared rule 20 | `buildMoneyScan` — names the decision, never quotes it | `names the decision as a category of thing, never as its content` | Same discretion as faith, for the same reason |
+| Shared rule 21–24 | `MoneyAreaView` — six sections, amounts behind a switch | browser `shows every section, with amounts switched off and explained` | Structured controls throughout; three text fields, all optional |
+
+The four `LEG-*` ids are the ones `DOMAIN_DEFINITIONS.money` already declares. As in §3l and
+§3m, **which row each belongs to is a plausible reading rather than a verified one** — see
+§5.
+
+### The whole domain works without a single figure
+
+The plan defers "detailed account, transaction, bill, debt, credit, and portfolio machinery
+unless separately activated". That is not a flag over a budgeting app; it is the shape of
+the domain. Pressure is a five-point scale, cover is five bands, avoidance is when he last
+looked, freedom is a sentence, and a decision is his words plus what became of it. Every one
+is useful to somebody who will never tell this application a balance.
+
+Resilience is the clearest case: "if money stopped coming in, how long could you cover
+things?" answered as _a few weeks_ carries the fact that matters and no account data at all.
+A budgeting app needs six months of transactions to compute a worse version of the same
+answer.
+
+**No branch of the candidate generator reads a figure**, and a test proves the suggestion is
+identical with amounts on and off. That is what stops the optional machinery quietly
+becoming required.
+
+### Six domains refused a meter; this one earns it, and only on request
+
+Health had no denominator. Fatherhood had one and the number would have been a child's
+score. Emotional's would have graded a quiet fortnight. Faith's would have graded a person's
+faith. Home's would have been a readiness score for a house. Every refusal was a fact about
+the construct rather than about the evidence.
+
+A debt paid down is different: 4,200 of 7,500 is a fraction of a real total, with a real
+baseline and a real target. `meterEligibility` says yes, and the module's own documentation
+has used exactly this example since Prompt 8A.
+
+It is still refused by default, because the figures do not exist until `money-figures` is
+switched on. **The same domain both earns and refuses the meter, and which one he sees
+depends on a decision he made about how much to tell it.**
+
+### The tradeoff is a sentence, because the two readings do not share an axis
+
+Pressure and cover move independently and are the useful pair — heavy pressure with months
+of cover is a bad week; no pressure with under a week of cover is fragility nobody has
+noticed. Drawing them as two bars would put an ordinal about a state of mind beside an
+ordinal about a length of time and imply the heights mean the same thing. The comparison is
+refused with `discrete: false` and its reason recorded, and the tension is stated in words.
+
+The comparison that **is** drawn is before-and-after: the pressure reading at the time of a
+decision beside the reading now. Same scale, same anchors, two moments — labelled as what
+changed since, never as what the decision caused.
+
+### Thin cover produces no suggestion, deliberately
+
+Somebody with under a week of cover is told nothing by the generator. There is no action
+that would help: "build up savings" is not a move anybody can make this afternoon, and
+offering it to a person who is short of money is the cruellest kind of useless. The reading
+stays on the panel because it is true and he should be able to see it. Withholding advice is
+not hiding facts, and the `because` says so.
+
+### Two defects this slice found in existing code
+
+**An exact accessible-name collision.** Direction renders a category summary beside a domain
+panel. For every other area the two names merely resemble each other ("Faith & meaning"
+against "Faith and meaning"); for money both were "Money", putting two regions with the same
+accessible name on one screen — indistinguishable to anyone navigating by landmark. The
+category label is now "Money & pressure". The general duplication remains Phase 8's.
+
+**An empty list with a heading over it.** Manage Areas rendered "Not built yet" above
+nothing once the last domain shipped, which reads as a loading failure rather than as
+completeness. The block is now omitted when the list is empty.
+
+### Two mechanisms generalised, not duplicated
+
+- **Scale classification.** `STATE_PROMPTS` consulted a `HEALTH_SCALES` set and a ternary,
+  which could answer only "is this health data". A money reading is neither general capacity
+  nor health, and a set needing a branch per classification is a lookup table pretending to
+  be a rule. Category, privacy, and prompt namespace now travel with the scale definition.
+- **The protected-topic switch.** The attribute was `emotional:topic-enabled`, written when
+  the emotional slice owned the only protected topic. It is now `privacy:topic-enabled`, and
+  the old attribute is still read so no existing decision is lost.
+
+---
+
 ---
 
 ## 4. Traceability fields used when a requirement becomes active
@@ -991,12 +1089,12 @@ privacy and safety classification · evidence artifact · status · deferred or 
 Proposals identified during Phase 0. **Not approved and not in force.** Each requires
 explicit owner approval before its owning phase begins.
 
-**Open, Prompts 8F and 8G.** The Final Legacy Decisions map is not in the repository, so
-the row-level `LEG-*` mapping in §3l and §3m is unverified. No ID has been minted: every
+**Open, Prompts 8F, 8G, and 8H.** The Final Legacy Decisions map is not in the repository, so
+the row-level `LEG-*` mapping in §3l, §3m, and §3n is unverified. No ID has been minted: every
 one cited is either an approved cross-cutting ID (`OWN-013`, `OWN-051`,
 `OWN-052`–`OWN-054`, `SAFE-001`, `XDS-015`) or one the domain definition already declares
 (`LEG-084`, `LEG-086`, `LEG-087`, `LEG-089` for faith; `LEG-121`, `LEG-123`, `LEG-124` for
-home). What needs confirming is which requirement each row satisfies. Substituting the
+home; `LEG-067`-`LEG-070` for money). What needs confirming is which requirement each row satisfies. Substituting the
 correct mapping touches documentation only, and no code.
 
 **No other open requirement gaps.** `STORE-004` was owner-approved on 2026-08-03 and moved into

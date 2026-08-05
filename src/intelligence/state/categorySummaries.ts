@@ -10,6 +10,7 @@ import { assessHealth, summariseHealthCategory } from '../domains/health';
 import { assessEmotional, summariseEmotionalCategory } from '../domains/emotional';
 import { assessFaith, summariseFaithCategory } from '../domains/faith';
 import { assessHome, summariseHomeCategory } from '../domains/home';
+import { assessMoney, summariseMoneyCategory } from '../domains/money';
 import { assessFatherhood, summariseFatherhoodCategory } from '../domains/fatherhood';
 import type { CategorySummary, StateAssessment, TrajectoryResult } from '../types';
 
@@ -193,6 +194,13 @@ export function summariseCategories(
       // Delegated to the Home slice. Unlike faith, this one may read `declining`: more
       // friction this fortnight than last is a fact about a setup, not about a person.
       summaries.push(summariseHomeCategory(assessHome(records, now)));
+      continue;
+    }
+
+    if (category === 'money') {
+      // Delegated to the Money slice. The only category whose reading can include a
+      // percentage, and only when the owner separately switched amounts on.
+      summaries.push(summariseMoneyCategory(assessMoney(records, now)));
       continue;
     }
 

@@ -548,6 +548,11 @@ describe('the shared scales stay where the engine can read them', () => {
     const evidence = evidenceFor('emotional-enabled');
     expect(evidence.loneliness).toBeDefined();
     expect(EMOTIONAL_ATTRIBUTES.connection).toBe('emotional:connection');
-    expect(TOPIC_ENABLED_ATTRIBUTE).toBe('emotional:topic-enabled');
+    /*
+     * Renamed in Prompt 8H, when `money-figures` became the second protected topic and
+     * "the emotional slice owns the money switch" stopped being defensible. The old
+     * attribute is still read, so a decision made before the rename survives.
+     */
+    expect(TOPIC_ENABLED_ATTRIBUTE).toBe('privacy:topic-enabled');
   });
 });

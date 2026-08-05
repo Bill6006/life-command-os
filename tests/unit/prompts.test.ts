@@ -215,6 +215,9 @@ describe('the approved anchored scales', () => {
       'retrieval-strength',
       // Prompt 8E. A present state that moves, read as a trend against his own weeks.
       'loneliness',
+      // Prompt 8H. Money on his mind — the first scale owned by a domain rather than a
+      // guide, and deliberately not read by the shared state assessment.
+      'financial-pressure',
     ]);
     expect(SCALES.energy.anchors.map((a) => a.label)).toEqual([
       'Drained',

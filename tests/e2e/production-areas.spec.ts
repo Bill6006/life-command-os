@@ -23,6 +23,7 @@ const AREAS = {
   emotional: 'Emotional state and relationships',
   faith: 'Faith and meaning',
   home: 'Home and environment',
+  money: 'Money',
 } as const;
 
 async function open(page: Page): Promise<void> {
@@ -97,28 +98,24 @@ async function updateArea(page: Page, label: string): Promise<void> {
 }
 
 test.describe('a fresh profile can reach every built area', () => {
-  test('offers exactly the six that exist, and names the one that does not', async ({
-    page,
-  }) => {
+  test('offers every approved area, now that the last slice has shipped', async ({ page }) => {
     await open(page);
     await goTo(page, 'Direction');
 
     const manage = manageAreas(page);
     await expect(manage).toBeVisible();
 
-    // Six switches, and only six.
+    // Seven switches, and only seven.
     const switchable = manage.getByRole('button', { name: /^Switch (on|off) / });
-    await expect(switchable).toHaveCount(6);
+    await expect(switchable).toHaveCount(7);
     for (const label of Object.values(AREAS)) {
       await expect(manage).toContainText(label);
     }
 
-    // The last one is named honestly and carries no control at all.
-    const notYet = manage.getByRole('list', { name: 'Areas that are not built yet' });
-    for (const label of ['Money']) {
-      await expect(notYet).toContainText(label);
-    }
-    await expect(notYet.getByRole('button')).toHaveCount(0);
+    // Nothing is left unbuilt, so the "not yet" list is gone rather than empty.
+    await expect(
+      manage.getByRole('list', { name: 'Areas that are not built yet' }),
+    ).toHaveCount(0);
 
     // And nothing is switched on to begin with.
     await expect(areaPanel(page, AREAS.health)).toHaveCount(0);
@@ -251,7 +248,7 @@ test.describe('the decision surface is unchanged by any of it', () => {
         }),
       );
 
-    expect(boxes.length).toBe(6);
+    expect(boxes.length).toBe(7);
     for (const box of boxes) {
       expect(box.h).toBeGreaterThanOrEqual(44);
       expect(box.w).toBeGreaterThanOrEqual(44);

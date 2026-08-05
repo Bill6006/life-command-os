@@ -68,7 +68,18 @@ export function grantedSurfaces(
  * and it appears when he opens it — while being permitted on no surface at all. That is
  * the default for Private Patterns and the whole point of the distinction.
  */
-export const TOPIC_ENABLED_ATTRIBUTE = 'emotional:topic-enabled';
+export const TOPIC_ENABLED_ATTRIBUTE = 'privacy:topic-enabled';
+
+/**
+ * The attribute Prompt 8E wrote, still read.
+ *
+ * The switch was named `emotional:topic-enabled` when the emotional slice was the only
+ * thing with a protected topic. Prompt 8H added `money-figures`, and "the emotional slice
+ * owns the money switch" is the kind of thing that looks like a defect forever. The
+ * neutral attribute is written from now on; the old one is still read so a profile
+ * created before this change keeps its decisions.
+ */
+const LEGACY_TOPIC_ENABLED_ATTRIBUTE = 'emotional:topic-enabled';
 
 export function topicEnabled(
   records: readonly CanonicalRecord[],
@@ -78,7 +89,8 @@ export function topicEnabled(
     .filter(
       (record) =>
         record.recordType === 'observation' &&
-        record.attribute === `${TOPIC_ENABLED_ATTRIBUTE}:${topic}`,
+        (record.attribute === `${TOPIC_ENABLED_ATTRIBUTE}:${topic}` ||
+          record.attribute === `${LEGACY_TOPIC_ENABLED_ATTRIBUTE}:${topic}`),
     )
     .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
 

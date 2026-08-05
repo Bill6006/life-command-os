@@ -62,6 +62,16 @@ export const ENABLED_CATEGORIES = [
    * is `general` — the first slice-owned category that is not sensitive by default.
    */
   'home-and-environment',
+  /**
+   * Activated by Prompt 8H, through the Money slice's own domain contract.
+   *
+   * Its own category because everything filed here is classified `money`, and because an
+   * export offering "direction and commitments" must not sweep up what somebody owes
+   * along with their work goals. The name is short where the others are compound: there
+   * is no second thing this category holds, and calling it `money-and-resources` would
+   * promise machinery the slice deliberately does not build.
+   */
+  'money',
 ] as const;
 export type LifeCategory = (typeof ENABLED_CATEGORIES)[number];
 

@@ -3,6 +3,7 @@ import {
   DOMAIN_IDS,
   DOMAIN_LIST,
   domainDefinition,
+  DOMAIN_DEFINITIONS,
 } from '../../src/domain/domains/definitions';
 import {
   CAPABILITY_CHANNELS,
@@ -23,7 +24,6 @@ import {
 } from '../../src/domain/records';
 import {
   DEFAULT_DOMAIN_STATE,
-  domainState,
   enabledDomains,
   mayGenerateCandidate,
   resolveDomains,
@@ -206,7 +206,7 @@ describe('only areas with a slice behind them can be switched on', () => {
     }
   });
 
-  it('offers exactly the built areas today', () => {
+  it('offers every approved area, now that the last slice has shipped', () => {
     expect(implementedDomains().map((definition) => definition.id)).toEqual([
       'health-recovery-energy',
       'career-and-learning',
@@ -214,22 +214,43 @@ describe('only areas with a slice behind them can be switched on', () => {
       'emotional-and-relationships',
       'faith-and-meaning',
       'home-and-environment',
+      'money',
     ]);
-    expect(unimplementedDomains().map((definition) => definition.id)).toEqual(['money']);
+
+    /*
+     * Empty for the first time since Prompt 8A. The availability mechanism is not
+     * retired with it — a definition added tomorrow without its update prompt is still
+     * unavailable, which the test below exercises directly rather than by pointing at
+     * whichever domain happens to be unbuilt.
+     */
+    expect(unimplementedDomains()).toEqual([]);
   });
 
-  it('ignores a preference that says an unbuilt area is on', () => {
-    // The record is not rewritten and not rejected — it stays exactly as the owner (or
-    // an older build, or a restored backup) wrote it. It is simply not acted on, which
-    // is what stops a frame with nothing behind it reaching the screen.
+  it('still refuses a definition whose update prompt does not exist', () => {
+    const unbuilt = {
+      ...DOMAIN_DEFINITIONS.money,
+      id: 'money' as const,
+      updatePromptId: 'update-area:not-written-yet',
+    };
+    expect(isImplemented(unbuilt)).toBe(false);
+    expect(isImplemented(DOMAIN_DEFINITIONS.money)).toBe(true);
+  });
+
+  it('ignores a preference naming an area this build does not know', () => {
+    /*
+     * The record is not rewritten and not rejected — it stays exactly as the owner (or an
+     * older build, or a restored backup) wrote it. It is simply not acted on, which is
+     * what stops a frame with nothing behind it reaching the screen.
+     *
+     * Every approved domain is now built, so the case this guards is a preference from a
+     * *later* build: a backup that names an area this one has never heard of.
+     */
     const records = [
-      aDomainPreference({ domainId: 'money', state: 'enabled' }),
+      aDomainPreference({ domainId: 'crypto-portfolio' as never, state: 'enabled' }),
     ] as CanonicalRecord[];
 
-    expect(domainState(records, 'money')).toBe('enabled');
     expect(enabledDomains(records)).toEqual([]);
     expect(visibleDomains(records)).toEqual([]);
-    expect(mayGenerateCandidate(records, 'money')).toBe(false);
     expect(buildDomainPanels(records, [], [])).toEqual([]);
   });
 
@@ -738,9 +759,15 @@ describe('exactly one surface owns each question', () => {
   });
 
   it('will not let a slice enable a domain with no way to update it', () => {
-    // No update prompt exists yet, so enabling any domain is reported.
-    expect(domainsMissingUpdatePrompt(['money'])).toEqual(['money']);
-    // And nothing is missing while nothing is enabled, which is today.
+    // Every domain now has its prompt, so the gap is shown against a catalogue missing
+    // one rather than against whichever domain happens to be unbuilt.
+    const withoutMoney = ALL_PROMPTS.filter(
+      (prompt) => prompt.promptId !== 'update-area:money',
+    );
+    expect(domainsMissingUpdatePrompt(['money'], withoutMoney)).toEqual(['money']);
+
+    // And nothing is missing against the real catalogue, which is the point of shipping.
+    expect(domainsMissingUpdatePrompt(['money'])).toEqual([]);
     expect(domainsMissingUpdatePrompt([])).toEqual([]);
   });
 });
