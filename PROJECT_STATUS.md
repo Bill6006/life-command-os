@@ -122,9 +122,27 @@ This is why the gate is YELLOW rather than GREEN.
 - **Unit: 667 passed**, up from 630. 37 new for Command Core.
 - **Browser: run alone**, one Playwright process throughout, isolated throwaway contexts, no
   owner data cleared.
-- **Deployed: verified against Pages** with `playwright.deployed.config.ts`.
+- **Deployed: 61 passed against Pages** with `playwright.deployed.config.ts`, verified at
+  commit `5659f64`.
 - The boundary test is the load-bearing one: it walks every import under
   `src/command-core/` and every import under the domain directories, both directions.
+
+### The commit that shipped without three of its own files
+
+`ce95c11` was pushed with `src/command-core/coverage/` missing — `plan.ts`,
+`suppression.ts`, and `forgotten.ts`. `.gitignore` carried an unanchored `coverage/`, which
+git matches at **any** depth, so the directory was silently excluded. `git add -A` reported
+success, `git status` showed only the untracked parent directory, and every local check
+passed because the files were on disk.
+
+It surfaced as a lint failure in CI — type resolution failing on two imports — after the
+deploy job had already been skipped. I caught it by checking the workflow status rather than
+continuing to poll a deploy that was never going to appear, which is the lesson Prompt 8D.2
+recorded and this is the first time it paid.
+
+Fixed in `5659f64`: the build and test-output rules are anchored to the repository root, and
+a guard fails the build when git is ignoring anything under `src/`. The guard was verified
+non-vacuous — with the old pattern restored it names exactly the three missing files.
 
 ### Four defects found, and how
 
@@ -211,7 +229,15 @@ audit agent ran (it was read-only and ran none).
 
 A disavowal is still a mention (Prompt 8G).
 
-**New, and the sharpest yet: a passing suite is not evidence that behaviour is unchanged.**
+**An unanchored `.gitignore` rule can delete source from a commit in silence.** `coverage/`
+matched `src/command-core/coverage/`. Anchor anything naming a build artifact, and never
+trust `git add -A` plus a green local suite as proof that the commit is complete — a clean
+clone is the only proof.
+
+**A failed deploy is a CI question, not a patience question.** Twenty minutes of polling told
+me nothing; one API call told me the run had failed and the deploy was skipped.
+
+**A passing suite is not evidence that behaviour is unchanged.**
 630 tests passed while the North Star gate silenced most of the product. Nothing asserted
 what Now emits across the corpus, so nothing could have caught it. When a change sits in the
 path of every decision, assert the output of every scenario before and after.
