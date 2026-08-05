@@ -22,6 +22,7 @@ const AREAS = {
   fatherhood: 'Fatherhood and child development',
   emotional: 'Emotional state and relationships',
   faith: 'Faith and meaning',
+  home: 'Home and environment',
 } as const;
 
 async function open(page: Page): Promise<void> {
@@ -96,7 +97,7 @@ async function updateArea(page: Page, label: string): Promise<void> {
 }
 
 test.describe('a fresh profile can reach every built area', () => {
-  test('offers exactly the five that exist, and names the two that do not', async ({
+  test('offers exactly the six that exist, and names the one that does not', async ({
     page,
   }) => {
     await open(page);
@@ -105,16 +106,16 @@ test.describe('a fresh profile can reach every built area', () => {
     const manage = manageAreas(page);
     await expect(manage).toBeVisible();
 
-    // Five switches, and only five.
+    // Six switches, and only six.
     const switchable = manage.getByRole('button', { name: /^Switch (on|off) / });
-    await expect(switchable).toHaveCount(5);
+    await expect(switchable).toHaveCount(6);
     for (const label of Object.values(AREAS)) {
       await expect(manage).toContainText(label);
     }
 
-    // The other two are named honestly and carry no control at all.
+    // The last one is named honestly and carries no control at all.
     const notYet = manage.getByRole('list', { name: 'Areas that are not built yet' });
-    for (const label of ['Home and environment', 'Money']) {
+    for (const label of ['Money']) {
       await expect(notYet).toContainText(label);
     }
     await expect(notYet.getByRole('button')).toHaveCount(0);
@@ -250,7 +251,7 @@ test.describe('the decision surface is unchanged by any of it', () => {
         }),
       );
 
-    expect(boxes.length).toBe(5);
+    expect(boxes.length).toBe(6);
     for (const box of boxes) {
       expect(box.h).toBeGreaterThanOrEqual(44);
       expect(box.w).toBeGreaterThanOrEqual(44);

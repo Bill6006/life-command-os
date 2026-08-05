@@ -177,8 +177,14 @@ export const DOMAIN_DEFINITIONS: Record<DomainId, DomainDefinition> = {
     id: 'home-and-environment',
     label: 'Home and environment',
     question: 'What friction is repeatedly in the way?',
-    reads: ['time-attention-capacity'],
+    /*
+     * Both. The slice's own content lives in the new category; available time and
+     * capacity stay where they are, and the domain reads them because a friction that
+     * costs ten minutes matters differently in a forty-minute window than in an evening.
+     */
+    reads: ['home-and-environment', 'time-attention-capacity'],
     privacy: 'general',
+    captureNamespace: 'home',
     channels: ['environmental-ease', 'focus-and-clarity'],
     legacyIds: ['LEG-121', 'LEG-123', 'LEG-124'],
     updatePromptId: 'update-area:home-and-environment',

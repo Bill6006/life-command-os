@@ -213,11 +213,9 @@ describe('only areas with a slice behind them can be switched on', () => {
       'fatherhood',
       'emotional-and-relationships',
       'faith-and-meaning',
-    ]);
-    expect(unimplementedDomains().map((definition) => definition.id)).toEqual([
       'home-and-environment',
-      'money',
     ]);
+    expect(unimplementedDomains().map((definition) => definition.id)).toEqual(['money']);
   });
 
   it('ignores a preference that says an unbuilt area is on', () => {

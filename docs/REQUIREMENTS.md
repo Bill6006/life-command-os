@@ -2,7 +2,7 @@
 
 **Status:** Controlling
 **Plan version:** 3.2 Coverage, Domain Scan, Learning Map, and AI Review Amendment
-**Current phase:** Phase 7 — Prompts 8A–8F and the 8D.2 bridge complete; slices 8G–8H outstanding
+**Current phase:** Phase 7 — Prompts 8A–8G and the 8D.2 bridge complete; slice 8H outstanding
 
 **Controlling artifacts from v3.0.** The Final Product Blueprint, Updated Requirements
 Register v2, Final Acceptance Test Matrix, and Final Legacy Decisions map now supply the
@@ -897,6 +897,87 @@ ever quoted on Now, in any domain.** A note is the one value kind whose contents
 unbounded; a scale or a state is something the application itself offered and can safely
 echo back. The class list survives alongside it, with `faith` added.
 
+## 3m. Active requirement records — Phase 7, Prompt 8G (Home and environment)
+
+| ID | Implementation | Test IDs | Notes |
+|---|---|---|---|
+| `LEG-121` | `FRICTION_KINDS` — eight, all functional, none aesthetic | `has no word for how a room looks, anywhere in the domain` | The boundary made into vocabulary rather than into a rule |
+| `LEG-123` | `home:access`, `home:setup-time`, `home:conditions` | `asks nothing about cause, feeling, or how anything looks` | Access, setup cost, and noise/light/privacy, all observable |
+| `LEG-124` | `home:transition` — switching one space between uses | browser `shows every section, all of them buttons` | Measured by what had to move, never by how long it looked wrong |
+| `SAFE-001` `XDS-015` | `ENVIRONMENT_ACTIONS` — four, none of which says what to change | `proposes no change of its own, in any action` | Three ask for his change; the fourth names a time, not a thing |
+| `XDS-015` | `generateHomeCandidate` — zero or one, four branches ending in silence | `says nothing at all about a friction recorded once` (3) | A single occurrence is deliberately not a branch |
+| `OWN-013` | `update-area:home-and-environment`, `captureNamespace: 'home'` | `classifies everything it captures as general data, owned by one surface` | Availability derived from the catalogue; the area became switchable by having its questions |
+| `OWN-051` | The meter **refused** with `hasValidDenominator: false` | `refuses a readiness percentage that would divide perfectly well` | Friction removed over friction recorded divides; the result is a Life Score for a house |
+| `OWN-052`–`OWN-054` | A bar comparison **earned**, and a line graph earned with two observed weeks | `draws the comparison faith refused, because the bars are rooms and not people` | The deliberate inverse of §3l's refusal |
+| `OWN-024` `OBS-006` | A week with no home records is a gap, never a zero | `keeps a week with nothing recorded as a gap rather than a zero` | A quiet fortnight because he stopped recording is not an improvement |
+| v3.2 §9 | `domain/home/capture.ts` — nine declarations, validated at import | `is never triggered by time passing` (3) | One triggered question, and it earns the interruption by changing eligibility |
+| Shared rule 20 | `buildHomeScan` — quotes the change he named | `quotes the change, because a charger on a desk is not a confession` | The deliberate contrast with `buildFaithScan` |
+| Shared rule 21–23 | `HomeAreaView` — six sections, one free-text field | browser `takes one change, and offers no way to add a second` | The field disappears while a change is open |
+
+The three `LEG-*` ids above are the ones `DOMAIN_DEFINITIONS['home-and-environment']`
+already declares. **Which row each belongs to is a plausible reading, not a verified one** —
+the Final Legacy Decisions map is not in the repository. The same is true of `LEG-084`,
+`LEG-086`, `LEG-087`, and `LEG-089` for §3l, which were in the domain definition all along
+and should be cited there once the mapping is confirmed. See §5.
+
+### Repetition is the entry condition, and it is the boundary
+
+The Blueprint forbids a cleaning app, a chore manager, a calendar, and a task platform.
+Those are four products sharing one failure: they generate work nobody agreed to, on a
+schedule, and then measure someone against it. Three things make the refusal structural
+rather than editorial:
+
+- **A single friction produces nothing.** No suggestion, no nudge, no "you might want to
+  look at this". One bad morning is an event; the same thing twice is a property of the
+  setup, and only the second is acted on.
+- **One open change, ever.** Enforced in the candidate generator *and* in
+  `nameEnvironmentChange`, because a rule living only in the generator is one the interface
+  can walk around. While a change is open the text field is not rendered.
+- **Nothing is raised because time passed.** No capture trigger names an interval, and a
+  test walks every trigger string to prove it. Every offer traces to something the owner
+  recorded.
+
+The vocabulary carries the rest: eight friction kinds, all describing what happened to an
+*activity*, and no word anywhere for tidy, messy, cluttered, or clean. "Nowhere to put
+things" is a fact about trying to work at a desk; "the desk is a mess" is a judgement about
+a desk, and the second has no representation in this product.
+
+### The comparison faith refused, earned here
+
+Prompt 8F declined a bar chart its own eligibility rules allowed, because ranking a
+person's practices puts one at the bottom and the bottom reads as failure. This slice draws
+exactly that chart. The difference is what the bars are **of**: friction kinds are
+properties of a house, and nobody reads "nowhere to put things: 4" as a verdict on
+themselves. Same rules, opposite answer, and the reason is the subject rather than the
+arithmetic.
+
+For the same reason this category **may** read `declining`, which faith may not. More
+friction this fortnight than last is a fact about a setup.
+
+### Where discretion is applied, and where it is not
+
+`buildHomeScan` quotes the change the owner named; `buildFaithScan` quotes nothing. The
+candidate reason quotes the change on Now; the faith slice's repair reason does not. Both
+differences are deliberate — a charger on a desk is not a confession, and blanket
+redaction would make the weekly scan useless without making anything safer.
+
+The one place the blunt rule wins anyway is What Changed: the general no-`note`-on-Now rule
+introduced in §3l still withholds a home note, even though a jammed drawer is harmless. A
+rule that has to be reasoned about per domain is a rule that gets forgotten, which is
+exactly how that leak reached production twice.
+
+### Why no new record family
+
+`LEAN-001` allows one domain content family per slice **where irreducible**. It was not.
+A friction is one observable fact with one value; the activity it interrupted rides in the
+attribute, and the link from a change to what it addresses is what
+`provenance.derivedFromRecordIds` is for. `EnvironmentSetupRecord` was designed and
+discarded — it would have carried a `state` vocabulary that differed per kind, which is a
+discriminated union standing in for two concepts that the existing envelope already
+separates.
+
+---
+
 ---
 
 ## 4. Traceability fields used when a requirement becomes active
@@ -910,12 +991,13 @@ privacy and safety classification · evidence artifact · status · deferred or 
 Proposals identified during Phase 0. **Not approved and not in force.** Each requires
 explicit owner approval before its owning phase begins.
 
-**Open, Prompt 8F.** The faith-specific `LEG-*` IDs from the Final Legacy Decisions map
-were not available when this slice was implemented, so §3l cites the approved IDs that
-genuinely apply (`OWN-013`, `OWN-051`, `OWN-052`–`OWN-054`, `SAFE-001`, `XDS-015`) and
-prompt task numbers elsewhere, following the convention §3j established. No new ID was
-minted. The owner should confirm the intended `LEG-*` IDs and they can be substituted
-without touching any code.
+**Open, Prompts 8F and 8G.** The Final Legacy Decisions map is not in the repository, so
+the row-level `LEG-*` mapping in §3l and §3m is unverified. No ID has been minted: every
+one cited is either an approved cross-cutting ID (`OWN-013`, `OWN-051`,
+`OWN-052`–`OWN-054`, `SAFE-001`, `XDS-015`) or one the domain definition already declares
+(`LEG-084`, `LEG-086`, `LEG-087`, `LEG-089` for faith; `LEG-121`, `LEG-123`, `LEG-124` for
+home). What needs confirming is which requirement each row satisfies. Substituting the
+correct mapping touches documentation only, and no code.
 
 **No other open requirement gaps.** `STORE-004` was owner-approved on 2026-08-03 and moved into
 Section 2; its traceability record is in Section 3a.

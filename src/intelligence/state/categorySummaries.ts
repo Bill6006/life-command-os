@@ -9,6 +9,7 @@ import {
 import { assessHealth, summariseHealthCategory } from '../domains/health';
 import { assessEmotional, summariseEmotionalCategory } from '../domains/emotional';
 import { assessFaith, summariseFaithCategory } from '../domains/faith';
+import { assessHome, summariseHomeCategory } from '../domains/home';
 import { assessFatherhood, summariseFatherhoodCategory } from '../domains/fatherhood';
 import type { CategorySummary, StateAssessment, TrajectoryResult } from '../types';
 
@@ -185,6 +186,13 @@ export function summariseCategories(
       // never say `declining`, because that word here would be a verdict on a person's
       // faith rather than a reading of their records.
       summaries.push(summariseFaithCategory(assessFaith(records, now)));
+      continue;
+    }
+
+    if (category === 'home-and-environment') {
+      // Delegated to the Home slice. Unlike faith, this one may read `declining`: more
+      // friction this fortnight than last is a fact about a setup, not about a person.
+      summaries.push(summariseHomeCategory(assessHome(records, now)));
       continue;
     }
 

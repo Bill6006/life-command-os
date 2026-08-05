@@ -119,6 +119,7 @@ const CATEGORY_LABELS: Record<LifeCategory, string> = {
   'fatherhood-and-child': 'Fatherhood & child development',
   'emotional-and-relationships': 'Emotional state & relationships',
   'faith-and-meaning': 'Faith & meaning',
+  'home-and-environment': 'Home & environment',
 };
 
 export function categoryLabel(category: string): string {

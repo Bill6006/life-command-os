@@ -2,6 +2,7 @@ import type { DomainId } from '../domains/definitions';
 import type { ProtectedTopic } from '../records/permissions';
 import { EMOTIONAL_CAPTURES } from '../emotional/capture';
 import { FAITH_CAPTURES } from '../faith/capture';
+import { HOME_CAPTURES } from '../home/capture';
 import { FATHERHOOD_CAPTURES } from '../fatherhood/capture';
 import type { ContextualCapture } from './contextualCapture';
 
@@ -20,6 +21,7 @@ export const ALL_CONTEXTUAL_CAPTURES: readonly ContextualCapture[] = [
   ...FATHERHOOD_CAPTURES,
   ...EMOTIONAL_CAPTURES,
   ...FAITH_CAPTURES,
+  ...HOME_CAPTURES,
 ];
 
 export function capturesForDomain(domainId: DomainId): readonly ContextualCapture[] {

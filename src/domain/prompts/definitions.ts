@@ -13,6 +13,7 @@ import { SCALE_LIST, scaleAttribute, type ScaleId } from '../records/scales';
 import { assertPromptCatalogue, type PromptDefinition } from './policy';
 import { EMOTIONAL_PROMPTS } from './emotional';
 import { FAITH_PROMPTS } from './faith';
+import { HOME_PROMPTS } from './home';
 
 /**
  * Every question this product asks in a normal flow.
@@ -963,7 +964,7 @@ export const QUICK_CAPTURE_PROMPTS: readonly CapturePrompt[] = [
 /* -------------------------------------------------------------------------- */
 
 /** Every prompt in the product, in one list. */
-export { EMOTIONAL_PROMPTS, FAITH_PROMPTS };
+export { EMOTIONAL_PROMPTS, FAITH_PROMPTS, HOME_PROMPTS };
 
 export const ALL_PROMPTS: readonly CapturePrompt[] = [
   ...STATE_PROMPTS,
@@ -976,6 +977,7 @@ export const ALL_PROMPTS: readonly CapturePrompt[] = [
   ...FATHERHOOD_PROMPTS,
   ...EMOTIONAL_PROMPTS,
   ...FAITH_PROMPTS,
+  ...HOME_PROMPTS,
   ...QUICK_CAPTURE_PROMPTS,
 ];
 

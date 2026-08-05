@@ -53,6 +53,15 @@ export const ENABLED_CATEGORIES = [
    * someone believes along with their work goals.
    */
   'faith-and-meaning',
+  /**
+   * Activated by Prompt 8G, through the Home slice's own domain contract.
+   *
+   * Its own category because friction is about a place rather than about the owner, and
+   * because an export offering "time, attention and capacity" should not sweep up a
+   * description of somebody's house along with their working hours. Everything filed here
+   * is `general` — the first slice-owned category that is not sensitive by default.
+   */
+  'home-and-environment',
 ] as const;
 export type LifeCategory = (typeof ENABLED_CATEGORIES)[number];
 

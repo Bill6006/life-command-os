@@ -46,6 +46,7 @@ import { buildLearningMap } from '../../../intelligence/domains/fatherhood/learn
 import { LearningMapView } from '../direction/LearningMapView';
 import { EmotionalAreaView } from '../direction/EmotionalAreaView';
 import { FaithAreaView } from '../direction/FaithAreaView';
+import { HomeAreaView } from '../direction/HomeAreaView';
 import {
   nameFaithAnchor,
   recordFaithObservation,
@@ -53,7 +54,13 @@ import {
   recordPracticeOccasion,
   retireFaithAnchor,
 } from '../../../application/commands/faith';
+import {
+  nameEnvironmentChange,
+  recordFriction,
+  recordHomeState,
+} from '../../../application/commands/home';
 import { assessFaith } from '../../../intelligence/domains/faith';
+import { assessHome } from '../../../intelligence/domains/home';
 import {
   recordBoundary,
   recordEmotionalObservation,
@@ -113,7 +120,9 @@ type Mode =
   /** The emotional area page: a scan surface with a protected section inside it. */
   | { readonly kind: 'emotional-area' }
   /** The faith area page: his words, and what he recorded against them. */
-  | { readonly kind: 'faith-area' };
+  | { readonly kind: 'faith-area' }
+  /** The home area page: what got in the way, and the one change. */
+  | { readonly kind: 'home-area' };
 
 const PRIMARY: readonly { id: Destination; label: string }[] = [
   { id: 'now', label: 'Now' },
@@ -536,6 +545,56 @@ export function AppShell(): React.JSX.Element {
       );
     }
 
+    if (mode.kind === 'home-area') {
+      const evidence = assessHome(records, now);
+      return (
+        <HomeAreaView
+          state={{
+            frictions: evidence.frictions,
+            repeated: evidence.repeated,
+            openChange: evidence.openChange,
+            changeStatement: evidence.changeStatement,
+            changeMade: evidence.changeMade,
+            frictionSince: evidence.frictionSince,
+            conditions: evidence.conditions,
+            access: evidence.access,
+            setupTime: evidence.setupTime,
+            transition: evidence.transition,
+          }}
+          busy={busy}
+          onRecordFriction={(kindLabel, purpose) => {
+            void run(() => recordFriction({ kindLabel, purpose }, new Date()), { stay: true });
+          }}
+          onRecord={(attribute, value) => {
+            void run(() => recordHomeState({ attribute, state: value }, new Date()), {
+              stay: true,
+            });
+          }}
+          onNameChange={(statement) => {
+            void run(
+              () =>
+                nameEnvironmentChange(
+                  { statement, openChange: evidence.openChange },
+                  new Date(),
+                ),
+              { stay: true },
+            );
+          }}
+          onOpenGuided={() => {
+            setMode({
+              kind: 'guide',
+              guide: 'update-area',
+              depth: 'full',
+              domainId: 'home-and-environment',
+            });
+          }}
+          onClose={() => {
+            setMode({ kind: 'console' });
+          }}
+        />
+      );
+    }
+
     if (mode.kind === 'capture') {
       return (
         <QuickCaptureSurface
@@ -720,7 +779,9 @@ export function AppShell(): React.JSX.Element {
                       ? { kind: 'emotional-area' }
                       : domainId === 'faith-and-meaning'
                         ? { kind: 'faith-area' }
-                        : { kind: 'guide', guide: 'update-area', depth: 'full', domainId },
+                        : domainId === 'home-and-environment'
+                          ? { kind: 'home-area' }
+                          : { kind: 'guide', guide: 'update-area', depth: 'full', domainId },
                 );
               }}
               onSetAreaState={(domainId, state) => {

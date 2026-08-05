@@ -410,6 +410,46 @@ function faithNote(attribute: string, text: string, occurredMs = -1 * DAY): Cano
   } as unknown as CanonicalRecord;
 }
 
+/* --- Prompt 8G: home and environment -------------------------------------- */
+
+/** One thing that got in the way, with the activity it interrupted when known. */
+function homeFriction(
+  label: string,
+  purpose: string | undefined,
+  occurredMs = -1 * DAY,
+): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'general',
+    category: 'home-and-environment',
+    attribute: purpose === undefined ? 'home:friction' : `home:friction:${purpose}`,
+    value: { kind: 'state', state: label },
+  } as unknown as CanonicalRecord;
+}
+
+function homeState(attribute: string, state: string, occurredMs = -1 * DAY): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'general',
+    category: 'home-and-environment',
+    attribute,
+    value: { kind: 'state', state },
+  } as unknown as CanonicalRecord;
+}
+
+function homeNote(attribute: string, text: string, occurredMs = -1 * DAY): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'general',
+    category: 'home-and-environment',
+    attribute,
+    value: { kind: 'note', text },
+  } as unknown as CanonicalRecord;
+}
+
 function star(): CanonicalRecord {
   return {
     ...envelope('north-star', -30 * DAY),
@@ -1159,6 +1199,71 @@ export const SCENARIOS: readonly Scenario[] = [
       careerState('career:barrier', 'Getting set up takes too long', -6 * DAY),
       careerState('career:barrier', 'Getting set up takes too long', -9 * DAY),
       careerState('career:barrier', 'I was interrupted', -12 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'home-repeated-friction',
+    'The same thing, four times',
+    'One friction recorded repeatedly and one recorded once. Expect a change offered against the repeated one, silence about the other, and a chart of what keeps happening.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('home-and-environment', 'enabled'),
+      homeFriction('What I needed was somewhere else', 'focused-work', -2 * DAY),
+      homeFriction('What I needed was somewhere else', 'focused-work', -6 * DAY),
+      homeFriction('What I needed was somewhere else', 'learning', -11 * DAY),
+      homeFriction('What I needed was somewhere else', undefined, -18 * DAY),
+      homeFriction('Too loud', 'focused-work', -4 * DAY),
+      homeState('home:setup-time', 'Long enough that I did something else', -2 * DAY),
+      homeState('home:transition', 'A lot', -3 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'home-single-friction',
+    'One awkward morning',
+    'Exactly one friction on record. Expect the app to say nothing at all about it.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('home-and-environment', 'enabled'),
+      homeFriction('Nowhere to put things', 'everyday', -1 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'home-change-open',
+    'A change decided and not made',
+    'One change named against repeated friction. Expect it offered back in his words, and no second job added while it is open.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('home-and-environment', 'enabled'),
+      homeFriction('It had to be set up first', 'learning', -3 * DAY),
+      homeFriction('It had to be set up first', 'learning', -8 * DAY),
+      homeNote('home:change-named', 'Placeholder change written by the owner', -2 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'home-change-did-not-hold',
+    'The change did not hold',
+    'A change made and the same thing still happening. Expect a second attempt offered once, and nothing that reads as a telling-off.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('home-and-environment', 'enabled'),
+      homeFriction('Too loud', 'focused-work', -25 * DAY),
+      homeFriction('Too loud', 'focused-work', -22 * DAY),
+      homeNote('home:change-named', 'Placeholder change written by the owner', -20 * DAY),
+      homeState('home:change-made', 'Yes', -19 * DAY),
+      homeFriction('Too loud', 'focused-work', -4 * DAY),
+      homeState('home:friction-outcome', 'Still happening', -2 * DAY),
       context({ minutes: 40, capacity: 'moderate' }),
     ],
   ),

@@ -207,7 +207,14 @@ The first vertical slice requires **twenty** families. All are implemented in Ph
 | 19 | `QuestionRecord` |
 | 20 | `QuestionAnswerRecord` |
 
-**Activated later** — twenty-seven families are registered as of Phase 7 Prompt 8F:
+**Activated later** — twenty-seven families are registered as of Phase 7 Prompt 8G. The
+count is unchanged from 8F: **the home slice added none**, because a friction is one
+observable fact with one value and the shared observation envelope already carries it. The
+activity a friction interrupted rides in the attribute (`home:friction:<purpose>`), the
+device `father:skill:<id>` established, and a change is linked to what it addresses through
+`provenance.derivedFromRecordIds` — the device the faith slice used for practice occasions.
+`LEAN-001` permits one domain content family per slice **where irreducible**; here it was
+not, and 8B added none for the same reason.
 
 - `LearnedBeliefRecord` — Phase 5, when learning behavior exists.
 - `GuideSessionRecord` — Phase 6, because a guide that legitimately asked nothing new
