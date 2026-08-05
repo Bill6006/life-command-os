@@ -24,8 +24,8 @@ beforeEach(() => {
  * Gate requirement: every active core record validates independently.
  */
 describe('core record families', () => {
-  it('registers twenty-six families, three of them domain content', () => {
-    expect(RECORD_TYPES).toHaveLength(26);
+  it('registers twenty-seven families, four of them domain content', () => {
+    expect(RECORD_TYPES).toHaveLength(27);
     expect(Object.keys(RECORD_SCHEMAS).sort()).toEqual([...RECORD_TYPES].sort());
   });
 
@@ -68,6 +68,13 @@ describe('core record families', () => {
     // may show **without being asked**, so its topic and surface are enums: a permission
     // that cannot be stated incorrectly beats one that merely fails closed when mistyped.
     expect(RECORD_TYPES).toContain('surface-permission');
+  });
+
+  it('registers FaithAnchorRecord, added with the Faith slice (Prompt 8F)', () => {
+    // The three things the owner names himself. Irreducible because a commitment
+    // completes and has a due date, which is the wrong shape for something that recurs
+    // forever — and because a value is not the kind of thing that can be done at all.
+    expect(RECORD_TYPES).toContain('faith-anchor');
   });
 
   it('adds domain content families only with their slice', () => {

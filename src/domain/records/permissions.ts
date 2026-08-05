@@ -37,6 +37,15 @@ export const PROTECTED_TOPICS = [
   'relationship-detail',
   'conflict-detail',
   'dating',
+  /**
+   * Doubt, dryness, and difficulty (Prompt 8F).
+   *
+   * Protected for the same reason a private journal is: it is written in full sentences,
+   * it is nobody else's business, and it is the last thing anyone would want on a screen
+   * someone else can see. It is **not** protected because it is a problem — the domain
+   * has no view on that at all.
+   */
+  'faith-struggle',
 ] as const;
 export type ProtectedTopic = (typeof PROTECTED_TOPICS)[number];
 
@@ -45,6 +54,7 @@ export const PROTECTED_TOPIC_LABELS: Record<ProtectedTopic, string> = {
   'relationship-detail': 'Relationship detail',
   'conflict-detail': 'Conflict detail',
   dating: 'Dating',
+  'faith-struggle': 'Doubt and struggle',
 };
 
 /**

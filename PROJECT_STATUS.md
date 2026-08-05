@@ -4,33 +4,33 @@
 
 - Repository: life-command-os (https://github.com/Bill6006/life-command-os)
 - Plan version: **3.2 Coverage, Domain Scan, Learning Map, and AI Review Amendment**
-- Current phase: **Phase 7 — framework and four domain slices complete.** Slices 8F–8H
+- Current phase: **Phase 7 — framework and five domain slices complete.** Slices 8G–8H
   outstanding.
-- Current prompt: PROMPT 8E (complete)
+- Current prompt: PROMPT 8F (complete)
 
 ## Gate status
 
-- Status: **GREEN.** Every Prompt 8E requirement passes, and every earlier slice it was
+- Status: **GREEN.** Every Prompt 8F requirement passes, and every earlier slice it was
   required to leave alone still passes.
 - Private local use: **READY** (unchanged from Prompt 7B).
 - Gate evidence:
-  - *Mood, stress, confidence, overwhelm, loneliness, and connection context* — the four
-    existing scales stay where the engine reads them; loneliness is added.
-  - *Emotional interference and regulation options* — interference is the one question
-    here allowed into a daily check-in, because it is about capacity rather than mood.
-  - *Connection, social practice, dating, boundaries, conflict and repair, rejection
-    recovery* — all recorded as what happened, none as how it went.
-  - *Observable interaction outcomes* — did you send it, did that happen, has either of
-    you been back in touch.
-  - *Private-by-default notes* — classified `private-pattern`, the most protected class.
-  - *Optional high-privacy module, explicitly enabled and manually opened* — off by
-    default, silent while off, and permitted on nothing when switched on.
-  - *Contextual-capture metadata* — seven declarations, validated at import.
-  - *Structured controls before free text* — every control is a button; two optional
-    text fields, both labelled optional.
-  - *Explicit protected-surface permissions* — a canonical family, denied by default,
-    granted one topic and one surface at a time.
-  - *No therapy, CRM, surveillance, or message automation* — no person record exists.
+  - *Values, purpose, and practices in his own words* — one canonical family holding all
+    three, stored unedited, with no field for a level or a rating.
+  - *No catalogue of values and no catalogue of practices* — the application ships the
+    container and never the contents. Asserted by test.
+  - *Occasions recorded against a practice he named* — counted, never rated, never turned
+    into a rate.
+  - *No streak, no percentage, no grade* — two visuals refused, one of them against
+    evidence that would have supported it.
+  - *A quiet practice offered at two minutes* — offered once, in his words, never chased.
+  - *A repair he named, held without interpretation* — and offered back discreetly, with
+    his words left on the page he opened.
+  - *Doubt recorded and left alone* — no candidate, no encouragement, no concern, no
+    referral, and no change to any reading.
+  - *Retiring keeps everything* — stopping something is not a gap in the record.
+  - *Contextual-capture metadata* — six declarations, none guide-eligible, validated at
+    import.
+  - *Now unchanged and compact* — five panels, the area named nowhere on it.
 
 ## GitHub Pages owner preview
 
@@ -42,122 +42,115 @@
 
 ## The decision this slice turned on
 
-**Enabling is not permitting.**
+**The application supplies the container and never the contents.**
 
-Every earlier domain had one switch: the area is on or off. That is not enough here. A
-man may want somewhere to record something he would not say aloud, and want it to appear
-absolutely nowhere — not in a morning check-in, not in a weekly review, not in an export
-he pastes into a chat window. One switch cannot express that.
+Every other domain in this product ships a vocabulary. Health ships recovery actions,
+career ships a proof ladder, fatherhood ships developmental checklists. Shipping the
+equivalent here — a list of practices worth keeping, a starter set of values — would be
+this application taking a position on how a person should live. So it ships none. The text
+fields are blank, they have no placeholder examples, and a test asserts that the words
+`pray`, `prayer`, `meditat`, `scripture`, `church`, `worship`, `fast`, and `tithe` appear
+in no action and no prompt in the domain.
 
-So there are two decisions, and they are separate everywhere in the code. **Enabling** a
-protected topic means "I want to record this"; it grants no surface anything. **Permitting**
-names one topic and one surface, all four start denied, and there is deliberately no
-"allow everywhere" control — a single switch that opened four surfaces at once would be
-pressed in a hurry and regretted on a shared screen.
+What the app does supply is structure: somewhere to put what matters, somewhere to record
+what he actually did about it, and the arithmetic to put those two next to each other. The
+conclusion is left to him, because the conclusion was never the app's to draw.
 
-The second decision is the shape of the data. **There is no person record and no field
-that could hold one.** Every observation is about what the owner did; the other person
-appears only as an unnamed participant. The Blueprint forbids a contact CRM, and the
-absence of a person family is what makes that structural rather than a promise.
+**The second decision follows from the first: doubt produces nothing.** Someone writing
+down that this is hard, or that they are not sure any more, gets no suggestion, no
+encouragement, no concern, and no referral. The candidate generator can read the record and
+deliberately has no branch for it. Doubt is not a symptom, and the honest response from a
+piece of software is silence.
 
 ## Work completed
 
-- **A `loneliness` scale**, read as a trend against the owner's own weeks. Mood, stress,
-  confidence, and overwhelm stay in `time-attention-capacity`, where the core engine
-  reads them for capacity.
-- **Interference as the load-bearing reading** — "is something on your mind getting in
-  the way of what you meant to do" is about capacity, which is why it is the single
-  question in this domain allowed into a daily check-in.
-- **Eight closed actions**, one of which is the domain declining to have a view and
-  naming who might.
-- **Connection counted by day**, practice counted as attempts, boundaries recorded as
-  what he decided, conflict recorded only as whether contact happened, and rejection
-  recovery measured by re-entry rather than by mood.
-- **`SurfacePermissionRecord`**, the 26th family and this slice's only one: topic and
-  surface are enums, so a permission cannot be stated incorrectly, and absence means
-  denied.
-- **A second gate on the readable export** — private content stays out even when its
-  privacy class was ticked, unless the export surface was separately granted.
-- **A scan-friendly area page** with seven sections, all structured controls, and the
-  guided flow still reachable from it.
-- **A domain-owned scan summary** for the Weekly Quick Domain Scan that Phase 8 will
-  build — it quotes nothing and names nobody.
+- **`FaithAnchorRecord`**, the 27th family, holding value, purpose, and practice as three
+  kinds of the same act — naming something. Filing these as commitments was rejected: a
+  commitment completes and has a due date, so "being present with my family" would become a
+  permanent open loop.
+- **Occasions counted per practice** through `derivedFromRecordIds`, so the count survives
+  him rewording the practice tomorrow.
+- **Five closed actions**, every one about something he already wrote down. The one action
+  for an empty area asks for his words rather than offering him any.
+- **Two refused visuals, for different reasons.** The meter is refused because no valid
+  denominator exists. The bar comparison is refused _although the eligibility rules allow
+  it_ — the counts are real and the arithmetic would be valid, and the practice at the
+  bottom would read as the one he is failing at.
+- **A category that can never summarise as `declining`.** A quiet month is a quiet month.
+- **Retiring appends** a `retired` record, so every occasion recorded against a practice
+  survives him stopping it.
+- **A struggle field behind a control that says nothing reads it** — excluded from all six
+  protected contexts, absent from Quick Capture until switched on, and read by no branch of
+  the domain.
+- **A domain-owned scan summary** that quotes none of his words; the open item is named as
+  "Something you decided to put right", never as its content.
 
 ### Decisions worth naming
 
-- **Mood never triggers an action.** A single low reading changing what the app suggests
-  would make it a mood-reactive machine, which is the opposite of useful on a bad day.
-  Mood is an input to the shared state assessment and nothing in this domain's branch
-  order reads it.
-- **Repair is offered on a timer, not on a judgement.** Twelve hours after something is
-  recorded as unresolved — long enough to have settled, short enough that going back is
-  still cheap. The app has no view on who was right.
-- **Recovery is re-entry.** "Have you tried anything similar again" is answerable.
-  "Have you got over it" is not, and asking would be asking him to grade himself.
-- **The private note is the only free-text field that matters, and it is the most
-  protected thing in the product.** Everything else is a button.
-- **Fatherhood and emotional actions are not blocked by `family` or `caregiving`.**
-  Reaching out, or going back after a row, is often exactly what belongs in those hours.
+- **A practice with nothing recorded shows as having nothing recorded.** It is not read as
+  skipped, not called a lapse, and not chased. Absence of evidence is not evidence of
+  absence, which is a rule the whole product holds and this domain leans on hardest.
+- **The repair is offered discreetly.** The statement on Now is "Do the thing you decided
+  to put right"; his words stay on the page he opened. A repair describes something that
+  went wrong with another person, which is not a sentence that belongs on a front page
+  while someone is looking over his shoulder.
+- **No question asks why, how it felt, or what it meant.** Every prompt in the domain is
+  about something observable, and a test enforces it.
+- **Free text only where the words must be his.** Everything after naming — recording an
+  occasion, marking a repair done, retiring a practice — is a button.
 
 ## Files created or modified
 
-Created (10): `src/domain/emotional/{regulation,social,permissions,capture}.ts`;
-`src/domain/records/permissions.ts`; `src/domain/prompts/emotional.ts`;
-`src/application/commands/emotional.ts`;
-`src/intelligence/domains/emotional/{index,assessEmotional,emotionalCandidate,scan}.ts`;
-`src/ui/features/direction/EmotionalAreaView.tsx`;
-`tests/unit/emotional.test.ts`;
-`tests/e2e/{emotional,production-emotional}.spec.ts`
+Created (10): `src/domain/records/faith.ts`; `src/domain/faith/{meaning,capture}.ts`;
+`src/domain/prompts/faith.ts`; `src/application/commands/faith.ts`;
+`src/intelligence/domains/faith/{index,assessFaith,faithCandidate,scan}.ts`;
+`src/ui/features/direction/FaithAreaView.tsx`; `tests/unit/faith.test.ts`;
+`tests/e2e/{faith,production-faith}.spec.ts`
 
-Modified: `domain/records/{index,categories,scales}.ts`;
+Modified: `domain/records/{index,categories,permissions}.ts`;
 `domain/prompts/definitions.ts`; `domain/domains/definitions.ts`;
-`domain/capture/{contextualCapture,registry}.ts`;
-`application/queries/aiExport.ts`; `intelligence/index.ts`;
+`domain/capture/registry.ts`; `intelligence/index.ts`;
 `intelligence/state/categorySummaries.ts`;
-`intelligence/change-detection/materialChange.ts`;
-`ui/features/shell/AppShell.tsx`; `ui/view-models/present.ts`;
-`ui/design-system/console.css`; `app/scenarios.ts`;
-`playwright.config.ts`; `playwright.deployed.config.ts`; `tests/fixtures/records.ts`;
-`tests/unit/{records,domains,areas,prompts}.test.ts`;
+`intelligence/change-detection/materialChange.ts`; `ui/features/shell/AppShell.tsx`;
+`ui/view-models/present.ts`; `app/scenarios.ts`; `playwright.config.ts`;
+`playwright.deployed.config.ts`; `tests/fixtures/records.ts`;
+`tests/unit/{records,domains,areas,emotional}.test.ts`;
 `tests/e2e/production-areas.spec.ts`;
 `docs/{REQUIREMENTS,architecture/ARCHITECTURE_OVERVIEW}.md`
 
 ## Tests and evidence
 
-- **Unit: 532 passed**, up from 498. 34 new for the slice.
-- **Browser: new specs are 16 against seeded state and 8 on the production build**, in
-  isolated contexts.
-- Covers: no person record and no field that could hold one; every question passing the
-  behaviour-first policy; no clinical or blaming vocabulary on any rendered surface;
-  nothing granted by default on any surface; enabling separated from permitting; a
-  permission naming one topic and one surface with revocation appended; unknown topics
-  and surfaces rejected by the schema; a private note withheld from the export until the
-  export surface is granted; the private capture route absent until the topic is on; only
-  the capacity question reaching a guide; the meter refused with its reason; the scan
-  summary quoting nothing; and Now unchanged.
-- **One real defect found, in code this slice did not write.** The production test caught
-  What Changed — on Now, the most-seen panel in the product — printing a private note
-  verbatim: `Recorded emotional:note — text: <the note>`. The change detector quoted every
-  record's value regardless of classification. It now withholds the value for
-  `private-pattern`, `child`, and `relationship` content while still reporting that
-  something was recorded. A unit test builds the exact case, and a second asserts ordinary
-  observations are still quoted so the panel stays useful.
-- Six older assertions were correct failures from activating the domain: the scale list,
-  the family count, the fixture coverage, the implemented-domain list, the unbuilt-area
-  list, and the Manage Areas counts.
-
-### One process failure worth recording
-
-The first full browser run took **2.9 hours** and reported a 59.9-minute test. That was
-mine: I started a second Playwright run while the first was still going, and both bound
-the same preview ports. The suite was re-run alone. Two Playwright runs must not overlap
-on this repository.
+- **Unit: 567 passed**, up from 532. 33 new for the slice, plus two on the change detector.
+- **Browser: 509 passed** across both builds in 5.6 minutes, including 16 new specs against
+  seeded state and 9 new on the production build, all in isolated contexts.
+- **Deployed: verified against Pages** with `playwright.deployed.config.ts`.
+- Covers: no catalogue of values or practices anywhere in the domain; no authority,
+  grading, or pressure vocabulary on any rendered surface in any of three states; both
+  refusals with their distinct reasons; the category never reading as `declining`; a
+  struggle producing no candidate and appearing in no condition, driver, or bottleneck; the
+  scan quoting nothing; the area page offering an empty box with no suggestions; an
+  occasion recorded against one practice without touching another; the guided flow still
+  reachable; no horizontal overflow at 375×812; and Now unchanged and compact.
+- **One real defect found, in code this slice did not write — and it is a repeat.** The
+  production test caught What Changed printing free text verbatim on Now for the second
+  slice running: `Recorded faith:repair needed — kind:note, text: <the repair>`. Prompt
+  8E's fix was a **list of sensitive classes**, and `faith` had not been added to it. A
+  list that must be edited every time the product grows is a reminder, not a safeguard. The
+  rule is now general: **no `note` value is ever quoted on Now, in any domain**, because a
+  note is the one value kind whose contents are unbounded. The class list survives
+  alongside it with `faith` added, and a unit test covers the general rule.
+- Six older assertions were correct failures from activating the domain: the family count,
+  the fixture coverage, the implemented-domain list, the unbuilt-area list, and both Manage
+  Areas counts.
+- One assertion of my own was wrong rather than the code: the panel does not render the
+  candidate's `because` text, so a spec expecting it there was corrected.
 
 ## Privacy status
 
-- Synthetic-only repository: **YES** — scanned clean across all tracked files.
-- Private Pattern content is `private-pattern`-classified, denied on every surface by
-  default, and requires two separate decisions before it can appear in a readable export.
+- Synthetic-only repository: **YES** — scanned clean across all tracked files and the built
+  bundle.
+- Every placeholder in the faith tests is explicitly labelled as one. No value, purpose,
+  practice, repair, or struggle text in this repository is anybody's actual words.
 - Commit identity: GitHub noreply address only.
 - Dependency audit: `npm audit` — **0 vulnerabilities**.
 - Runtime private-data readiness: **READY.** See `docs/PRIVATE_ALPHA.md`.
@@ -165,8 +158,8 @@ on this repository.
 ## Architecture decisions
 
 No new ADRs. The slice applies decisions already recorded: ADR-0005 (append-oriented
-records) and the Prompt 8A framework contracts. The enabling-versus-permitting separation
-is recorded in `docs/REQUIREMENTS.md` §3k.
+records) and the Prompt 8A framework contracts. Authority separation and the two refusals
+are recorded in `docs/REQUIREMENTS.md` §3l.
 
 ## New dependencies
 
@@ -174,44 +167,45 @@ is recorded in `docs/REQUIREMENTS.md` §3k.
 
 ## New abstractions or infrastructure
 
-**1. `domain/records/permissions.ts`** — `SurfacePermissionRecord`.
-- Active requirement: Master Plan v3.2 §11.
-- Why smaller was insufficient: as an attribute it would be a string under a string,
-  writable by anything that writes observations. For a control that decides what appears
-  unasked, a permission that *cannot be stated incorrectly* beats one that merely fails
-  closed when mistyped.
+**1. `domain/records/faith.ts`** — `FaithAnchorRecord`.
 
-**2. `domain/emotional/permissions.ts`** — the read side.
-- Active requirement: v3.2 §11.
-- Why smaller was insufficient: the export, the capture registry, and the interface all
-  ask the same question, and three copies of "is this allowed" would eventually disagree.
+- Active requirement: Prompt 8F task 1; `SAFE-001`.
+- Why smaller was insufficient: `CommitmentRecord` was the obvious reuse and is wrong. A
+  commitment completes and carries a due date, so a value filed as one becomes a permanent
+  open loop the owner can never close. A separate family also gives the schema somewhere to
+  refuse a level, a rating, or a streak outright rather than by convention.
 
-**3. `domain/emotional/{regulation,social}.ts`** — the closed vocabulary.
-- Active requirement: `SAFE-001`, `LEG-111`–`LEG-117`.
-- Why smaller was insufficient: the same device health and fatherhood use. A generated
-  suggestion in this domain is one template away from advice about a person's inner life.
+**2. `domain/faith/meaning.ts`** — the closed action set and the forbidden vocabulary.
 
-**4. `ui/features/direction/EmotionalAreaView.tsx`** — the area page.
+- Active requirement: `SAFE-001`, `XDS-015`.
+- Why smaller was insufficient: the device health, fatherhood, and emotional already use.
+  It is load-bearing here for a different reason — the file's most important property is
+  what it does **not** contain, and a generated suggestion in this domain would be one
+  template away from telling someone how to live.
+
+**3. `ui/features/direction/FaithAreaView.tsx`** — the area page.
+
 - Active requirement: Phase 7 shared rules 21–24.
-- Why smaller was insufficient: a guide cannot show several independently editable
-  sections, and the protected section needs to be visibly off rather than merely absent.
+- Why smaller was insufficient: six independently editable sections cannot be a guide, and
+  the struggle field has to be visibly present and visibly unread rather than merely
+  absent.
 
 ## Known limitations
 
-- **Three domains remain unimplemented.** Faith (8F), home (8G), money (8H).
-- **`dating` and `conflict-detail` are protected topics with no separate surface of their
-  own yet.** They are declared, denied by default, and honoured by the permission gate;
-  the interface currently exposes practice and conflict through the ordinary sections.
-- **The scan summary is built and unused.** Phase 8 owns the Weekly Quick Domain Scan
-  that will render it; this slice supplies the shape and tests it.
-- **Loneliness needs several weeks to say anything**, and a gap-heavy trend stays
-  gap-heavy — which is correct, and worth knowing before it looks like a bug.
-- **The permission screen lists four surfaces, two of which do not exist yet.**
-  Notifications and the weekly scan are Phase 8; granting them today stores a decision
-  that nothing reads. Denied-by-default means that is harmless, but it is visible.
-- **No cross-domain synthesis yet.** Emotional competes in the same comparison as
-  everything else.
-- **Cached startup is still unmeasured.** Bundle is ~195 kB gzipped, up from ~186 kB.
+- **Two domains remain unimplemented.** Home (8G), money (8H).
+- **The faith-specific `LEG-*` requirement IDs were unavailable.** The Final Legacy
+  Decisions map was not in this session's context, so §3l cites the approved IDs that
+  genuinely apply and prompt task numbers elsewhere, following the convention §3j set. No
+  ID was minted. Recorded as an open item in `docs/REQUIREMENTS.md` §5; substituting the
+  intended IDs touches no code.
+- **The scan summary is built and unused.** Phase 8 owns the Weekly Quick Domain Scan.
+- **The struggle count appears on the panel**, as "N notes you wrote about how this is
+  going — kept here, read by nothing". The contents never do. That is deliberate: he should
+  be able to see they were kept.
+- **No cross-domain synthesis yet.** Faith competes in the same comparison as everything
+  else, and can win it — as it did during verification, which is how the What Changed leak
+  surfaced.
+- **Cached startup is still unmeasured.** Bundle is ~200 kB gzipped, up from ~195 kB.
 - Carried forward: the local database is not encrypted at rest; the app lock hides the
   screen only; notifications do not exist; `frame-ancestors` unenforceable on Pages;
   Chromium-only matrix; no router; service-worker staleness; deletion semantics undecided;
@@ -219,30 +213,39 @@ is recorded in `docs/REQUIREMENTS.md` §3k.
 
 ## Deferred work
 
-| Deferred | Activates |
-| --- | --- |
-| Faith and meaning | Prompt 8F |
-| Home and environment | Prompt 8G |
-| Money | Prompt 8H |
-| Weekly Quick Domain Scan, monthly review, forgotten-domain protection | Phase 8 |
-| Contextual-capture orchestration across domains | Phase 8 |
-| Duplicate panel/category label resolution | Phase 8 |
-| AI review export prompt with coaching intensity | Phase 8 |
-| Quarantined legacy importer | Phase 9 |
-| Traceability generator, full browser matrix, startup measurement, release artifacts | Phase 10 |
+| Deferred                                                                            | Activates |
+| ----------------------------------------------------------------------------------- | --------- |
+| Home and environment                                                                  | Prompt 8G |
+| Money                                                                                 | Prompt 8H |
+| Weekly Quick Domain Scan, monthly review, forgotten-domain protection                 | Phase 8   |
+| Contextual-capture orchestration across domains                                       | Phase 8   |
+| Duplicate panel/category label resolution                                             | Phase 8   |
+| AI review export prompt with coaching intensity                                       | Phase 8   |
+| Quarantined legacy importer                                                           | Phase 9   |
+| Traceability generator, full browser matrix, startup measurement, release artifacts    | Phase 10  |
 
 ## Blockers
 
-**None blocking Prompt 8F.** Two owner decisions carried forward, neither blocking:
+**None blocking Prompt 8G.** Three owner decisions carried forward, none blocking:
 
 1. **Measure cached startup on the Samsung phone** and say if it exceeds three seconds.
 2. **Decide whether to purge a child's first name from commit `b5ffe54`.** HEAD is clean.
+3. **Confirm the faith `LEG-*` requirement IDs** so §3l can cite them.
+
+## Process notes carried forward
+
+Two Playwright runs must not overlap on this repository — they bind the same preview ports.
+Recorded after Prompt 8E's 2.9-hour run. Honoured this slice; the full suite ran alone in
+5.6 minutes.
+
+A second one from this slice: `prettier --write .` reported files as written while
+`prettier --check .` still failed them. Run the explicit glob form and re-check before
+committing, or CI fails the format gate and no deploy ever appears.
 
 ## Next permitted prompt
 
-**PROMPT 8F — Phase 7 domain slice: Faith and meaning.**
+**PROMPT 8G — Phase 7 domain slice: Home and environment.**
 
-It inherits the sensitive-topic machinery this slice built, and it needs the same
-restraint for a different reason: the risk there is not exposure but authority. A product
-that grades faith, or claims to know what a practice was worth, would be doing the thing
-the Blueprint forbids most explicitly.
+It is the first domain since 8B where the subject is not the owner himself but the space
+around him, and the restraint it needs is different again: the failure mode there is a
+cleaning-schedule app that generates chores nobody agreed to.

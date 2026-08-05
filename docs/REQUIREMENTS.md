@@ -2,7 +2,7 @@
 
 **Status:** Controlling
 **Plan version:** 3.2 Coverage, Domain Scan, Learning Map, and AI Review Amendment
-**Current phase:** Phase 7 — Prompts 8A–8D and the 8D.2 bridge complete; slices 8E–8H outstanding
+**Current phase:** Phase 7 — Prompts 8A–8F and the 8D.2 bridge complete; slices 8G–8H outstanding
 
 **Controlling artifacts from v3.0.** The Final Product Blueprint, Updated Requirements
 Register v2, Final Acceptance Test Matrix, and Final Legacy Decisions map now supply the
@@ -840,6 +840,65 @@ not the app's to broadcast.
 
 ---
 
+## 3l. Active requirement records — Phase 7, Prompt 8F (Faith and meaning)
+
+| ID | Implementation | Test IDs | Notes |
+|---|---|---|---|
+| Prompt 8F, task 1 | `FaithAnchorRecord` — the 27th family, three kinds, no level | `registers one family holding all three kinds`; `has nowhere to record a level, a rating, or a streak` | Retiring appends; everything recorded against a retired practice survives |
+| `OWN-013` | `FAITH_PROMPTS` — six, all `privacy: 'faith'`, all owned by Update This Area | `classifies everything it captures as faith data, owned by one surface` | None is guide-eligible; `eligibleGuides: []` on all six captures |
+| Prompt 8F, task 3 | Occasions counted per practice via `derivedFromRecordIds` | `counts occasions per practice from the record they point at` | A count, never a rate and never a level |
+| `SAFE-001` `XDS-015` | `FAITH_ACTIONS` — five, closed, every one about something he already wrote down | `has five actions, all about something he already wrote down` | No action proposes a value or a practice |
+| `OWN-051` | The meter **refused** — no valid denominator exists | `refuses a percentage because there is no total to be a fraction of` | Practices kept over practices chosen would divide cleanly, and the result would be a grade for a faith |
+| `OWN-052`–`OWN-054` | The bar comparison **refused although the evidence supports it** | `refuses a comparison the eligibility rules would allow` | The only refusal in the product made against sufficient evidence: the bottom bar would read as the practice he is failing at |
+| v3.2 §11 | Struggle text read by nothing — no candidate, no condition, no driver, no bottleneck | `produces no candidate, and appears in no reading` (4) | The domain can read the record and chooses to have no view |
+| Shared rule 20 | `buildFaithScan` — quotes nothing, names the open item without its content | `the scan quotes none of his words` | `openItem` is `'Something you decided to put right'` |
+| Shared rule 21–23 | `FaithAreaView` — six sections, buttons after naming | browser `offers an empty box and no suggestions` | Free text only where the words must be his |
+
+### Authority separation, made structural
+
+The application ships **the container and never the contents**. There is no catalogue of
+values, no list of practices, no suggested starting point, and no example placeholder in
+the text fields — because any of those would be this product taking a position on how a
+person should live. A test asserts that no faith action or prompt contains `pray`,
+`prayer`, `meditat`, `scripture`, `church`, `worship`, `fast`, or `tithe`, and
+`FORBIDDEN_FAITH_VOCABULARY` bars three groups of language outright: authority
+(`god wants`, `scripture says`, `sinful`, `righteous`, `salvation`, `doctrine`), grading
+(`spiritual maturity`, `faith score`, `lukewarm`, `backslid`), and pressure
+(`you should pray`, `streak`, `days in a row`).
+
+The category can never summarise as `declining`. A quiet month is a quiet month, and this
+is not the area where an app gets to call that a decline.
+
+### Doubt is recorded and left alone
+
+Writing down that this is hard produces **nothing**: no candidate, no encouragement, no
+concern, no referral, and no change to any reading. It is behind a control that says
+nothing reads it, it is excluded from all six protected contexts, and it does not appear in
+Quick Capture until the owner switches it on. Recording it is the entire feature. This is
+the sharpest expression of authority separation in the product — the domain can read the
+record and declines to have a view.
+
+### Why a repair is not quoted on Now
+
+The repair candidate's statement is `Do the thing you decided to put right`, and his words
+stay on the page he opened. A repair is by nature the description of something that went
+wrong with another person, which is not a sentence that belongs on the front page of an app
+while someone is looking over the owner's shoulder.
+
+### The leak this slice found in existing code, again
+
+Prompt 8F's production test caught What Changed printing free text verbatim on Now a
+second time — `Recorded faith:repair needed — kind:note, text: <the repair>` — because the
+8E fix was a **list of sensitive classes** and `faith` had not been added to it. A list
+that must be edited every time the product grows is a reminder, not a safeguard.
+
+The rule is now general and does not depend on anyone remembering: **no `note` value is
+ever quoted on Now, in any domain.** A note is the one value kind whose contents are
+unbounded; a scale or a state is something the application itself offered and can safely
+echo back. The class list survives alongside it, with `faith` added.
+
+---
+
 ## 4. Traceability fields used when a requirement becomes active
 
 Per master plan §68, each active requirement record includes: ID · statement · source
@@ -851,7 +910,14 @@ privacy and safety classification · evidence artifact · status · deferred or 
 Proposals identified during Phase 0. **Not approved and not in force.** Each requires
 explicit owner approval before its owning phase begins.
 
-**No open requirement gaps.** `STORE-004` was owner-approved on 2026-08-03 and moved into
+**Open, Prompt 8F.** The faith-specific `LEG-*` IDs from the Final Legacy Decisions map
+were not available when this slice was implemented, so §3l cites the approved IDs that
+genuinely apply (`OWN-013`, `OWN-051`, `OWN-052`–`OWN-054`, `SAFE-001`, `XDS-015`) and
+prompt task numbers elsewhere, following the convention §3j established. No new ID was
+minted. The owner should confirm the intended `LEG-*` IDs and they can be substituted
+without touching any code.
+
+**No other open requirement gaps.** `STORE-004` was owner-approved on 2026-08-03 and moved into
 Section 2; its traceability record is in Section 3a.
 
 New requirement IDs are **not** minted silently. Anything implemented under a proposed ID

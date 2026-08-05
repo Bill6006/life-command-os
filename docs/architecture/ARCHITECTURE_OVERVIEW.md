@@ -207,7 +207,7 @@ The first vertical slice requires **twenty** families. All are implemented in Ph
 | 19 | `QuestionRecord` |
 | 20 | `QuestionAnswerRecord` |
 
-**Activated later** — twenty-six families are registered as of Phase 7 Prompt 8E:
+**Activated later** — twenty-seven families are registered as of Phase 7 Prompt 8F:
 
 - `LearnedBeliefRecord` — Phase 5, when learning behavior exists.
 - `GuideSessionRecord` — Phase 6, because a guide that legitimately asked nothing new
@@ -220,6 +220,13 @@ The first vertical slice requires **twenty** families. All are implemented in Ph
   owner's life: it decides what the product may show **without being asked**. Topic and
   surface are enums, so a permission cannot be stated incorrectly, and absence means
   denied.
+- `FaithAnchorRecord` — Phase 7 Prompt 8F. Holds what the owner said matters, why, and
+  what he does about it, in his words and unedited. One family covers all three kinds
+  because they are the same act — naming something — and the app supplies no candidates
+  for any of them. It has no field for a level, a rating, a streak, or an assessment, and
+  retiring appends a `retired` record so everything observed against a practice survives
+  the owner stopping it. Filing these as commitments was rejected: a commitment completes
+  and has a due date, so "being present with my family" would become a permanent open loop.
 - `MilestoneObservationRecord` — Phase 7 Prompt 8D. An answer against a developmental
   checklist is meaningless without which list and which revision it was answered against,
   and checklists get revised, so `checklistSource` and `checklistVersion` travel with

@@ -45,6 +45,15 @@ import {
 import { buildLearningMap } from '../../../intelligence/domains/fatherhood/learningMap';
 import { LearningMapView } from '../direction/LearningMapView';
 import { EmotionalAreaView } from '../direction/EmotionalAreaView';
+import { FaithAreaView } from '../direction/FaithAreaView';
+import {
+  nameFaithAnchor,
+  recordFaithObservation,
+  recordFaithStruggle,
+  recordPracticeOccasion,
+  retireFaithAnchor,
+} from '../../../application/commands/faith';
+import { assessFaith } from '../../../intelligence/domains/faith';
 import {
   recordBoundary,
   recordEmotionalObservation,
@@ -102,7 +111,9 @@ type Mode =
    */
   | { readonly kind: 'learning-map' }
   /** The emotional area page: a scan surface with a protected section inside it. */
-  | { readonly kind: 'emotional-area' };
+  | { readonly kind: 'emotional-area' }
+  /** The faith area page: his words, and what he recorded against them. */
+  | { readonly kind: 'faith-area' };
 
 const PRIMARY: readonly { id: Destination; label: string }[] = [
   { id: 'now', label: 'Now' },
@@ -463,6 +474,68 @@ export function AppShell(): React.JSX.Element {
       );
     }
 
+    if (mode.kind === 'faith-area') {
+      const evidence = assessFaith(records, now);
+      return (
+        <FaithAreaView
+          state={{
+            values: evidence.values.map((value) => ({
+              recordId: value.recordId,
+              statement: value.statement,
+            })),
+            purpose: evidence.purpose?.statement,
+            practices: evidence.practices,
+            openRepair: evidence.openRepair,
+            repairDone: evidence.repairDone,
+            struggleCount: evidence.struggleCount,
+          }}
+          busy={busy}
+          onName={(kind, statement) => {
+            void run(() => nameFaithAnchor({ kind, statement }, new Date()), { stay: true });
+          }}
+          onRetire={(practice) => {
+            void run(
+              () =>
+                retireFaithAnchor(
+                  { kind: 'practice', statement: practice.statement },
+                  new Date(),
+                ),
+              { stay: true },
+            );
+          }}
+          onRecordOccasion={(practice, outcome) => {
+            void run(
+              () =>
+                recordPracticeOccasion(
+                  { practiceRecordId: practice.recordId, outcome },
+                  new Date(),
+                ),
+              { stay: true },
+            );
+          }}
+          onRecord={(attribute, state, text) => {
+            void run(() => recordFaithObservation({ attribute, state, text }, new Date()), {
+              stay: true,
+            });
+          }}
+          onStruggle={(text) => {
+            void run(() => recordFaithStruggle(text, new Date()), { stay: true });
+          }}
+          onOpenGuided={() => {
+            setMode({
+              kind: 'guide',
+              guide: 'update-area',
+              depth: 'full',
+              domainId: 'faith-and-meaning',
+            });
+          }}
+          onClose={() => {
+            setMode({ kind: 'console' });
+          }}
+        />
+      );
+    }
+
     if (mode.kind === 'capture') {
       return (
         <QuickCaptureSurface
@@ -645,7 +718,9 @@ export function AppShell(): React.JSX.Element {
                     ? { kind: 'learning-map' }
                     : domainId === 'emotional-and-relationships'
                       ? { kind: 'emotional-area' }
-                      : { kind: 'guide', guide: 'update-area', depth: 'full', domainId },
+                      : domainId === 'faith-and-meaning'
+                        ? { kind: 'faith-area' }
+                        : { kind: 'guide', guide: 'update-area', depth: 'full', domainId },
                 );
               }}
               onSetAreaState={(domainId, state) => {

@@ -300,6 +300,31 @@ describe('sensitive topics never appear unasked', () => {
     expect(changes).toContain('Kept private');
   });
 
+  it('quotes no free text on Now, whatever domain it came from', () => {
+    /*
+     * The general form of the rule above, added in Prompt 8F after the class list failed
+     * a second time. A note is the one value kind whose contents are unbounded, so no
+     * note reaches Now regardless of how it is classified — a domain arriving later
+     * cannot leak by being forgotten.
+     */
+    resetFixtureIds();
+    const ordinaryNote = anObservation({
+      attribute: 'career:note',
+      category: 'career-and-learning',
+      privacy: 'standard',
+      value: { kind: 'note', text: 'Placeholder free text written by the owner' },
+      occurredAt: '2026-08-05T17:00:00.000Z',
+      recordedAt: '2026-08-05T17:00:00.000Z',
+    } as never);
+
+    const changes = JSON.stringify(
+      runEpisode([ordinaryNote] as CanonicalRecord[], NOW).whatChanged,
+    );
+
+    expect(changes).not.toContain('Placeholder free text written by the owner');
+    expect(changes).toContain('Open the area to read it');
+  });
+
   it('still quotes an ordinary observation, so the panel stays useful', () => {
     resetFixtureIds();
     const ordinary = anObservation({

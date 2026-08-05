@@ -45,6 +45,14 @@ export const ENABLED_CATEGORIES = [
    * and repair — all of which is `relationship` data or more sensitive.
    */
   'emotional-and-relationships',
+  /**
+   * Activated by Prompt 8F, through the Faith slice's own domain contract.
+   *
+   * Its own category because everything filed here is classified `faith`, and because an
+   * export offering to include "direction and commitments" must not sweep up what
+   * someone believes along with their work goals.
+   */
+  'faith-and-meaning',
 ] as const;
 export type LifeCategory = (typeof ENABLED_CATEGORIES)[number];
 

@@ -8,6 +8,7 @@ import {
 } from '../support';
 import { assessHealth, summariseHealthCategory } from '../domains/health';
 import { assessEmotional, summariseEmotionalCategory } from '../domains/emotional';
+import { assessFaith, summariseFaithCategory } from '../domains/faith';
 import { assessFatherhood, summariseFatherhoodCategory } from '../domains/fatherhood';
 import type { CategorySummary, StateAssessment, TrajectoryResult } from '../types';
 
@@ -176,6 +177,14 @@ export function summariseCategories(
       // fatherhood's are: the slice created the category, so nothing else can describe
       // it without inventing a second version of the same reading.
       summaries.push(summariseEmotionalCategory(assessEmotional(records, now)));
+      continue;
+    }
+
+    if (category === 'faith-and-meaning') {
+      // Delegated to the Faith slice. It is the only summary in the product that can
+      // never say `declining`, because that word here would be a verdict on a person's
+      // faith rather than a reading of their records.
+      summaries.push(summariseFaithCategory(assessFaith(records, now)));
       continue;
     }
 

@@ -56,10 +56,28 @@ const UNQUOTABLE_CLASSES: readonly PrivacyClass[] = [
   'private-pattern',
   'child',
   'relationship',
+  'faith',
 ];
 
 function quotable(record: CanonicalRecord): boolean {
   return !UNQUOTABLE_CLASSES.includes(classificationOf(record));
+}
+
+/**
+ * The second rule, and the more reliable one.
+ *
+ * The class list above has now failed twice — once in Prompt 8E and again in Prompt 8F,
+ * both times because a new domain arrived and nobody extended it. A list that must be
+ * edited every time the product grows is not a safeguard, it is a reminder.
+ *
+ * So: **free text is never quoted on Now, whatever domain it came from.** A note is the
+ * one value kind whose contents are unbounded — it can hold a name, an argument, a
+ * diagnosis, or a repair someone owes another person — and the owner typed it into a page
+ * they chose to open. A scale or a state is a value the application offered and can
+ * safely echo back; a note is not.
+ */
+function freeText(record: CanonicalRecord & { recordType: 'observation' }): boolean {
+  return record.value.kind === 'note';
 }
 
 function describe(record: CanonicalRecord): { change: string; detail: string } {
@@ -67,9 +85,11 @@ function describe(record: CanonicalRecord): { change: string; detail: string } {
     case 'observation':
       return {
         change: `Recorded ${record.attribute.replace(/-/g, ' ')}`,
-        detail: quotable(record)
-          ? JSON.stringify(record.value).replace(/[{}"]/g, '').replace(/,/g, ', ')
-          : 'Kept private — open the area to see it',
+        detail: !quotable(record)
+          ? 'Kept private — open the area to see it'
+          : freeText(record)
+            ? 'Open the area to read it'
+            : JSON.stringify(record.value).replace(/[{}"]/g, '').replace(/,/g, ', '),
       };
     case 'observation-correction':
       return {

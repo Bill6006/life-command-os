@@ -23,6 +23,7 @@ import type {
   SkillClaimRecord,
   MilestoneObservationRecord,
   SurfacePermissionRecord,
+  FaithAnchorRecord,
   TrajectoryRecord,
   UntreatedForecastRecord,
   WeeklyDirectionRecord,
@@ -560,6 +561,25 @@ export function aSurfacePermission(
   } as SurfacePermissionRecord;
 }
 
+/**
+ * One thing the owner named (Prompt 8F).
+ *
+ * A practice, because that is the kind other records point at. The statement is neutral
+ * synthetic text — no fixture in this repository asserts anything about what anyone
+ * believes.
+ */
+export function aFaithAnchor(overrides: Partial<FaithAnchorRecord> = {}): FaithAnchorRecord {
+  return {
+    ...envelope('faith-anchor', 38),
+    ...OBSERVED,
+    privacy: 'faith',
+    kind: 'practice',
+    statement: 'Ten quiet minutes before the house wakes up',
+    state: 'active',
+    ...overrides,
+  } as FaithAnchorRecord;
+}
+
 /** A guide session (Phase 6). Completed with nothing skipped. */
 export function aGuideSession(
   producedRecordIds: readonly string[] = [],
@@ -624,5 +644,6 @@ export function oneOfEveryFamily(): Record<string, unknown> {
     'skill-claim': aSkillClaim(),
     'milestone-observation': aMilestoneObservation(),
     'surface-permission': aSurfacePermission(),
+    'faith-anchor': aFaithAnchor(),
   };
 }

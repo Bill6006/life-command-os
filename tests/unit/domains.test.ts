@@ -212,9 +212,9 @@ describe('only areas with a slice behind them can be switched on', () => {
       'career-and-learning',
       'fatherhood',
       'emotional-and-relationships',
+      'faith-and-meaning',
     ]);
     expect(unimplementedDomains().map((definition) => definition.id)).toEqual([
-      'faith-and-meaning',
       'home-and-environment',
       'money',
     ]);

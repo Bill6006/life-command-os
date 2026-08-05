@@ -54,6 +54,7 @@ import { domainPreferenceRecord, type DomainPreferenceRecord } from './domains';
 import { skillClaimRecord, type SkillClaimRecord } from './career';
 import { milestoneObservationRecord, type MilestoneObservationRecord } from './fatherhood';
 import { surfacePermissionRecord, type SurfacePermissionRecord } from './permissions';
+import { faithAnchorRecord, type FaithAnchorRecord } from './faith';
 import {
   questionAnswerRecord,
   questionRecord,
@@ -78,15 +79,16 @@ export * from './domains';
 export * from './career';
 export * from './fatherhood';
 export * from './permissions';
+export * from './faith';
 
 /**
- * Twenty-six canonical record families.
+ * Twenty-seven canonical record families.
  *
  * The twenty of the first vertical slice, plus `learned-belief` (**Phase 5**),
  * `guide-session` (**Phase 6**), `domain-preference` (**Prompt 8A**), `skill-claim`
- * (**Prompt 8C**), `milestone-observation` (**Prompt 8D**), and `surface-permission`
- * (**Prompt 8E**). Each was deliberately absent until there was behaviour for it to
- * describe.
+ * (**Prompt 8C**), `milestone-observation` (**Prompt 8D**), `surface-permission`
+ * (**Prompt 8E**), and `faith-anchor` (**Prompt 8F**). Each was deliberately absent
+ * until there was behaviour for it to describe.
  *
  * `guide-session` is canonical rather than derived because it cannot be
  * reconstructed from the observations it produced: a guide that legitimately asked
@@ -143,6 +145,7 @@ export const RECORD_TYPES = [
   'skill-claim',
   'milestone-observation',
   'surface-permission',
+  'faith-anchor',
 ] as const;
 
 export type RecordType = (typeof RECORD_TYPES)[number];
@@ -173,7 +176,8 @@ export type CanonicalRecord =
   | DomainPreferenceRecord
   | SkillClaimRecord
   | MilestoneObservationRecord
-  | SurfacePermissionRecord;
+  | SurfacePermissionRecord
+  | FaithAnchorRecord;
 
 /**
  * Schema per family.
@@ -209,6 +213,7 @@ export const RECORD_SCHEMAS: Record<RecordType, z.ZodType> = {
   'skill-claim': skillClaimRecord,
   'milestone-observation': milestoneObservationRecord,
   'surface-permission': surfacePermissionRecord,
+  'faith-anchor': faithAnchorRecord,
 };
 
 /** Families that record first-hand fact rather than system interpretation. */
@@ -227,6 +232,7 @@ export const OBSERVED_RECORD_TYPES = [
   'skill-claim',
   'milestone-observation',
   'surface-permission',
+  'faith-anchor',
 ] as const satisfies readonly RecordType[];
 
 export function isRecordType(value: unknown): value is RecordType {

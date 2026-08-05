@@ -352,6 +352,64 @@ function loneliness(ordinal: number, label: string, occurredMs = -1 * DAY): Cano
   } as unknown as CanonicalRecord;
 }
 
+/* --- Prompt 8F: faith and meaning ----------------------------------------- */
+
+/** Something the owner named. Synthetic and deliberately neutral. */
+function faithAnchor(
+  kind: 'value' | 'purpose' | 'practice',
+  statement: string,
+  occurredMs = -30 * DAY,
+  state: 'active' | 'retired' = 'active',
+): CanonicalRecord {
+  return {
+    ...envelope('faith-anchor', occurredMs),
+    ...OBSERVED,
+    privacy: 'faith',
+    kind,
+    statement,
+    state,
+  } as unknown as CanonicalRecord;
+}
+
+/** One occasion, pointing at the practice it belongs to. */
+function faithOccasion(
+  practiceRecordId: string,
+  outcome: string,
+  occurredMs = -1 * DAY,
+): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    source: 'user-entry',
+    provenance: { method: 'direct-report', derivedFromRecordIds: [practiceRecordId] },
+    privacy: 'faith',
+    category: 'faith-and-meaning',
+    attribute: 'faith:practice-done',
+    value: { kind: 'state', state: outcome },
+  } as unknown as CanonicalRecord;
+}
+
+function faithState(attribute: string, state: string, occurredMs = -1 * DAY): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'faith',
+    category: 'faith-and-meaning',
+    attribute,
+    value: { kind: 'state', state },
+  } as unknown as CanonicalRecord;
+}
+
+function faithNote(attribute: string, text: string, occurredMs = -1 * DAY): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'faith',
+    category: 'faith-and-meaning',
+    attribute,
+    value: { kind: 'note', text },
+  } as unknown as CanonicalRecord;
+}
+
 function star(): CanonicalRecord {
   return {
     ...envelope('north-star', -30 * DAY),
@@ -1106,6 +1164,82 @@ export const SCENARIOS: readonly Scenario[] = [
   ),
 
   /* --- Prompt 8D: fatherhood and child development ------------------------ */
+
+  build(
+    'faith-enabled',
+    'Faith area switched on',
+    'Two things named, one practice kept and one gone quiet. Expect his words shown back, a small offer against the quiet one, and no chart ranking them.',
+    ((): CanonicalRecord[] => {
+      const kept = faithAnchor(
+        'practice',
+        'Ten quiet minutes before the house wakes up',
+        -40 * DAY,
+      );
+      const quiet = faithAnchor(
+        'practice',
+        'Write to someone who would not expect it',
+        -40 * DAY,
+      );
+
+      return [
+        star(),
+        ...decliningWeeks(),
+        domainPreference('faith-and-meaning', 'enabled'),
+        faithAnchor('value', 'Being someone my family can rely on', -45 * DAY),
+        faithAnchor('purpose', 'Because the small things are what people remember', -45 * DAY),
+        kept,
+        quiet,
+        faithOccasion(kept.recordId, 'Did it', -1 * DAY),
+        faithOccasion(kept.recordId, 'A shorter version', -3 * DAY),
+        faithOccasion(kept.recordId, 'Did it', -6 * DAY),
+        faithState('faith:service-happened', 'Yes', -4 * DAY),
+        context({ minutes: 40, capacity: 'moderate' }),
+      ];
+    })(),
+  ),
+
+  build(
+    'faith-repair',
+    'Something to put right',
+    'A repair named and not done. Expect it offered once, in his words, with no view on what it was about.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('faith-and-meaning', 'enabled'),
+      faithAnchor('value', 'Saying the true thing even when it costs', -45 * DAY),
+      faithNote(
+        'faith:repair-needed',
+        'Apologise properly for how I spoke on Tuesday',
+        -2 * DAY,
+      ),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'faith-struggle',
+    'Doubt, recorded and left alone',
+    'A struggle note on record with practices kept up. Expect the app to do nothing with it at all.',
+    ((): CanonicalRecord[] => {
+      const kept = faithAnchor(
+        'practice',
+        'Ten quiet minutes before the house wakes up',
+        -40 * DAY,
+      );
+
+      return [
+        star(),
+        ...decliningWeeks(),
+        domainPreference('faith-and-meaning', 'enabled'),
+        faithAnchor('value', 'Being someone my family can rely on', -45 * DAY),
+        kept,
+        faithOccasion(kept.recordId, 'Did it', -1 * DAY),
+        faithOccasion(kept.recordId, 'Did it', -4 * DAY),
+        faithNote('faith:struggle', 'Placeholder struggle entry', -2 * DAY),
+        context({ minutes: 40, capacity: 'moderate' }),
+      ];
+    })(),
+  ),
 
   build(
     'emotional-enabled',

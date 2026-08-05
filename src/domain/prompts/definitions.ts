@@ -12,6 +12,7 @@ import { MEDITATION_PURPOSE_LABELS, MEDITATION_PURPOSES } from '../health/action
 import { SCALE_LIST, scaleAttribute, type ScaleId } from '../records/scales';
 import { assertPromptCatalogue, type PromptDefinition } from './policy';
 import { EMOTIONAL_PROMPTS } from './emotional';
+import { FAITH_PROMPTS } from './faith';
 
 /**
  * Every question this product asks in a normal flow.
@@ -962,7 +963,7 @@ export const QUICK_CAPTURE_PROMPTS: readonly CapturePrompt[] = [
 /* -------------------------------------------------------------------------- */
 
 /** Every prompt in the product, in one list. */
-export { EMOTIONAL_PROMPTS };
+export { EMOTIONAL_PROMPTS, FAITH_PROMPTS };
 
 export const ALL_PROMPTS: readonly CapturePrompt[] = [
   ...STATE_PROMPTS,
@@ -974,6 +975,7 @@ export const ALL_PROMPTS: readonly CapturePrompt[] = [
   ...CAREER_PROMPTS,
   ...FATHERHOOD_PROMPTS,
   ...EMOTIONAL_PROMPTS,
+  ...FAITH_PROMPTS,
   ...QUICK_CAPTURE_PROMPTS,
 ];
 

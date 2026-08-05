@@ -156,11 +156,17 @@ export const DOMAIN_DEFINITIONS: Record<DomainId, DomainDefinition> = {
     id: 'faith-and-meaning',
     label: 'Faith and meaning',
     question: 'Where am I acting in line with what I say matters?',
-    reads: ['direction-and-commitments'],
+    /*
+     * Both. The slice's own content lives in the new category; goals and commitments
+     * stay where they are, and the domain reads them because "acting in line with what
+     * matters" is partly about what he already committed to elsewhere.
+     */
+    reads: ['faith-and-meaning', 'direction-and-commitments'],
     privacy: 'faith',
     channels: ['purpose-and-values-alignment', 'emotional-regulation'],
     legacyIds: ['LEG-084', 'LEG-086', 'LEG-087', 'LEG-089'],
     updatePromptId: 'update-area:faith-and-meaning',
+    captureNamespace: 'faith',
     activatedBy: 'Prompt 8F',
     notBuilt: [
       'any claim of divine command, punishment, or blessing',

@@ -16,7 +16,8 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests/e2e',
-  testMatch: /(production-learning-map|production-areas|production-emotional)\.spec\.ts/,
+  testMatch:
+    /(production-learning-map|production-areas|production-emotional|production-faith)\.spec\.ts/,
   fullyParallel: false,
   workers: 1,
   reporter: 'list',

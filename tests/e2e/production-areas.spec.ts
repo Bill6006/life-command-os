@@ -21,6 +21,7 @@ const AREAS = {
   career: 'Career and learning',
   fatherhood: 'Fatherhood and child development',
   emotional: 'Emotional state and relationships',
+  faith: 'Faith and meaning',
 } as const;
 
 async function open(page: Page): Promise<void> {
@@ -94,8 +95,8 @@ async function updateArea(page: Page, label: string): Promise<void> {
   await expect(manageAreas(page)).toBeVisible();
 }
 
-test.describe('a fresh profile can reach both built areas', () => {
-  test('offers exactly the two that exist, and names the five that do not', async ({
+test.describe('a fresh profile can reach every built area', () => {
+  test('offers exactly the five that exist, and names the two that do not', async ({
     page,
   }) => {
     await open(page);
@@ -104,17 +105,16 @@ test.describe('a fresh profile can reach both built areas', () => {
     const manage = manageAreas(page);
     await expect(manage).toBeVisible();
 
-    // Four switches, and only four.
+    // Five switches, and only five.
     const switchable = manage.getByRole('button', { name: /^Switch (on|off) / });
-    await expect(switchable).toHaveCount(4);
-    await expect(manage).toContainText(AREAS.health);
-    await expect(manage).toContainText(AREAS.career);
-    await expect(manage).toContainText(AREAS.fatherhood);
-    await expect(manage).toContainText(AREAS.emotional);
+    await expect(switchable).toHaveCount(5);
+    for (const label of Object.values(AREAS)) {
+      await expect(manage).toContainText(label);
+    }
 
-    // The other three are named honestly and carry no control at all.
+    // The other two are named honestly and carry no control at all.
     const notYet = manage.getByRole('list', { name: 'Areas that are not built yet' });
-    for (const label of ['Faith and meaning', 'Home and environment', 'Money']) {
+    for (const label of ['Home and environment', 'Money']) {
       await expect(notYet).toContainText(label);
     }
     await expect(notYet.getByRole('button')).toHaveCount(0);
@@ -250,7 +250,7 @@ test.describe('the decision surface is unchanged by any of it', () => {
         }),
       );
 
-    expect(boxes.length).toBe(4);
+    expect(boxes.length).toBe(5);
     for (const box of boxes) {
       expect(box.h).toBeGreaterThanOrEqual(44);
       expect(box.w).toBeGreaterThanOrEqual(44);
