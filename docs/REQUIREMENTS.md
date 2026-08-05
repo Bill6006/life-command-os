@@ -2,7 +2,7 @@
 
 **Status:** Controlling
 **Plan version:** 3.2 Coverage, Domain Scan, Learning Map, and AI Review Amendment
-**Current phase:** Phase 7 — **complete**. Prompts 8A–8H and the 8D.2 bridge are GREEN; Phase 8 is next
+**Current phase:** Phase 8 — Command Core delivered. Phases 0–7 remain GREEN; Phase 9 is next
 
 **Controlling artifacts from v3.0.** The Final Product Blueprint, Updated Requirements
 Register v2, Final Acceptance Test Matrix, and Final Legacy Decisions map now supply the
@@ -1073,6 +1073,60 @@ completeness. The block is now omitted when the list is empty.
 - **The protected-topic switch.** The attribute was `emotional:topic-enabled`, written when
   the emotional slice owned the only protected topic. It is now `privacy:topic-enabled`, and
   the old attribute is still read so no existing decision is lost.
+
+---
+
+## 3o. Active requirement records — Phase 8, Prompt 9 (Command Core)
+
+| ID | Implementation | Test IDs | Notes |
+|---|---|---|---|
+| Master plan §2 | `command-core/arbitration/northStar.ts` — four qualifying routes | `the North Star gate` (4) | Removes before ranking; abstains honestly when no direction is recorded |
+| Deliverable 3 | `arbitration/dedupe.ts` — merge on outcome + follow-up, across distinct generators only | `equivalent candidates merge; different subjects do not` (3) | Same-generator candidates are different subjects |
+| Deliverables 4, 9, 10 | `coverage/plan.ts`, `coverage/suppression.ts` | `coverage asks only what could change something` (4) | Reads the Phase 7 declarations rather than copying them |
+| Deliverable 11 | `coverage/forgotten.ts` | `a quiet area is raised where it does not interrupt` (2) | Weekly scan or deep review, never a daily guide |
+| Deliverables 12, 13, 16 | `review/weeklyScan.ts`, `ui/features/review/ReviewSurface.tsx` | `the weekly scan shows every switched-on area` (3), browser (4), production (5) | Every enabled area, including the empty ones |
+| Deliverable 14 | `review/deepReview.ts` | `the deep review is useful without a scorecard` (3) | Due, never overdue; no total anywhere |
+| Deliverables 29, 33, 36 | `review/synthesis.ts` | `a domain is described by its own evidence` (2) | Tradeoffs stated, never resolved; horizons kept apart |
+| Deliverable 21 | `recompute/cantNow.ts` | `Can’t Now recomputes rather than picking the runner-up` (2) | Re-arbitrates from scratch; excludes the declined candidate |
+| Deliverables 25, 26 | `arbitration/arbitrate.ts` → Phase 4 `selectOutput` | `every domain can still reach Now` (2) | Wraps rather than reimplements the nine gates |
+| Deliverable 34 | `trace/decisionTrace.ts` | `the decision trace explains without becoming a menu` | Counts per stage; never names a rejected candidate |
+| Deliverable 37 | `export/reviewPrompt.ts`, the panel in `DataPrivacySurface.tsx` | `the review prompt is evidence-bound` (6), browser (3), production (2) | Brief and Balanced default; prohibitions identical at every intensity |
+| Deliverable 38 | `tests/unit/commandCore.test.ts` + two browser specs | 37 unit, 13 browser, 8 production | Includes the import-graph boundary test |
+| Shared rule 20 | `intelligence/domains/{health,career,fatherhood}/scan.ts` | `gives one row per enabled area` | The three slices that predate the rule |
+
+### Where Command Core begins and ends
+
+The user's architectural requirement for this prompt, and the reason it is a directory
+rather than a file. **Begins** at `runCommandCore(input)`; everything before is episode
+assembly in `src/intelligence/index.ts`. **Ends** at `CommandCoreResult`; it writes nothing
+and reads no clock.
+
+The line is enforced rather than documented: `tests/unit/commandCore.test.ts` walks the
+import graph both ways and greps for domain vocabulary. A research-backed arbitration
+replaces files inside the directory and no slice moves, because no slice is reachable from
+it. See `docs/architecture/ARCHITECTURE_OVERVIEW.md` §3a.
+
+### Four defects an independent audit found in this slice
+
+Recorded because each was live in the working tree and each passed the tests as written.
+
+1. **The North Star gate silenced five of seven domains.** It accepted `improves` only on
+   three "foundation" channels, so environmental ease, financial resilience, values
+   alignment, and connection all failed it. Caught by a probe, not a test — 630 tests passed
+   while the global output changed from action to silence across the corpus. Fixed to accept
+   any capability channel, and `everyDomainCanReachNow` now guards it.
+2. **Deduplication merged two different commitments.** Grouping on intended outcome and
+   follow-up alone merged two `unblock` candidates for different open loops and dropped one
+   from the comparison. Fixed by merging only across distinct generators.
+3. **The synthesis described one area using another's evidence.** `summaryFor` matched on
+   `reads.includes(...)`, returning whichever shared category came first in
+   `ENABLED_CATEGORIES` — health, emotional, and home all resolved to
+   `time-attention-capacity`, faith and money to `direction-and-commitments`. The same shape
+   as the fatherhood fallback bug in `categorySummaries`, and worse in consequence: the
+   false attribution reached the review surface and the block pasted into an external model.
+4. **Prompt deduplication was a no-op.** The call site built a `Set` of the deduplicated ids
+   and filtered the original list by membership — a filter that always passes. The function
+   was correct and unit-tested in isolation; the caller discarded the result.
 
 ---
 

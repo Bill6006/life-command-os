@@ -47,6 +47,7 @@ import { LearningMapView } from '../direction/LearningMapView';
 import { EmotionalAreaView } from '../direction/EmotionalAreaView';
 import { FaithAreaView } from '../direction/FaithAreaView';
 import { HomeAreaView } from '../direction/HomeAreaView';
+import { ReviewSurface } from '../review/ReviewSurface';
 import { MoneyAreaView } from '../direction/MoneyAreaView';
 import {
   nameFaithAnchor,
@@ -103,7 +104,7 @@ import '../../design-system/console.css';
  */
 
 type Destination =
-  'now' | 'timeline' | 'direction' | 'commitments' | 'learning' | 'data-privacy';
+  'now' | 'timeline' | 'direction' | 'commitments' | 'review' | 'learning' | 'data-privacy';
 
 /** What the owner is doing right now. Only one flow is ever open. */
 type Mode =
@@ -143,6 +144,12 @@ const PRIMARY: readonly { id: Destination; label: string }[] = [
 ];
 
 const UNDER_MORE: readonly { id: Destination; label: string }[] = [
+  /*
+   * Review is the Weekly Quick Domain Scan and the deep review (Phase 8). It lives under
+   * More rather than in the persistent bar because it is a surface the owner goes to
+   * deliberately — putting it beside Now would make a weekly rhythm look like a daily one.
+   */
+  { id: 'review', label: 'Review' },
   { id: 'learning', label: 'Learning' },
   { id: 'data-privacy', label: 'Data & Privacy' },
 ];
@@ -869,6 +876,56 @@ export function AppShell(): React.JSX.Element {
               }}
             />
           ) : null}
+          {flow === undefined && destination === 'review' ? (
+            <ReviewSurface
+              episode={episode}
+              busy={busy}
+              onQuickUpdate={(domainId) => {
+                /*
+                 * The middle response: the area's own questions at the shortest depth, so
+                 * a quick update is genuinely quick and still writes through the one
+                 * canonical path rather than a scan-specific shortcut.
+                 */
+                go('direction');
+                setMode({ kind: 'guide', guide: 'update-area', depth: '15', domainId });
+              }}
+              onNoChange={() => {
+                /*
+                 * "I looked and nothing had moved" is the fact `GuideSessionRecord` was
+                 * created for — it cannot be reconstructed from the observations, because
+                 * there are none. Recorded as a review session with nothing answered.
+                 */
+                void run(() =>
+                  completeGuideSession(
+                    {
+                      kind: 'weekly',
+                      depth: '15',
+                      outcome: 'completed',
+                      answers: [],
+                      skippedPromptIds: [],
+                    },
+                    new Date(),
+                  ),
+                );
+              }}
+              onOpenArea={(domainId) => {
+                go('direction');
+                setMode(
+                  domainId === 'fatherhood'
+                    ? { kind: 'learning-map' }
+                    : domainId === 'emotional-and-relationships'
+                      ? { kind: 'emotional-area' }
+                      : domainId === 'faith-and-meaning'
+                        ? { kind: 'faith-area' }
+                        : domainId === 'home-and-environment'
+                          ? { kind: 'home-area' }
+                          : domainId === 'money'
+                            ? { kind: 'money-area' }
+                            : { kind: 'guide', guide: 'update-area', depth: 'full', domainId },
+                );
+              }}
+            />
+          ) : null}
           {flow === undefined && destination === 'commitments' ? (
             <CommitmentsSurface records={records} />
           ) : null}
@@ -876,7 +933,7 @@ export function AppShell(): React.JSX.Element {
             <LearningSurface episode={episode} />
           ) : null}
           {flow === undefined && destination === 'data-privacy' ? (
-            <DataPrivacySurface recordCount={records.length} />
+            <DataPrivacySurface recordCount={records.length} episode={episode} />
           ) : null}
         </main>
       </div>

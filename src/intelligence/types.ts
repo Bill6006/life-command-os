@@ -175,7 +175,16 @@ export interface EffectPrediction {
 /** Why a candidate was removed. Internal audit only — never surfaced (INTEL-006). */
 export interface RejectedCandidate {
   readonly candidateId: string;
-  readonly stage: 'safety' | 'protected-context' | 'commitment' | 'capacity' | 'comparison';
+  readonly stage:
+    | 'safety'
+    | 'protected-context'
+    | 'commitment'
+    | 'capacity'
+    /** Removed by Command Core's North Star gate before ranking (Phase 8). */
+    | 'north-star'
+    /** Merged into an equivalent candidate rather than shown twice (Phase 8). */
+    | 'duplicate'
+    | 'comparison';
   readonly reason: string;
 }
 

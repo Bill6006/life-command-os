@@ -450,7 +450,7 @@ test.describe('navigation', () => {
     await expect(page.getByRole('main')).toContainText('Nothing has been learned yet');
   });
 
-  test('exposes all six destinations on desktop, without More', async ({ page }) => {
+  test('exposes all seven destinations on desktop, without More', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await open(page);
 
@@ -460,7 +460,8 @@ test.describe('navigation', () => {
       .filter({ visible: true })
       .allTextContents();
 
-    expect(visible).toEqual([...DESTINATIONS, 'Learning', 'Data & Privacy']);
+    // Review joined the rail in Phase 8: the weekly scan and the deep review.
+    expect(visible).toEqual([...DESTINATIONS, 'Review', 'Learning', 'Data & Privacy']);
     expect(visible).not.toContain('More');
   });
 });

@@ -24,6 +24,9 @@ import {
 export { assessFatherhood, childReference, generateFatherhoodCandidate };
 export type { FatherhoodEvidence, FatherhoodCandidateResult };
 
+export { buildFatherhoodScan } from './scan';
+export type { FatherhoodScan } from './scan';
+
 /**
  * The Fatherhood slice, assembled (Prompt 8D tasks 8–11).
  *

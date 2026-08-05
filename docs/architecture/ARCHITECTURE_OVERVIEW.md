@@ -180,6 +180,64 @@ Corrections **append and supersede**. Historical truth is never silently rewritt
 
 See [ADR-0005](../decisions/ADR-0005-append-oriented-records-and-projections.md).
 
+## 3a. Command Core — the cross-domain subsystem (Phase 8)
+
+Seven domain slices read their own records and each produce a reading, at most one
+candidate, a scan summary, and their permissions. **Command Core** takes those submissions
+and decides what the owner is actually shown.
+
+```
+src/command-core/
+  index.ts              ← the public entry point: runCommandCore(input)
+  boundary.ts           ← the documented seam: CommandCoreInput / CommandCoreResult
+  arbitration/          ← merge, North Star gate, one global output
+  coverage/             ← what is worth asking now; suppression; quiet areas
+  review/               ← weekly scan, synthesis, deep review
+  trace/                ← what happened to everything that did not win
+  recompute/            ← full re-arbitration after a new constraint
+  export/               ← the copy-ready AI review instruction block
+```
+
+### Where it begins and ends
+
+**Begins** at `runCommandCore(input)`. Everything before it — assessing state, running each
+slice, gathering submissions — is *episode assembly* and lives in `src/intelligence/index.ts`.
+Command Core does not know how a submission was produced and cannot ask.
+
+**Ends** at the returned `CommandCoreResult`. It writes nothing, reads no clock, and
+consumes no randomness.
+
+### The line is enforced, not described
+
+Nothing under `src/command-core/` may import a domain's content or intelligence modules.
+It may import only the shared contracts every domain already speaks: canonical records, the
+domain *registry* (ids, labels, enablement), the prompt catalogue, the contextual-capture
+registry, and the shared intelligence types. Nothing under `src/domain/` or
+`src/intelligence/domains/` may import Command Core.
+
+`tests/unit/commandCore.test.ts` walks the import graph in both directions and fails the
+build on a violation. A third test greps for domain vocabulary — a core that knew what a
+milestone or a resilience band was would need editing whenever a domain changed.
+
+**That is what makes the subsystem upgradeable.** A research-backed arbitration, a smarter
+coverage policy, or a learned ranking replaces files inside this directory and no slice
+moves, because no slice is reachable from here.
+
+### What each module owns
+
+| Module | Owns |
+|---|---|
+| `arbitration/dedupe` | Equivalent candidates merge, carrying both reasons. Same-generator candidates never merge — they are different subjects. |
+| `arbitration/northStar` | The four qualifying routes. Removes before ranking; labels every survivor with which route it took. |
+| `arbitration/arbitrate` | Wraps Phase 4's constraint-first `selectOutput` rather than reimplementing the nine gates. |
+| `coverage/suppression` | Freshness, cooldown, expiry, repeated-skip, protected context, unpermitted topic. Reads the Phase 7 declarations rather than holding a second copy. |
+| `coverage/forgotten` | Quiet areas, raised on the weekly scan or the deep review — never in a daily guide. |
+| `review/*` | The Weekly Quick Domain Scan, the synthesis and its tradeoffs, the monthly deep review. |
+| `trace/decisionTrace` | Counts per stage. Never lists a rejected candidate — that would be a menu. |
+| `export/reviewPrompt` | The instruction block. No network call exists anywhere in the product. |
+
+---
+
 ## 4. Core record families
 
 The first vertical slice requires **twenty** families. All are implemented in Phase 2.

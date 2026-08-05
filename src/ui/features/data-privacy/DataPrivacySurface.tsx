@@ -1,4 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  buildReviewPrompt,
+  COACHING_INTENSITIES,
+  DEFAULT_COACHING_INTENSITY,
+  DEFAULT_REVIEW_MODE,
+  INTENSITY_LABELS,
+  MODE_LABELS,
+  REVIEW_MODES,
+  type CoachingIntensity,
+  type ReviewMode,
+} from '../../../command-core';
+import type { EpisodeResult } from '../../../intelligence';
 import { buildInfo, shortCommit } from '../../../app/buildInfo';
 import { KeyValues, Panel } from '../../components/primitives';
 import { PRIVACY_CLASSES, type PrivacyClass } from '../../../domain/records';
@@ -118,6 +130,119 @@ function PlanTable({ plan }: { plan: RestorePlan }): React.JSX.Element {
         </p>
       )}
     </>
+  );
+}
+
+/**
+ * The copy-ready AI review instruction block (Phase 8 deliverable 37).
+ *
+ * Sits beside the export because the two are used together and separately from everything
+ * else here: the export is the evidence, this is what to ask of it. Neither sends anything
+ * anywhere — there is no network call in this product and no key to make one with.
+ *
+ * Mode and intensity are the owner's, defaulting to Brief and Balanced. The prohibitions
+ * are identical at every intensity: Hard Coach is direct about the evidence, never unkind
+ * about the person.
+ */
+function ReviewPromptPanel({
+  episode,
+  result,
+  rangeLabel,
+  included,
+}: {
+  readonly episode: EpisodeResult;
+  readonly result: ExportResult | undefined;
+  readonly rangeLabel: string;
+  readonly included: readonly PrivacyClass[];
+}): React.JSX.Element {
+  const [mode, setMode] = useState<ReviewMode>(DEFAULT_REVIEW_MODE);
+  const [intensity, setIntensity] = useState<CoachingIntensity>(DEFAULT_COACHING_INTENSITY);
+  const [shown, setShown] = useState(false);
+
+  const prompt = buildReviewPrompt({
+    mode,
+    intensity,
+    rangeLabel,
+    includedClasses: included,
+    withheldClasses: result?.withheldByClass ?? [],
+    includedCount: result?.includedCount ?? 0,
+    synthesis: episode.commandCore.synthesis,
+    deepReview: episode.commandCore.deepReview,
+  });
+
+  return (
+    <Panel label="Ask an AI to review it" wide>
+      <p className="fine">
+        This builds the instructions to paste alongside the export. The app produces the text
+        and nothing else — it makes no network call, holds no key, and sends nothing anywhere.
+        Where you paste it is entirely your decision.
+      </p>
+
+      <p className="panel-label">How long</p>
+      <div className="scale scale-choices" role="group" aria-label="Review length">
+        {REVIEW_MODES.map((option) => (
+          <button
+            type="button"
+            key={option}
+            className={`scale-step${mode === option ? ' scale-step-on' : ''}`}
+            aria-pressed={mode === option}
+            onClick={() => {
+              setMode(option);
+            }}
+          >
+            <span className="scale-label">{MODE_LABELS[option]}</span>
+          </button>
+        ))}
+      </div>
+
+      <p className="panel-label">How firm</p>
+      <div className="scale scale-choices" role="group" aria-label="Coaching intensity">
+        {COACHING_INTENSITIES.map((option) => (
+          <button
+            type="button"
+            key={option}
+            className={`scale-step${intensity === option ? ' scale-step-on' : ''}`}
+            aria-pressed={intensity === option}
+            onClick={() => {
+              setIntensity(option);
+            }}
+          >
+            <span className="scale-label">{INTENSITY_LABELS[option]}</span>
+          </button>
+        ))}
+      </div>
+      <p className="fine why">
+        Firmness changes the tone and nothing else. All three forbid causal claims, diagnosis,
+        scores, and anything shaming — Hard Coach is direct about the evidence, never about you.
+      </p>
+
+      <div className="actions">
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => {
+            setShown((open) => !open);
+          }}
+        >
+          {shown ? 'Hide instructions' : 'Show review instructions'}
+        </button>
+      </div>
+
+      {shown ? (
+        <p className="field">
+          <label className="fine" htmlFor="review-prompt">
+            copy this, and paste it with the export
+          </label>
+          <textarea
+            id="review-prompt"
+            className="field-input field-text"
+            rows={14}
+            readOnly
+            value={prompt}
+          />
+        </p>
+      ) : null}
+    </Panel>
   );
 }
 
@@ -245,8 +370,10 @@ function ExportPanel({
 
 export function DataPrivacySurface({
   recordCount,
+  episode,
 }: {
   readonly recordCount: number;
+  readonly episode: EpisodeResult;
 }): React.JSX.Element {
   const [busy, setBusy] = useState<Busy>('none');
   const [health, setHealth] = useState<StorageHealth | undefined>(undefined);
@@ -639,6 +766,13 @@ export function DataPrivacySurface({
             );
           }
         }}
+      />
+
+      <ReviewPromptPanel
+        episode={episode}
+        result={exported}
+        rangeLabel={RANGE_LABELS[range.kind]}
+        included={included}
       />
 
       <Panel label="Storage">

@@ -19,6 +19,9 @@ import { generateHealthCandidate, type HealthCandidateResult } from './healthCan
 export { assessHealth, generateHealthCandidate };
 export type { HealthEvidence, HealthCandidateResult };
 
+export { buildHealthScan } from './scan';
+export type { HealthScan } from './scan';
+
 /**
  * The Health slice, assembled (Prompt 8B tasks 10–11).
  *

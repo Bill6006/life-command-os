@@ -22,6 +22,9 @@ import { generateCareerCandidate, type CareerCandidateResult } from './careerCan
 export { assessCareer, assessClaim, generateCareerCandidate };
 export type { CareerEvidence, CareerCandidateResult };
 
+export { buildCareerScan } from './scan';
+export type { CareerScan } from './scan';
+
 /**
  * The Career slice, assembled (Prompt 8C tasks 11–13).
  *
