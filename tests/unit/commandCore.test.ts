@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -46,6 +47,32 @@ function importsOf(file: string): readonly string[] {
 }
 
 /* -------------------------------------------------------------------------- */
+
+describe('every source file actually reaches the commit', () => {
+  it('has nothing under src/ that git is ignoring', () => {
+    /*
+     * Phase 8 shipped a commit missing three of its own source files.
+     *
+     * `.gitignore` carried an unanchored `coverage/`, which git matches at **any** depth,
+     * so `src/command-core/coverage/` was silently excluded. `git add -A` reported success,
+     * `git status` showed only the untracked parent directory, and every local check passed
+     * because the files were on disk. The absence surfaced as a type-resolution failure in
+     * CI, after the deploy had already been skipped.
+     *
+     * A rule that ignores source is never intentional, so this fails the build rather than
+     * waiting for a remote runner to notice.
+     */
+    const ignored = execFileSync(
+      'git',
+      ['ls-files', '--others', '--ignored', '--exclude-standard', 'src'],
+      { encoding: 'utf8' },
+    )
+      .split(/\r?\n/)
+      .filter((line) => line.trim() !== '');
+
+    expect(ignored, 'git is ignoring source files').toEqual([]);
+  });
+});
 
 describe('the boundary is walked, not described', () => {
   const coreFiles = filesUnder(join(SRC, 'command-core'));

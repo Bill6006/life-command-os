@@ -39,22 +39,31 @@ secrets.json
 credentials.json
 
 # --- Dependencies and build output ---
+#
+# Build and test-output rules are anchored with a leading slash so they match only
+# the directory at the repository root. An unanchored `coverage/` matches a directory
+# of that name at ANY depth, and in Phase 8 it silently swallowed
+# `src/command-core/coverage/` — three source files that `git add -A` reported adding,
+# that `git status` hid behind their parent directory, and whose absence only appeared
+# as a type-resolution failure in CI. Anchor anything that names a build artifact.
+#
+# `node_modules/` stays unanchored deliberately: a nested one should always be ignored.
 node_modules/
-dist/
+/dist/
 # The end-to-end build. Identical to production except that it includes the test
 # bridge, which is why it is built separately and never deployed.
-dist-e2e/
-dist-ssr/
-build/
+/dist-e2e/
+/dist-ssr/
+/build/
 *.local
 
 # --- Test and tooling output ---
-coverage/
+/coverage/
 /test-results/
 /playwright-report/
 /playwright/.cache/
 /blob-report/
-.vitest/
+/.vitest/
 
 # --- Editor and OS ---
 .vscode/*
