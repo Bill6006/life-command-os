@@ -7,6 +7,7 @@ import {
   openCommitments,
 } from '../support';
 import { assessHealth, summariseHealthCategory } from '../domains/health';
+import { assessEmotional, summariseEmotionalCategory } from '../domains/emotional';
 import { assessFatherhood, summariseFatherhoodCategory } from '../domains/fatherhood';
 import type { CategorySummary, StateAssessment, TrajectoryResult } from '../types';
 
@@ -170,6 +171,14 @@ export function summariseCategories(
      * "losing ground on focused work" under a heading about a two-year-old before the
      * exhaustiveness check below was added.
      */
+    if (category === 'emotional-and-relationships') {
+      // Delegated to the Emotional slice, for the same reason health's and
+      // fatherhood's are: the slice created the category, so nothing else can describe
+      // it without inventing a second version of the same reading.
+      summaries.push(summariseEmotionalCategory(assessEmotional(records, now)));
+      continue;
+    }
+
     /*
      * Exhaustive by assignment.
      *

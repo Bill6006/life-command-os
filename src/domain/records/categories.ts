@@ -35,6 +35,16 @@ export const ENABLED_CATEGORIES = [
    * "my week".
    */
   'fatherhood-and-child',
+  /**
+   * Activated by Prompt 8E, through the Emotional slice's own domain contract.
+   *
+   * The mood, stress, confidence, and overwhelm scales deliberately **stay** in
+   * `time-attention-capacity`: the core engine reads them to decide what anyone can
+   * take on today, and they are general state rather than relationship content. This
+   * category is for what the slice adds — connection, loneliness, boundaries, conflict
+   * and repair — all of which is `relationship` data or more sensitive.
+   */
+  'emotional-and-relationships',
 ] as const;
 export type LifeCategory = (typeof ENABLED_CATEGORIES)[number];
 

@@ -20,6 +20,7 @@ const AREAS = {
   health: 'Health, recovery, and energy',
   career: 'Career and learning',
   fatherhood: 'Fatherhood and child development',
+  emotional: 'Emotional state and relationships',
 } as const;
 
 async function open(page: Page): Promise<void> {
@@ -103,21 +104,17 @@ test.describe('a fresh profile can reach both built areas', () => {
     const manage = manageAreas(page);
     await expect(manage).toBeVisible();
 
-    // Three switches, and only three.
+    // Four switches, and only four.
     const switchable = manage.getByRole('button', { name: /^Switch (on|off) / });
-    await expect(switchable).toHaveCount(3);
+    await expect(switchable).toHaveCount(4);
     await expect(manage).toContainText(AREAS.health);
     await expect(manage).toContainText(AREAS.career);
     await expect(manage).toContainText(AREAS.fatherhood);
+    await expect(manage).toContainText(AREAS.emotional);
 
-    // The other four are named honestly and carry no control at all.
+    // The other three are named honestly and carry no control at all.
     const notYet = manage.getByRole('list', { name: 'Areas that are not built yet' });
-    for (const label of [
-      'Emotional state and relationships',
-      'Faith and meaning',
-      'Home and environment',
-      'Money',
-    ]) {
+    for (const label of ['Faith and meaning', 'Home and environment', 'Money']) {
       await expect(notYet).toContainText(label);
     }
     await expect(notYet.getByRole('button')).toHaveCount(0);
@@ -253,7 +250,7 @@ test.describe('the decision surface is unchanged by any of it', () => {
         }),
       );
 
-    expect(boxes.length).toBe(3);
+    expect(boxes.length).toBe(4);
     for (const box of boxes) {
       expect(box.h).toBeGreaterThanOrEqual(44);
       expect(box.w).toBeGreaterThanOrEqual(44);

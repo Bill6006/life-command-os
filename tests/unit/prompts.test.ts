@@ -196,7 +196,7 @@ describe('the shipped catalogue', () => {
 });
 
 describe('the approved anchored scales', () => {
-  it('defines the seven Blueprint scales, plus the three the Health slice added', () => {
+  it('defines the seven Blueprint scales, plus those the later slices added', () => {
     expect([...SCALE_IDS]).toEqual([
       // Blueprint §4.4, unchanged.
       'energy',
@@ -213,6 +213,8 @@ describe('the approved anchored scales', () => {
       'pain-interference',
       // Prompt 8C. What came back without looking — a trend, so it needs ordinals.
       'retrieval-strength',
+      // Prompt 8E. A present state that moves, read as a trend against his own weeks.
+      'loneliness',
     ]);
     expect(SCALES.energy.anchors.map((a) => a.label)).toEqual([
       'Drained',

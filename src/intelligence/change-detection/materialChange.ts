@@ -1,4 +1,8 @@
-import type { CanonicalRecord } from '../../domain/records';
+import {
+  classificationOf,
+  type CanonicalRecord,
+  type PrivacyClass,
+} from '../../domain/records';
 import { ago } from '../support';
 import type { DecisionOutput, MaterialChange, StateAssessment, WhatChanged } from '../types';
 
@@ -37,17 +41,40 @@ export function recordsBefore(
   return records.filter((record) => record.recordedAt < instant);
 }
 
+/**
+ * Content too sensitive to quote on a surface the owner did not open for it.
+ *
+ * What Changed sits on Now. It is the most-seen panel in the product and the owner does
+ * not choose what it shows — which makes it exactly the wrong place for the contents of
+ * a private note. Prompt 8E's production test caught this one verbatim on Now: "Recorded
+ * emotional:note — text: <the note>".
+ *
+ * The change itself is still reported, because "something was recorded" is true and
+ * useful. Only the value is withheld, and the panel says so rather than looking empty.
+ */
+const UNQUOTABLE_CLASSES: readonly PrivacyClass[] = [
+  'private-pattern',
+  'child',
+  'relationship',
+];
+
+function quotable(record: CanonicalRecord): boolean {
+  return !UNQUOTABLE_CLASSES.includes(classificationOf(record));
+}
+
 function describe(record: CanonicalRecord): { change: string; detail: string } {
   switch (record.recordType) {
     case 'observation':
       return {
         change: `Recorded ${record.attribute.replace(/-/g, ' ')}`,
-        detail: JSON.stringify(record.value).replace(/[{}"]/g, '').replace(/,/g, ', '),
+        detail: quotable(record)
+          ? JSON.stringify(record.value).replace(/[{}"]/g, '').replace(/,/g, ', ')
+          : 'Kept private — open the area to see it',
       };
     case 'observation-correction':
       return {
         change: `Corrected ${record.attribute.replace(/-/g, ' ')}`,
-        detail: record.reason,
+        detail: quotable(record) ? record.reason : 'Kept private — open the area to see it',
       };
     case 'context-snapshot':
       return {
@@ -58,11 +85,20 @@ function describe(record: CanonicalRecord): { change: string; detail: string } {
             : 'Nothing protected',
       };
     case 'commitment':
-      return { change: `Commitment ${record.state}`, detail: record.statement };
+      return {
+        change: `Commitment ${record.state}`,
+        detail: quotable(record) ? record.statement : 'Kept private',
+      };
     case 'goal':
-      return { change: `Goal ${record.state}`, detail: record.statement };
+      return {
+        change: `Goal ${record.state}`,
+        detail: quotable(record) ? record.statement : 'Kept private',
+      };
     case 'life-context-change':
-      return { change: 'Life context changed', detail: record.summary };
+      return {
+        change: 'Life context changed',
+        detail: quotable(record) ? record.summary : 'Kept private',
+      };
     default:
       return { change: `Recorded ${record.recordType.replace(/-/g, ' ')}`, detail: '' };
   }

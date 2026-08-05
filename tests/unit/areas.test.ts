@@ -85,12 +85,7 @@ describe('switching an area on', () => {
 
   it('refuses every unbuilt area, not just the one that was tried', async () => {
     const records = await seed('areas-all-off');
-    for (const domainId of [
-      'emotional-and-relationships',
-      'faith-and-meaning',
-      'home-and-environment',
-      'money',
-    ] as const) {
+    for (const domainId of ['faith-and-meaning', 'home-and-environment', 'money'] as const) {
       expect((await setDomainState(records, { domainId, state: 'enabled' }, NOW)).ok).toBe(
         false,
       );

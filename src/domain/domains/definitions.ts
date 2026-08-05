@@ -134,7 +134,12 @@ export const DOMAIN_DEFINITIONS: Record<DomainId, DomainDefinition> = {
     id: 'emotional-and-relationships',
     label: 'Emotional state and relationships',
     question: 'What is interfering, and what connection is available?',
-    reads: ['time-attention-capacity'],
+    /*
+     * Both, on purpose. The slice's own content lives in the new category; mood,
+     * stress, confidence, and overwhelm stay in `time-attention-capacity`, where the
+     * core engine reads them to decide what anyone can take on today.
+     */
+    reads: ['emotional-and-relationships', 'time-attention-capacity'],
     privacy: 'relationship',
     channels: [
       'emotional-regulation',
@@ -143,6 +148,7 @@ export const DOMAIN_DEFINITIONS: Record<DomainId, DomainDefinition> = {
     ],
     legacyIds: ['LEG-111', 'LEG-112', 'LEG-115', 'LEG-116', 'LEG-117'],
     updatePromptId: 'update-area:emotional-and-relationships',
+    captureNamespace: 'emotional',
     activatedBy: 'Prompt 8E',
     notBuilt: ['therapy', 'diagnosis', 'a contact CRM', 'message automation'],
   },

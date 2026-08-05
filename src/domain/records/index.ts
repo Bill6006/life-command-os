@@ -53,6 +53,7 @@ import { guideSessionRecord, type GuideSessionRecord } from './guides';
 import { domainPreferenceRecord, type DomainPreferenceRecord } from './domains';
 import { skillClaimRecord, type SkillClaimRecord } from './career';
 import { milestoneObservationRecord, type MilestoneObservationRecord } from './fatherhood';
+import { surfacePermissionRecord, type SurfacePermissionRecord } from './permissions';
 import {
   questionAnswerRecord,
   questionRecord,
@@ -76,14 +77,16 @@ export * from './guides';
 export * from './domains';
 export * from './career';
 export * from './fatherhood';
+export * from './permissions';
 
 /**
- * Twenty-five canonical record families.
+ * Twenty-six canonical record families.
  *
  * The twenty of the first vertical slice, plus `learned-belief` (**Phase 5**),
  * `guide-session` (**Phase 6**), `domain-preference` (**Prompt 8A**), `skill-claim`
- * (**Prompt 8C**), and `milestone-observation` (**Prompt 8D**). Each was deliberately
- * absent until there was behaviour for it to describe.
+ * (**Prompt 8C**), `milestone-observation` (**Prompt 8D**), and `surface-permission`
+ * (**Prompt 8E**). Each was deliberately absent until there was behaviour for it to
+ * describe.
  *
  * `guide-session` is canonical rather than derived because it cannot be
  * reconstructed from the observations it produced: a guide that legitimately asked
@@ -104,6 +107,11 @@ export * from './fatherhood';
  * `milestone-observation` is irreducible for a different reason: an answer against a
  * developmental checklist is meaningless without which list and which revision it was
  * answered against, and checklists get revised. See `fatherhood.ts`.
+ *
+ * `surface-permission` is the only one that is not about the owner's life at all. It
+ * decides what the product may show **without being asked**, so its topic and surface
+ * are enums rather than strings: a permission that cannot be stated incorrectly is
+ * better than one that merely fails closed when mistyped. See `permissions.ts`.
  *
  * Domain content families arrive one at a time with their slice. Adding one early is a
  * stop condition (`LEAN-001`); Prompt 8B needed none, and this is 8C's only one.
@@ -134,6 +142,7 @@ export const RECORD_TYPES = [
   'domain-preference',
   'skill-claim',
   'milestone-observation',
+  'surface-permission',
 ] as const;
 
 export type RecordType = (typeof RECORD_TYPES)[number];
@@ -163,7 +172,8 @@ export type CanonicalRecord =
   | GuideSessionRecord
   | DomainPreferenceRecord
   | SkillClaimRecord
-  | MilestoneObservationRecord;
+  | MilestoneObservationRecord
+  | SurfacePermissionRecord;
 
 /**
  * Schema per family.
@@ -198,6 +208,7 @@ export const RECORD_SCHEMAS: Record<RecordType, z.ZodType> = {
   'domain-preference': domainPreferenceRecord,
   'skill-claim': skillClaimRecord,
   'milestone-observation': milestoneObservationRecord,
+  'surface-permission': surfacePermissionRecord,
 };
 
 /** Families that record first-hand fact rather than system interpretation. */
@@ -215,6 +226,7 @@ export const OBSERVED_RECORD_TYPES = [
   'domain-preference',
   'skill-claim',
   'milestone-observation',
+  'surface-permission',
 ] as const satisfies readonly RecordType[];
 
 export function isRecordType(value: unknown): value is RecordType {

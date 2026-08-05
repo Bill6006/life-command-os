@@ -7,6 +7,7 @@ import {
   type RecordType,
   type SkillClaimRecord,
 } from '../../domain/records';
+import { mayExport } from '../../domain/emotional/permissions';
 import { listAllRecords } from './readRecords';
 
 /**
@@ -174,8 +175,26 @@ export function buildAiExport(
     return (from === undefined || at >= from.getTime()) && at <= to.getTime();
   });
 
-  const withheld = inWindow.filter((record) => !included.has(classificationOf(record)));
-  const visible = inWindow.filter((record) => included.has(classificationOf(record)));
+  /*
+   * The second gate (Prompt 8E, Master Plan v3.2 §11).
+   *
+   * Choosing to include a privacy class is not enough for a protected topic. Private
+   * Pattern content stays out **even when `private-pattern` was ticked**, unless the
+   * owner separately granted the export surface — two deliberate decisions before the
+   * most sensitive thing in the product can leave the device in readable form.
+   *
+   * The gate is applied to the class rather than to individual records, so a future
+   * topic cannot be added to the protected list and quietly miss it.
+   */
+  const permitted = (record: CanonicalRecord): boolean =>
+    classificationOf(record) !== 'private-pattern' || mayExport(records, 'private-pattern');
+
+  const withheld = inWindow.filter(
+    (record) => !included.has(classificationOf(record)) || !permitted(record),
+  );
+  const visible = inWindow.filter(
+    (record) => included.has(classificationOf(record)) && permitted(record),
+  );
 
   const withheldCounts = new Map<PrivacyClass, number>();
   for (const record of withheld) {

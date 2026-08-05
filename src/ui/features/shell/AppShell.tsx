@@ -44,6 +44,17 @@ import {
 } from '../../../application/commands/fatherhood';
 import { buildLearningMap } from '../../../intelligence/domains/fatherhood/learningMap';
 import { LearningMapView } from '../direction/LearningMapView';
+import { EmotionalAreaView } from '../direction/EmotionalAreaView';
+import {
+  recordBoundary,
+  recordEmotionalObservation,
+  recordPrivateNote,
+  setSurfacePermission,
+  setTopicEnabled,
+} from '../../../application/commands/emotional';
+import { assessEmotional } from '../../../intelligence/domains/emotional';
+import { enabledTopics, grantedSurfaces } from '../../../domain/emotional/permissions';
+import { PROTECTED_TOPICS } from '../../../domain/records/permissions';
 import { quickCaptureOptions } from '../../../domain/capture/registry';
 import type { DomainId } from '../../../domain/domains/definitions';
 import { onDatabaseSuperseded } from '../../../application/queries/storageInfo';
@@ -89,7 +100,9 @@ type Mode =
    * items. The guided one-question-at-a-time flow is still reachable from it, for when
    * the owner would rather be led than scan.
    */
-  | { readonly kind: 'learning-map' };
+  | { readonly kind: 'learning-map' }
+  /** The emotional area page: a scan surface with a protected section inside it. */
+  | { readonly kind: 'emotional-area' };
 
 const PRIMARY: readonly { id: Destination; label: string }[] = [
   { id: 'now', label: 'Now' },
@@ -402,6 +415,54 @@ export function AppShell(): React.JSX.Element {
       );
     }
 
+    if (mode.kind === 'emotional-area') {
+      const evidence = assessEmotional(records, now);
+      return (
+        <EmotionalAreaView
+          state={{
+            enabledTopics: evidence.enabledTopics,
+            grants: new Map(
+              PROTECTED_TOPICS.map((topic) => [topic, grantedSurfaces(records, topic)]),
+            ),
+            conflictOpen: evidence.conflictOpen,
+            openBoundary: evidence.openBoundary,
+          }}
+          busy={busy}
+          onRecord={(attribute, choice) => {
+            void run(
+              () => recordEmotionalObservation({ attribute, state: choice }, new Date()),
+              { stay: true },
+            );
+          }}
+          onRecordBoundary={(text) => {
+            void run(() => recordBoundary(text, new Date()), { stay: true });
+          }}
+          onPrivateNote={(text) => {
+            void run(() => recordPrivateNote(text, new Date()), { stay: true });
+          }}
+          onSetTopicEnabled={(topic, enabled) => {
+            void run(() => setTopicEnabled(topic, enabled, new Date()), { stay: true });
+          }}
+          onSetPermission={(topic, surface, granted) => {
+            void run(() => setSurfacePermission({ topic, surface, granted }, new Date()), {
+              stay: true,
+            });
+          }}
+          onOpenGuided={() => {
+            setMode({
+              kind: 'guide',
+              guide: 'update-area',
+              depth: 'full',
+              domainId: 'emotional-and-relationships',
+            });
+          }}
+          onClose={() => {
+            setMode({ kind: 'console' });
+          }}
+        />
+      );
+    }
+
     if (mode.kind === 'capture') {
       return (
         <QuickCaptureSurface
@@ -410,6 +471,7 @@ export function AppShell(): React.JSX.Element {
             episode.domains
               .filter((panel) => panel.state === 'enabled')
               .map((panel) => panel.domainId),
+            enabledTopics(records),
           )}
           onCapture={(input) => {
             void run(() => quickCapture(input, new Date()));
@@ -581,7 +643,9 @@ export function AppShell(): React.JSX.Element {
                 setMode(
                   domainId === 'fatherhood'
                     ? { kind: 'learning-map' }
-                    : { kind: 'guide', guide: 'update-area', depth: 'full', domainId },
+                    : domainId === 'emotional-and-relationships'
+                      ? { kind: 'emotional-area' }
+                      : { kind: 'guide', guide: 'update-area', depth: 'full', domainId },
                 );
               }}
               onSetAreaState={(domainId, state) => {

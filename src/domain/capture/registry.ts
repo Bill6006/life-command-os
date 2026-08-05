@@ -1,4 +1,6 @@
 import type { DomainId } from '../domains/definitions';
+import type { ProtectedTopic } from '../records/permissions';
+import { EMOTIONAL_CAPTURES } from '../emotional/capture';
 import { FATHERHOOD_CAPTURES } from '../fatherhood/capture';
 import type { ContextualCapture } from './contextualCapture';
 
@@ -13,7 +15,10 @@ import type { ContextualCapture } from './contextualCapture';
  * Phase 8's orchestrator will read this same list to decide what to ask and when.
  * Nothing here decides anything.
  */
-export const ALL_CONTEXTUAL_CAPTURES: readonly ContextualCapture[] = [...FATHERHOOD_CAPTURES];
+export const ALL_CONTEXTUAL_CAPTURES: readonly ContextualCapture[] = [
+  ...FATHERHOOD_CAPTURES,
+  ...EMOTIONAL_CAPTURES,
+];
 
 export function capturesForDomain(domainId: DomainId): readonly ContextualCapture[] {
   return ALL_CONTEXTUAL_CAPTURES.filter((capture) => capture.domainId === domainId);
@@ -37,12 +42,25 @@ export interface QuickCaptureOption {
  */
 export function quickCaptureOptions(
   enabledDomainIds: readonly DomainId[],
+  enabledTopics: readonly ProtectedTopic[] = [],
 ): readonly QuickCaptureOption[] {
-  return ALL_CONTEXTUAL_CAPTURES.flatMap((capture) =>
-    capture.captureClass === 'quick-capture' &&
-    capture.quickCaptureKind !== undefined &&
-    enabledDomainIds.includes(capture.domainId)
-      ? [{ kind: capture.quickCaptureKind, domainId: capture.domainId }]
-      : [],
-  );
+  return ALL_CONTEXTUAL_CAPTURES.flatMap((capture) => {
+    if (capture.captureClass !== 'quick-capture') return [];
+    if (capture.quickCaptureKind === undefined) return [];
+    if (!enabledDomainIds.includes(capture.domainId)) return [];
+
+    /*
+     * A protected topic needs its own switch. Enabling the area is consent to record
+     * ordinary things about it; it is not consent to be offered the most private route
+     * in the product every time the owner writes something down.
+     */
+    if (
+      capture.protectedTopic !== undefined &&
+      !enabledTopics.includes(capture.protectedTopic)
+    ) {
+      return [];
+    }
+
+    return [{ kind: capture.quickCaptureKind, domainId: capture.domainId }];
+  });
 }

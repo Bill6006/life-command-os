@@ -206,14 +206,14 @@ describe('only areas with a slice behind them can be switched on', () => {
     }
   });
 
-  it('offers exactly the two built areas today', () => {
+  it('offers exactly the built areas today', () => {
     expect(implementedDomains().map((definition) => definition.id)).toEqual([
       'health-recovery-energy',
       'career-and-learning',
       'fatherhood',
+      'emotional-and-relationships',
     ]);
     expect(unimplementedDomains().map((definition) => definition.id)).toEqual([
-      'emotional-and-relationships',
       'faith-and-meaning',
       'home-and-environment',
       'money',

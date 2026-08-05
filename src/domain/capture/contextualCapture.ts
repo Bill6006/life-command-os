@@ -2,6 +2,7 @@ import type { DomainId } from '../domains/definitions';
 import type { ProtectedContext } from '../records/categories';
 import type { PrivacyClass } from '../records/envelope';
 import type { RecordType } from '../records';
+import type { ProtectedTopic } from '../records/permissions';
 import type { GuideKind } from '../records/guides';
 
 /**
@@ -108,6 +109,15 @@ export interface ContextualCapture {
    * need to know which domains exist — it asks which enabled domains declared one.
    */
   readonly quickCaptureKind?: string | undefined;
+  /**
+   * A protected topic this capture belongs to, when it is one.
+   *
+   * Switching the **domain** on is not enough to offer it: a protected topic has to be
+   * switched on separately. Without this field, enabling an area would have quietly put
+   * "A private note" on the capture screen, which is exactly the surprise the sensitive
+   * boundaries exist to prevent.
+   */
+  readonly protectedTopic?: ProtectedTopic | undefined;
 }
 
 export type CaptureViolationCode =

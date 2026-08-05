@@ -782,6 +782,64 @@ throwaway context and Playwright's clock to cross a day boundary instead.
 
 ---
 
+## 3k. Active requirement records — Phase 7, Prompt 8E (Emotional state, social, and relationships)
+
+| ID | Implementation | Test IDs | Notes |
+|---|---|---|---|
+| `LEG-111` | `loneliness` scale; mood, stress, confidence, overwhelm unchanged | `the shared scales stay where the engine can read them` (2) | The four existing scales stay in `time-attention-capacity` — the core engine reads them for capacity |
+| `LEG-112` | `emotional:interference` — the one guide-eligible question | `lets only the capacity question into a guide` | Interference is about capacity, not mood, which is why it may interrupt |
+| `LEG-115` | Connection kinds, counted by day | `counts contact by day without rating any of it` | Never a target, never compared |
+| `LEG-116` | `SOCIAL_PRACTICES` — attempts, including dating | `records attempts, never the other person's response` | Sending is the task; a reply is not part of it |
+| `LEG-117` | Boundaries, conflict and repair, rejection re-entry | `the one candidate` (6) | Recovery measured by re-entry, never by mood |
+| `SAFE-001` | `EMOTIONAL_ACTIONS` — eight, closed, one of which defers to a professional | `has eight actions, one of which is to stop having a view` | Same device as health and fatherhood |
+| `OWN-051` | The meter **refused** with an explicitly invalid construct | `refuses a percentage that would have divided cleanly` | Contact days over a fortnight divides neatly, and the result would be a grade for a quiet week |
+| v3.2 §11 | `SurfacePermissionRecord` — the 26th family | `sensitive topics never appear unasked` (9) | Topic and surface are enums; absence means denied |
+| v3.2 §11 | `mayExport` gate inside `buildAiExport` | `keeps a private note out of the export until the export surface is granted` | Two deliberate decisions before private content leaves in readable form |
+| Shared rule 20 | `buildEmotionalScan` | `the scan summary this domain hands to Phase 8` (3) | Domain-owned; quotes nothing |
+| Shared rule 21–23 | `EmotionalAreaView` — seven sections, buttons throughout | browser `shows every section at once, with structured controls` | Guided flow still reachable from it |
+
+### It is not a CRM, and the data shape is why
+
+**There is no person record and no field that could hold one.** Every observation is
+about what the owner did; the other person appears only as an unnamed participant. The
+moment this app holds a list of people with notes attached it becomes a surveillance tool
+pointed at the owner's family, and it invites the score-keeping about relationships that
+ruins them. The Blueprint forbids a contact CRM; the *absence of a person family* is what
+makes that structural rather than a promise. A test walks every structure in the domain
+and asserts no key named `name`, `person`, `contact`, or `partner` exists.
+
+### Enabling is not permitting
+
+Two separate decisions, and the distinction is the whole of the sensitive-topic
+boundary:
+
+- **Enabling** a protected topic means the owner wants somewhere to record it. It grants
+  no surface anything.
+- **Permitting** names one topic and one surface. All four surfaces start denied, there is
+  no "allow everywhere" control, and revoking appends rather than deletes.
+
+`manual-only` is deliberately not on the surface list, because deliberately opening a
+screen is not the app surfacing anything.
+
+### Resolved conflict: which category the mood scales live in
+
+The prompt lists mood, stress, confidence, and overwhelm under this domain. They stay in
+`time-attention-capacity`, and the domain **reads both categories** — the precedent health
+set in 8B. Moving them would have changed what the core engine reads to decide what anyone
+can take on today, for no gain: they are general state, not relationship content. The new
+category holds what the slice adds.
+
+### The leak this slice found in existing code
+
+The production test caught What Changed — on Now, the most-seen panel in the product —
+printing a private note verbatim: `Recorded emotional:note — text: <the note>`. The change
+detector quoted every record's value regardless of classification. It now withholds the
+value for `private-pattern`, `child`, and `relationship` content while still reporting that
+something was recorded, because "something changed" is true and useful and the contents are
+not the app's to broadcast.
+
+---
+
 ## 4. Traceability fields used when a requirement becomes active
 
 Per master plan §68, each active requirement record includes: ID · statement · source

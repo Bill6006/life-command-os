@@ -57,6 +57,15 @@ export const SCALE_IDS = [
    * owner thinks they know it — the two diverge exactly where it matters.
    */
   'retrieval-strength',
+  /**
+   * Loneliness, as a present state (Prompt 8E).
+   *
+   * A scale rather than a yes/no because it moves, and because the useful reading is a
+   * trend against the owner's own weeks rather than a threshold. It is **not** a measure
+   * of how much company someone has: a person can be lonely in a full house, and the
+   * scale asks what is true right now rather than auditing a social calendar.
+   */
+  'loneliness',
 ] as const;
 export type ScaleId = (typeof SCALE_IDS)[number];
 
@@ -158,6 +167,13 @@ export const SCALES: Record<ScaleId, ScaleDefinition> = {
     'Functional',
     'Good',
     'Strong',
+  ]),
+  loneliness: scale('loneliness', 'Connection right now', 'more lonely', [
+    'Connected',
+    'Mostly fine',
+    'A bit apart',
+    'Lonely',
+    'Very alone',
   ]),
   'retrieval-strength': scale(
     'retrieval-strength',

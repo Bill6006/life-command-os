@@ -22,6 +22,7 @@ import type {
   RecommendationRecord,
   SkillClaimRecord,
   MilestoneObservationRecord,
+  SurfacePermissionRecord,
   TrajectoryRecord,
   UntreatedForecastRecord,
   WeeklyDirectionRecord,
@@ -539,6 +540,26 @@ export function aMilestoneObservation(
   } as MilestoneObservationRecord;
 }
 
+/**
+ * One surface permission (Prompt 8E).
+ *
+ * Granting, because a fixture of a revocation would be a fixture of the default. The
+ * default is that nothing is granted and no record exists at all.
+ */
+export function aSurfacePermission(
+  overrides: Partial<SurfacePermissionRecord> = {},
+): SurfacePermissionRecord {
+  return {
+    ...envelope('surface-permission', 34),
+    ...OBSERVED,
+    privacy: 'relationship',
+    topic: 'relationship-detail',
+    surface: 'weekly-scan',
+    granted: true,
+    ...overrides,
+  } as SurfacePermissionRecord;
+}
+
 /** A guide session (Phase 6). Completed with nothing skipped. */
 export function aGuideSession(
   producedRecordIds: readonly string[] = [],
@@ -602,5 +623,6 @@ export function oneOfEveryFamily(): Record<string, unknown> {
     'domain-preference': aDomainPreference(),
     'skill-claim': aSkillClaim(),
     'milestone-observation': aMilestoneObservation(),
+    'surface-permission': aSurfacePermission(),
   };
 }

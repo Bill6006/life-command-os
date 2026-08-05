@@ -24,8 +24,8 @@ beforeEach(() => {
  * Gate requirement: every active core record validates independently.
  */
 describe('core record families', () => {
-  it('registers twenty-five families, two of them domain content', () => {
-    expect(RECORD_TYPES).toHaveLength(25);
+  it('registers twenty-six families, three of them domain content', () => {
+    expect(RECORD_TYPES).toHaveLength(26);
     expect(Object.keys(RECORD_SCHEMAS).sort()).toEqual([...RECORD_TYPES].sort());
   });
 
@@ -61,6 +61,13 @@ describe('core record families', () => {
     // meaningless without which list and which revision it was answered against, and
     // checklists get revised.
     expect(RECORD_TYPES).toContain('milestone-observation');
+  });
+
+  it('registers SurfacePermissionRecord, added with the Emotional slice (Prompt 8E)', () => {
+    // The only family that is not about the owner's life. It decides what the product
+    // may show **without being asked**, so its topic and surface are enums: a permission
+    // that cannot be stated incorrectly beats one that merely fails closed when mistyped.
+    expect(RECORD_TYPES).toContain('surface-permission');
   });
 
   it('adds domain content families only with their slice', () => {

@@ -207,7 +207,7 @@ The first vertical slice requires **twenty** families. All are implemented in Ph
 | 19 | `QuestionRecord` |
 | 20 | `QuestionAnswerRecord` |
 
-**Activated later** — twenty-five families are registered as of Phase 7 Prompt 8D:
+**Activated later** — twenty-six families are registered as of Phase 7 Prompt 8E:
 
 - `LearnedBeliefRecord` — Phase 5, when learning behavior exists.
 - `GuideSessionRecord` — Phase 6, because a guide that legitimately asked nothing new
@@ -216,6 +216,10 @@ The first vertical slice requires **twenty** families. All are implemented in Ph
 - `DomainPreferenceRecord` — Phase 7 Prompt 8A. Which areas are switched on is the owner's
   decision with a date, not a setting.
 - `SkillClaimRecord` — Phase 7 Prompt 8C, the first **domain content** family. See §4.2.
+- `SurfacePermissionRecord` — Phase 7 Prompt 8E. The only family that is not about the
+  owner's life: it decides what the product may show **without being asked**. Topic and
+  surface are enums, so a permission cannot be stated incorrectly, and absence means
+  denied.
 - `MilestoneObservationRecord` — Phase 7 Prompt 8D. An answer against a developmental
   checklist is meaningless without which list and which revision it was answered against,
   and checklists get revised, so `checklistSource` and `checklistVersion` travel with
@@ -423,6 +427,7 @@ officially supported GitHub Actions approach.
 | Domain slices (7) | The shared panel contract; one candidate per domain; visual eligibility earned **and refused**; Update This Area owning its own questions while the morning stays unchanged; each domain's own prohibited vocabulary asserted against the rendered surface |
 | Reachability (7) | Every owner-facing control exercised on the **production** build from a fresh profile, with no test bridge and no seeding. Added after two finished slices passed every seeded test while being unreachable on the shipped app |
 | Scan and progression (7, v3.2) | The full domain page shows every relevant item at once and updates one without walking the rest; a progression is evidence-backed, one rung, cited, and applied only on owner approval. Verified in an isolated context that never touches the owner's profile |
+| Sensitive boundaries (7, v3.2) | Protected topics are denied on every surface until granted one at a time; enabling a topic grants nothing; private content never reaches a guide, a scan, or an export without a second explicit decision |
 | Contextual capture (7, v3.1) | Every capture declares its class, owning surface, timing, triggers, privacy exclusions, suppression, follow-up window, and expiry — validated at module load. Placement rules are enforced, not documented |
 
 Coverage percentage is a signal, not the goal. Critical behavior must be covered

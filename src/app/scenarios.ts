@@ -300,6 +300,58 @@ function moment(text: string, occurredMs = -2 * DAY): CanonicalRecord {
   } as unknown as CanonicalRecord;
 }
 
+/* --- Prompt 8E: emotional state, social, and relationships ---------------- */
+
+/** One emotional observation. Never about a named person — there is no field for one. */
+function emotionalState(
+  attribute: string,
+  state: string,
+  occurredMs = -1 * DAY,
+): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'relationship',
+    category: 'emotional-and-relationships',
+    attribute,
+    value: { kind: 'state', state },
+  } as unknown as CanonicalRecord;
+}
+
+function emotionalNote(
+  attribute: string,
+  text: string,
+  occurredMs = -1 * DAY,
+  privacy: 'relationship' | 'private-pattern' = 'relationship',
+): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy,
+    category: 'emotional-and-relationships',
+    attribute,
+    value: { kind: 'note', text },
+  } as unknown as CanonicalRecord;
+}
+
+/** A loneliness reading, on the shared anchored scale. */
+function loneliness(ordinal: number, label: string, occurredMs = -1 * DAY): CanonicalRecord {
+  return {
+    ...envelope('observation', occurredMs),
+    ...OBSERVED,
+    privacy: 'relationship',
+    category: 'emotional-and-relationships',
+    attribute: 'state:loneliness',
+    value: {
+      kind: 'anchored-scale',
+      scaleId: 'loneliness',
+      scaleVersion: 1,
+      ordinal,
+      label,
+    },
+  } as unknown as CanonicalRecord;
+}
+
 function star(): CanonicalRecord {
   return {
     ...envelope('north-star', -30 * DAY),
@@ -1054,6 +1106,78 @@ export const SCENARIOS: readonly Scenario[] = [
   ),
 
   /* --- Prompt 8D: fatherhood and child development ------------------------ */
+
+  build(
+    'emotional-enabled',
+    'Emotional area switched on',
+    'Contact, practice, and a boundary held. Expect a readable panel, a practice comparison, and a refused percentage.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('emotional-and-relationships', 'enabled'),
+      emotionalState('emotional:connection', 'In person', -2 * DAY),
+      emotionalState('emotional:connection', 'A call or video', -5 * DAY),
+      emotionalState('emotional:practice', 'Started a conversation', -2 * DAY),
+      emotionalState('emotional:practice', 'Said no to something', -4 * DAY),
+      emotionalState('emotional:practice', 'Started a conversation', -9 * DAY),
+      emotionalNote(
+        'emotional:boundary-decided',
+        'Not answering work messages after seven',
+        -6 * DAY,
+      ),
+      emotionalState('emotional:boundary-outcome', 'Held it', -3 * DAY),
+      emotionalState('emotional:interference', 'Not really', -1 * DAY),
+      loneliness(2, 'Mostly fine', -1 * DAY),
+      loneliness(3, 'A bit apart', -9 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'emotional-unresolved',
+    'Something unresolved with someone',
+    'A conflict on record, settled but not repaired. Expect repair offered while it is still cheap, and nothing about the other person.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('emotional-and-relationships', 'enabled'),
+      emotionalState('emotional:conflict-open', 'Yes', -2 * DAY),
+      emotionalState('emotional:connection', 'In person', -2 * DAY),
+      emotionalState('emotional:interference', 'A bit', -1 * DAY),
+      loneliness(3, 'A bit apart', -1 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'emotional-quiet',
+    'Nothing to interrupt for',
+    'Contact yesterday, nothing in the way, nothing open. Expect silence.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('emotional-and-relationships', 'enabled'),
+      emotionalState('emotional:connection', 'In person', -1 * DAY),
+      emotionalState('emotional:interference', 'Not really', -1 * DAY),
+      loneliness(1, 'Connected', -1 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
+
+  build(
+    'emotional-private',
+    'A private note, and no permission to show it',
+    'Private patterns switched on with a note recorded and every surface still denied. Expect it stored, withheld from the export, and absent from every guide.',
+    [
+      star(),
+      ...decliningWeeks(),
+      domainPreference('emotional-and-relationships', 'enabled'),
+      emotionalState('emotional:topic-enabled:private-pattern', 'On', -3 * DAY),
+      emotionalNote('emotional:note', 'Placeholder private note', -2 * DAY, 'private-pattern'),
+      emotionalState('emotional:connection', 'Messages back and forth', -1 * DAY),
+      context({ minutes: 40, capacity: 'moderate' }),
+    ],
+  ),
 
   build(
     'fatherhood-enabled',

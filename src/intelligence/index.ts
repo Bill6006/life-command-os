@@ -33,6 +33,11 @@ import {
   fatherhoodContribution,
   generateFatherhoodCandidate,
 } from './domains/fatherhood';
+import {
+  assessEmotional,
+  emotionalContribution,
+  generateEmotionalCandidate,
+} from './domains/emotional';
 
 export * from './types';
 export * from './contracts';
@@ -105,12 +110,15 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
   const career = generateCareerCandidate(records, careerEvidence);
   const fatherhoodEvidence = assessFatherhood(records, now);
   const fatherhood = generateFatherhoodCandidate(records, fatherhoodEvidence, now);
+  const emotionalEvidence = assessEmotional(records, now);
+  const emotional = generateEmotionalCandidate(records, emotionalEvidence, now);
 
   const candidates = enforceOneCandidatePerDomain([
     ...generateCandidates(records, state, now),
     ...(health.candidate === undefined ? [] : [health.candidate]),
     ...(career.candidate === undefined ? [] : [career.candidate]),
     ...(fatherhood.candidate === undefined ? [] : [fatherhood.candidate]),
+    ...(emotional.candidate === undefined ? [] : [emotional.candidate]),
   ]).accepted;
   const effects = candidates.map((candidate) => predictEffects(candidate, state));
 
@@ -193,6 +201,10 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
         ],
         ['career-and-learning', careerContribution(careerEvidence, career, trajectory)],
         ['fatherhood', fatherhoodContribution(fatherhoodEvidence, fatherhood, trajectory)],
+        [
+          'emotional-and-relationships',
+          emotionalContribution(emotionalEvidence, emotional, trajectory),
+        ],
       ]),
     ),
     internal: { candidates, effects, rejected },

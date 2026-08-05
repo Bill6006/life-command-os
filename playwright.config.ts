@@ -27,7 +27,7 @@ const E2E_URL = `http://localhost:${String(E2E_PORT)}/life-command-os/`;
 const PRODUCTION_URL = `http://localhost:${String(PRODUCTION_PORT)}/life-command-os/`;
 
 const PRODUCTION_SPEC =
-  /(production-recovery|production-areas|production-fatherhood|production-learning-map|privacy-audit)\.spec\.ts/;
+  /(production-recovery|production-areas|production-fatherhood|production-learning-map|production-emotional|privacy-audit)\.spec\.ts/;
 
 export default defineConfig({
   testDir: './tests/e2e',

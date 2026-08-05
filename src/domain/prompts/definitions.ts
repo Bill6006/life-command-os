@@ -11,6 +11,7 @@ import { MILESTONE_STATUS_LABELS, REPORTABLE_MILESTONE_STATUSES } from '../recor
 import { MEDITATION_PURPOSE_LABELS, MEDITATION_PURPOSES } from '../health/actions';
 import { SCALE_LIST, scaleAttribute, type ScaleId } from '../records/scales';
 import { assertPromptCatalogue, type PromptDefinition } from './policy';
+import { EMOTIONAL_PROMPTS } from './emotional';
 
 /**
  * Every question this product asks in a normal flow.
@@ -961,6 +962,8 @@ export const QUICK_CAPTURE_PROMPTS: readonly CapturePrompt[] = [
 /* -------------------------------------------------------------------------- */
 
 /** Every prompt in the product, in one list. */
+export { EMOTIONAL_PROMPTS };
+
 export const ALL_PROMPTS: readonly CapturePrompt[] = [
   ...STATE_PROMPTS,
   ...CONTEXT_PROMPTS,
@@ -970,6 +973,7 @@ export const ALL_PROMPTS: readonly CapturePrompt[] = [
   ...HEALTH_PROMPTS,
   ...CAREER_PROMPTS,
   ...FATHERHOOD_PROMPTS,
+  ...EMOTIONAL_PROMPTS,
   ...QUICK_CAPTURE_PROMPTS,
 ];
 
