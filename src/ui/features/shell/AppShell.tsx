@@ -16,6 +16,7 @@ import { useLocalRecords } from '../../state/useLocalRecords';
 import type { GuideDepth, GuideKind, GuideOutcome } from '../../../domain/records';
 import type { AnsweredPrompt } from '../../../application/commands/capture';
 import {
+  chooseDeclineReasons,
   declineRecommendation,
   openEpisodes,
   recordOutcome,
@@ -439,6 +440,25 @@ export function AppShell(): React.JSX.Element {
         <DeclineSurface
           statement={episode.output.candidate.statement}
           busy={busy}
+          /*
+           * Only what the situation makes likely. The soft prior is allowed to inform this
+           * — guessing which reasons to *offer* is exactly what a prior is for, since the
+           * owner still chooses and a wrong guess costs one tap rather than a wrong call.
+           */
+          reasons={chooseDeclineReasons({
+            setting:
+              episode.state.situation.setting ?? episode.state.situationPrior.usually.setting,
+            privacy:
+              episode.state.situation.privacy ?? episode.state.situationPrior.usually.privacy,
+            interruptibility:
+              episode.state.situation.interruptibility ??
+              episode.state.situationPrior.usually.interruptibility,
+            neededShape: episode.output.candidate.capacity?.shape,
+            lowCapacity:
+              episode.state.capacity.status === 'known' &&
+              (episode.state.capacity.value === 'low' ||
+                episode.state.capacity.value === 'depleted'),
+          })}
           onDecline={decline}
           onCancel={() => {
             setMode({ kind: 'console' });

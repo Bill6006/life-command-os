@@ -9,6 +9,7 @@ import {
 } from '../support';
 import type { Reading, StateAssessment } from '../types';
 import type { SituationalCapacity } from '../../domain/domains/capacity';
+import { inferSituationPrior } from './recurringContext';
 
 /**
  * Deterministic current-state understanding (`STATE-CAPACITY`).
@@ -26,6 +27,15 @@ import type { SituationalCapacity } from '../../domain/domains/capacity';
 
 /** How old a context snapshot may be before it stops answering "right now". */
 const CONTEXT_USEFUL_AGE_MS = 4 * 60 * 60 * 1000;
+
+/**
+ * How long a situation report describes the present.
+ *
+ * Shorter than the snapshot window, because these answer "where are you *right now*".
+ * Three hours is long enough to cover a working morning and short enough that an
+ * afternoon does not inherit it.
+ */
+const SITUATION_USEFUL_AGE_MS = 3 * 60 * 60 * 1000;
 
 function describeCapacity(value: EvidenceValue<string>): string {
   switch (value.status) {
@@ -58,13 +68,36 @@ function describeMinutes(value: EvidenceValue<number>): EvidenceValue<string> {
  * Anything unsaid stays `undefined` and blocks nothing. See `capacity.fits`.
  */
 function readSituation(
-  observations: readonly { readonly attribute: string; readonly value: unknown }[],
+  observations: readonly {
+    readonly attribute: string;
+    readonly value: unknown;
+    readonly occurredAt: string;
+  }[],
   availableMinutes: EvidenceValue<number>,
+  now: Date,
 ): SituationalCapacity {
+  /*
+   * The latest answer, and only if it is still about now.
+   *
+   * Two things went wrong in the first version of this. It took the *first* matching
+   * observation rather than the most recent, so a four-week-old "at work" outranked what
+   * the owner said this morning. And it had no recency window at all, which meant a
+   * situation report never expired — the app would go on believing you were at the office
+   * a month after you said so. Where you were is not where you are.
+   */
   const answerTo = (attribute: string): string | undefined => {
-    const found = observations.find((observation) => observation.attribute === attribute);
-    const value = found?.value as { kind?: string; state?: string } | undefined;
-    return value?.kind === 'state' ? value.state : undefined;
+    let latest: { at: number; state: string } | undefined;
+    for (const observation of observations) {
+      if (observation.attribute !== attribute) continue;
+      const value = observation.value as { kind?: string; state?: string } | undefined;
+      if (value?.kind !== 'state' || value.state === undefined) continue;
+
+      const at = Date.parse(observation.occurredAt);
+      if (Number.isNaN(at)) continue;
+      if (now.getTime() - at > SITUATION_USEFUL_AGE_MS) continue;
+      if (latest === undefined || at > latest.at) latest = { at, state: value.state };
+    }
+    return latest?.state;
   };
 
   const minutes = knownValue(availableMinutes);
@@ -211,7 +244,13 @@ export function assessState(records: readonly CanonicalRecord[], now: Date): Sta
   return {
     readings,
     availableMinutes,
-    situation: readSituation(observations, availableMinutes),
+    situation: readSituation(observations, availableMinutes, now),
+    /*
+     * Kept strictly apart from `situation` (`V33-028`, clarification 11). What usually
+     * happens on a Tuesday morning is a guess; only what the owner said today decides
+     * what is possible. Nothing that filters candidates receives this.
+     */
+    situationPrior: inferSituationPrior(records, now),
     capacity,
     protectedContexts,
     contradictions,

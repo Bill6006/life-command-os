@@ -1,3 +1,4 @@
+import type { CapacityProfile } from '../domains/capacity';
 import type { CapabilityEffect } from '../capabilities';
 
 /**
@@ -83,6 +84,16 @@ export interface HealthAction {
   readonly stoppingPoint: string;
   readonly friction: 'low' | 'moderate' | 'high';
   readonly capabilityEffects: readonly CapabilityEffect[];
+  /**
+   * What the situation has to allow for this to be possible (`V33-026`, clarification 3).
+   *
+   * Declared only where it genuinely changes eligibility. Most health moves are deliberately
+   * shapeless — a glass of water is possible in an open-plan office, on a train, and with a
+   * toddler on your hip, and inventing a constraint for it would rule out the one move that
+   * is nearly always available. Omission is the honest default, and `fits` treats it as no
+   * constraint rather than as "fits anywhere".
+   */
+  readonly capacity?: CapacityProfile | undefined;
 }
 
 const effect = (
@@ -138,6 +149,8 @@ export const HEALTH_ACTIONS: Record<HealthActionId, HealthAction> = {
   },
   'gentle-movement': {
     id: 'gentle-movement',
+    /* Ten minutes of walking needs somewhere to walk and a gap to walk in. */
+    capacity: { shape: 'transition' },
     statement: 'Move gently for ten minutes — a walk, or anything that is not sitting',
     intendedOutcome: 'Energy after moving is different from energy before',
     followUp: { promptId: 'outcome:completed', windowHours: 6 },
@@ -154,6 +167,8 @@ export const HEALTH_ACTIONS: Record<HealthActionId, HealthAction> = {
   },
   'prepare-for-sleep': {
     id: 'prepare-for-sleep',
+    /* Only possible where you sleep, and an interruption restarts the wind-down. */
+    capacity: { shape: 'protected-focus', interruptionCost: 'total' },
     statement: 'Start winding down for sleep now rather than later',
     intendedOutcome: 'Falling asleep takes less time than last night',
     followUp: { promptId: 'sleep:onset-minutes', windowHours: 16 },
@@ -170,6 +185,11 @@ export const HEALTH_ACTIONS: Record<HealthActionId, HealthAction> = {
   },
   meditate: {
     id: 'meditate',
+    /*
+     * Sitting quietly needs privacy and room to think. This is the clearest case in the
+     * catalogue where an open-plan desk rules the move out at any duration.
+     */
+    capacity: { shape: 'protected-focus', interruptionCost: 'partial' },
     statement: 'Sit quietly for ten minutes',
     intendedOutcome: 'The thing this was for becomes possible',
     followUp: { promptId: 'outcome:returned-to-task', windowHours: 3 },
@@ -199,6 +219,8 @@ export const HEALTH_ACTIONS: Record<HealthActionId, HealthAction> = {
   },
   'seek-human-support': {
     id: 'seek-human-support',
+    /* Raising something with a person needs to be somewhere you can speak freely. */
+    capacity: { shape: 'protected-focus' },
     statement: 'Worth raising with someone qualified',
     intendedOutcome: 'A person who can actually assess this has heard about it',
     followUp: { promptId: 'outcome:interaction-happened', windowHours: 24 * 14 },

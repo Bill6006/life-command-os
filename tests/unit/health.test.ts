@@ -45,6 +45,8 @@ const NO_STATE: StateAssessment = {
   availableMinutes: { status: 'unknown' },
   /* Nothing said about the situation. Every field unknown, and none of them blocking. */
   situation: {},
+  /* And no history to guess from, which is a different thing from guessing nothing. */
+  situationPrior: { usually: {}, fromDays: 0, because: [] },
   capacity: { status: 'unknown' },
   protectedContexts: [],
   contradictions: [],

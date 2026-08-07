@@ -50,6 +50,7 @@ function toCandidate(action: HealthAction, reason: string): CandidateAction {
     followUp: action.followUp,
     capabilityEffects: action.capabilityEffects,
     durationMinutes: action.durationMinutes,
+    ...(action.capacity === undefined ? {} : { capacity: action.capacity }),
     minimumMinutes: action.minimumMinutes,
     minimumVersion: action.minimumVersion,
     fallback: action.fallback,

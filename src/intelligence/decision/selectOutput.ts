@@ -1,5 +1,6 @@
 import { knownValue, type CanonicalRecord } from '../../domain/records';
 import { selectQuestion } from '../questioning/selectQuestion';
+import { fits } from '../../domain/domains/capacity';
 import { assessConfidence, northStar, openCommitments } from '../support';
 import type {
   CandidateAction,
@@ -239,6 +240,32 @@ export function selectOutput(
       return true;
     });
   }
+
+  /*
+   * Shape, not duration (`V33-026`, clarification 3).
+   *
+   * The two filters above ask "is there enough time" and "is there enough capacity", and
+   * between them they still cannot tell that sitting quietly is impossible at an open-plan
+   * desk with ten free minutes and moderate energy. Shape is the third question, and the
+   * only one that can say so.
+   *
+   * It runs last of the three because it is the most specific, and it can only ever remove
+   * a candidate that has explicitly declared what it needs. An undeclared shape passes —
+   * see `fits`, where unknown never blocks.
+   */
+  eligible = eligible.filter((candidate) => {
+    if (candidate.capacity === undefined) return true;
+    const verdict = fits(candidate.capacity, state.situation);
+    if (!verdict.eligible) {
+      rejected.push({
+        candidateId: candidate.id,
+        stage: 'capacity',
+        reason: verdict.because,
+      });
+      return false;
+    }
+    return true;
+  });
 
   /* --- One high-value question, when an answer changes eligibility -------- */
   const question = selectQuestion(state, eligible);

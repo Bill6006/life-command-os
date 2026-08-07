@@ -714,14 +714,77 @@ export interface Scenario {
   readonly records: readonly CanonicalRecord[];
 }
 
+/**
+ * A situation observation — where the owner is, and what that allows (`V33-023`).
+ *
+ * Filed as `general` because none of it is sensitive: the room you are in is not a
+ * health fact, and treating it as one would put ordinary context behind a permission.
+ */
+function situationState(attribute: string, state: string): CanonicalRecord {
+  return {
+    ...envelope('observation', -20 * MINUTE),
+    ...OBSERVED,
+    privacy: 'general',
+    category: 'time-attention-capacity',
+    attribute,
+    value: { kind: 'state', state },
+  } as unknown as CanonicalRecord;
+}
+
+/**
+ * The situation every scenario assumes unless it says otherwise.
+ *
+ * At home, nothing in particular on, able to step away and speak freely — the condition
+ * under which the largest number of moves are possible, so a scenario that expects a
+ * recommendation gets one for reasons to do with what it is testing rather than with an
+ * unrelated gap in its context.
+ *
+ * A scenario that is *about* an unknown or constrained situation records its own values
+ * and these are skipped. That is the point of merging by attribute rather than appending.
+ */
+const DEFAULT_SITUATION: readonly CanonicalRecord[] = [
+  situationState('context:setting', 'Home'),
+  situationState('context:engagement', 'Nothing in particular'),
+  situationState('context:interruptibility', 'Yes, freely'),
+  situationState('context:privacy', 'Yes'),
+];
+
 function build(
   scenarioId: string,
   name: string,
   description: string,
   records: readonly CanonicalRecord[],
   nowOffsetMs = 0,
+  /**
+   * Set false where a *known* situation would falsify the premise.
+   *
+   * `return-after-absence` is the case: three weeks with nothing recorded, and a set of
+   * twenty-minute-old context observations would make the profile look freshly active.
+   * It would also be untrue — after a gap the app genuinely does not know where you are.
+   */
+  assumeSituation = true,
 ): Scenario {
-  return { id: scenarioId, name, description, nowIso: at(nowOffsetMs), records };
+  if (!assumeSituation) {
+    return { id: scenarioId, name, description, nowIso: at(nowOffsetMs), records };
+  }
+  const declared = new Set(
+    records.flatMap((record) => {
+      const attribute = (record as { attribute?: string }).attribute;
+      return attribute === undefined ? [] : [attribute];
+    }),
+  );
+  const situation = DEFAULT_SITUATION.filter((record) => {
+    const attribute = (record as unknown as { attribute: string }).attribute;
+    return !declared.has(attribute);
+  });
+
+  return {
+    id: scenarioId,
+    name,
+    description,
+    nowIso: at(nowOffsetMs),
+    records: [...situation, ...records],
+  };
 }
 
 /**
@@ -1060,6 +1123,9 @@ export const SCENARIOS: readonly Scenario[] = [
       forecastRecord('declining', -35 * DAY, -28 * DAY),
       context({ minutes: 40, capacity: 'moderate', occurredMs: -30 * DAY }),
     ],
+    0,
+    /* Nothing recorded for three weeks includes the situation. */
+    false,
   ),
 
   /* --- Phase 7 Prompt 8A: the shared domain framework --------------------- */

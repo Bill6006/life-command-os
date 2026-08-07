@@ -7,10 +7,7 @@ import {
   type CapturePrompt,
 } from '../../../domain/prompts/definitions';
 import type { Answer, AnsweredPrompt } from '../../../application/commands/capture';
-import {
-  DECLINE_REASONS,
-  type DeclineReason,
-} from '../../../application/commands/decisionEpisode';
+import { type DeclineReason } from '../../../application/commands/decisionEpisode';
 import type { QuickCaptureOption } from '../../../domain/capture/registry';
 import type { DomainId } from '../../../domain/domains/definitions';
 
@@ -36,11 +33,20 @@ import type { DomainId } from '../../../domain/domains/definitions';
 export function DeclineSurface({
   statement,
   busy,
+  reasons,
   onDecline,
   onCancel,
 }: {
   readonly statement: string;
   readonly busy: boolean;
+  /**
+   * The few reasons the situation makes likely (`V33-029`, clarification 4).
+   *
+   * Chosen by `chooseDeclineReasons` rather than rendered from the whole catalogue. A
+   * fifteen-item list is read rather than answered, and the app then learns whichever
+   * reason was easiest to find.
+   */
+  readonly reasons: readonly DeclineReason[];
   readonly onDecline: (reason: DeclineReason) => void;
   readonly onCancel: () => void;
 }): React.JSX.Element {
@@ -52,7 +58,7 @@ export function DeclineSurface({
           What is in the way? This becomes a constraint on what gets suggested next.
         </p>
         <div className="scale scale-choices" role="group" aria-label="What is in the way">
-          {DECLINE_REASONS.map((reason) => (
+          {reasons.map((reason) => (
             <button
               type="button"
               key={reason.id}
@@ -63,12 +69,19 @@ export function DeclineSurface({
               }}
             >
               <span className="scale-label">{reason.label}</span>
+              {reason.unlockedBy === undefined ? null : (
+                <span className="scale-anchor">{reason.unlockedBy}</span>
+              )}
             </button>
           ))}
         </div>
         <p className="fine">
           Declining is not recorded as evidence that the suggestion was wrong, and not as
           anything about you. It records what was true at the time.
+        </p>
+        <p className="fine">
+          These are the reasons that look likely from what is already known — not a complete
+          list. Anything that does not fit is “Other, or not sure”.
         </p>
         <div className="actions">
           <button type="button" className="btn btn-link" onClick={onCancel}>

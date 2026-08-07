@@ -1,4 +1,5 @@
 import type { CapacityProfile, SituationalCapacity } from '../domain/domains/capacity';
+import type { SituationPrior } from './state/recurringContext';
 import type {
   CanonicalRecord,
   ConfidenceLabel,
@@ -68,6 +69,14 @@ export interface StateAssessment {
    * field is independently unknown, and an unknown never rules anything out.
    */
   readonly situation: SituationalCapacity;
+  /**
+   * What the situation usually is at this hour on this weekday (`V33-028`).
+   *
+   * A soft prior, never a constraint. It may order candidates, choose which `Can't now`
+   * reasons to offer, and decide whether a question is worth asking — it may not make a
+   * move ineligible, and `selectOutput` never passes it to `fits`.
+   */
+  readonly situationPrior: SituationPrior;
   readonly capacity: EvidenceValue<'depleted' | 'low' | 'moderate' | 'high'>;
   readonly protectedContexts: readonly ProtectedContext[];
   /** Attributes where credible records disagree. Reduces confidence; never hidden. */

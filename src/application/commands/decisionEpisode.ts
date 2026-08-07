@@ -52,51 +52,200 @@ export type DeclineConstraint =
   | { readonly kind: 'capacity'; readonly level: 'depleted' | 'low' }
   | { readonly kind: 'preference' };
 
+/**
+ * The three things a decline can mean (`V33-029`, section I, clarification 4).
+ *
+ * They are different claims and must not be collapsed. A **temporary context** constraint
+ * is about this hour and releases the moment anything else is recorded. A **prerequisite**
+ * is a reversible gap — hungry, thirsty, needs a tool — and should produce a small action
+ * that removes it rather than an entry in a list of things you cannot do. A **preference**
+ * is the owner correcting the app about the move itself, which is the only one of the three
+ * that is evidence about the recommendation rather than about the moment.
+ */
+export type DeclineKind = 'temporary-context' | 'prerequisite' | 'preference';
+
 export interface DeclineReason {
   readonly id: string;
   readonly label: string;
+  readonly kind: DeclineKind;
   readonly constraint: DeclineConstraint;
+  /**
+   * A small action that removes the obstacle, where one honestly exists.
+   *
+   * Only for reversible prerequisites. "I have not eaten" is not an inability, it is a
+   * ten-second problem with a five-minute answer, and treating it as a refusal loses both.
+   */
+  readonly unlockedBy?: string | undefined;
 }
 
 export const DECLINE_REASONS: readonly DeclineReason[] = [
-  { id: 'no-time', label: 'Not enough time', constraint: { kind: 'time-unclear' } },
+  {
+    id: 'no-time',
+    label: 'Not enough time right now',
+    kind: 'temporary-context',
+    constraint: { kind: 'time-unclear' },
+  },
+  {
+    id: 'wrong-place',
+    label: 'Wrong place — I am at work',
+    kind: 'temporary-context',
+    constraint: { kind: 'protected', context: 'work-focus' },
+  },
+  {
+    id: 'around-people',
+    label: 'I am around other people',
+    kind: 'temporary-context',
+    constraint: { kind: 'protected', context: 'work-focus' },
+  },
+  {
+    id: 'need-something-first',
+    label: 'I need something first',
+    kind: 'prerequisite',
+    constraint: { kind: 'preference' },
+    unlockedBy: 'Name the one thing that would make it possible',
+  },
+  {
+    id: 'not-eaten',
+    label: 'I have not eaten',
+    kind: 'prerequisite',
+    constraint: { kind: 'capacity', level: 'low' },
+    unlockedBy: 'Eat something first',
+  },
   {
     id: 'low-physical-energy',
     label: 'Low physical energy',
+    kind: 'temporary-context',
     constraint: { kind: 'capacity', level: 'depleted' },
   },
   {
     id: 'low-mental-energy',
     label: 'Low mental energy',
+    kind: 'temporary-context',
     constraint: { kind: 'capacity', level: 'low' },
   },
-  { id: 'sleepy', label: 'Too sleepy', constraint: { kind: 'capacity', level: 'depleted' } },
+  {
+    id: 'sleepy',
+    label: 'Too sleepy',
+    kind: 'temporary-context',
+    constraint: { kind: 'capacity', level: 'depleted' },
+  },
   {
     id: 'pain-or-symptom',
     label: 'Pain or a symptom',
+    kind: 'temporary-context',
     constraint: { kind: 'capacity', level: 'depleted' },
   },
   {
     id: 'responsibility',
     label: 'Looking after someone',
+    kind: 'temporary-context',
     constraint: { kind: 'protected', context: 'caregiving' },
   },
   {
     id: 'family-time',
     label: 'Family time',
+    kind: 'temporary-context',
     constraint: { kind: 'protected', context: 'family' },
   },
   {
     id: 'in-transit',
     label: 'Travelling',
+    kind: 'temporary-context',
     constraint: { kind: 'protected', context: 'commute' },
+  },
+  {
+    id: 'nothing-extra',
+    label: 'Nothing extra right now',
+    kind: 'temporary-context',
+    constraint: { kind: 'preference' },
   },
   {
     id: 'not-relevant',
     label: 'Not the right action',
+    kind: 'preference',
+    constraint: { kind: 'preference' },
+  },
+  {
+    id: 'unsure',
+    label: 'Other, or not sure',
+    kind: 'temporary-context',
     constraint: { kind: 'preference' },
   },
 ];
+
+/**
+ * The few reasons worth offering, chosen from the situation (`V33-029`, clarification 4).
+ *
+ * ## Why not just show all of them
+ *
+ * Fifteen reasons is an option swamp, and an option swamp is a worse question than a short
+ * one: the owner reads a list instead of answering, and the app learns whichever reason was
+ * easiest to find rather than the true one. Section I says it directly — *show only a few
+ * context-likely options, use known context, no option swamp.*
+ *
+ * ## How the shortlist is built
+ *
+ * From what is already known. If the situation says the owner is at work, "wrong place" is
+ * near the top and "family time" is not. If the declined move needed privacy, being around
+ * people is the likely obstacle. If nothing is known, the fallback list is the small set of
+ * reasons that are plausible anywhere.
+ *
+ * The prior is allowed here, and only here: guessing the *reasons to offer* is exactly what
+ * a soft prior is for, because the owner still chooses and a wrong guess costs one extra
+ * tap rather than a wrong recommendation.
+ *
+ * `Other, or not sure` is always last and always present, so the list is never a claim to
+ * be exhaustive.
+ */
+export const MAX_DECLINE_REASONS = 5;
+
+export interface DeclineContext {
+  readonly setting?: string | undefined;
+  readonly privacy?: string | undefined;
+  readonly interruptibility?: string | undefined;
+  /** The shape the refused move needed, when it declared one. */
+  readonly neededShape?: string | undefined;
+  /** True when the state assessment already says capacity is low or depleted. */
+  readonly lowCapacity?: boolean | undefined;
+}
+
+export function chooseDeclineReasons(context: DeclineContext): readonly DeclineReason[] {
+  const byId = new Map(DECLINE_REASONS.map((reason) => [reason.id, reason]));
+  const picked: DeclineReason[] = [];
+
+  const add = (id: string): void => {
+    const reason = byId.get(id);
+    if (reason === undefined) return;
+    if (picked.some((entry) => entry.id === id)) return;
+    if (picked.length >= MAX_DECLINE_REASONS - 1) return;
+    picked.push(reason);
+  };
+
+  /* What the situation makes likely, most specific first. */
+  if (context.setting === 'work') add('wrong-place');
+  if (context.privacy === 'public' || context.privacy === 'semi-private') add('around-people');
+  if (context.interruptibility === 'none') add('no-time');
+  if (context.lowCapacity === true) add('low-mental-energy');
+
+  if (context.neededShape === 'protected-focus') {
+    add('around-people');
+    add('wrong-place');
+  }
+  if (context.neededShape === 'exclusive-time') add('no-time');
+
+  /* Then the reasons that are plausible anywhere, in the order they usually apply. */
+  add('no-time');
+  add('need-something-first');
+  add('low-mental-energy');
+  add('nothing-extra');
+  add('not-relevant');
+
+  /* Never a closed menu. */
+  const unsure = byId.get('unsure');
+  if (unsure !== undefined) picked.push(unsure);
+
+  return picked;
+}
 
 export function declineReasonById(id: string): DeclineReason {
   const found = DECLINE_REASONS.find((reason) => reason.id === id);

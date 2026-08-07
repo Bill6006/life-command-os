@@ -6,9 +6,9 @@
 - Plan version: **3.3 UI Clarity and North Star Intelligence Amendment**, plus eleven owner
   clarifications that supersede it where they conflict
 - Current phase: **Phase 8 closed.** Phases 0–7 remain GREEN.
-- Current prompt: **PROMPT 9C v3.3 — partially delivered. YELLOW.** Sections A, B1, B5 and
-  the capacity/Can't Now clarifications are done and verified; sections C–K and most of B
-  are not started. See "Prompt 9C v3.3" below for the exact line.
+- Current prompt: **PROMPT 9C v3.3 — partially delivered. YELLOW.** Section A, B1, B5 and
+  clarifications 1–8, 10 and 11 are done and verified; clarification 9, sections C–K and most
+  of B are not started. See "Prompt 9C v3.3" below for the exact line.
 
 ## Prompt 9C v3.3 status
 
@@ -35,23 +35,32 @@ the app behaves differently but incompletely.
 | # | Status |
 | --- | --- |
 | 1 — depth is not a control | **Done.** The `15/30/45/Full` selector is **removed**, not relabelled. `src/intelligence/guides/questionValue.ts` derives length from decision value, coverage/cadence, existing evidence, and marginal value. A caller's `depth` argument now provably cannot change what is asked. |
-| 2 — no generic time question | **Done.** Four contextual-capacity prompts added (setting, engagement, interruptibility, privacy), and `selectQuestion` now runs a ladder from most constraining to least. The minutes question is last and gated: it is asked only when a reply could change which moves are possible, or which can be done in full rather than cut to their minimum. Every question carries `Not sure`. |
-| 3 — move capacity characteristics | **Model done and wired, not yet populated.** `src/domain/domains/capacity.ts` defines the five shapes with setup and interruption cost; `CandidateAction.capacity` accepts a profile; `fits()` and `situationFieldMatters()` are tested. **No domain generator emits a profile yet**, so the situation ladder correctly stays silent and nothing is ranked by shape. This is the largest single gap in the delivery. |
-| 4 — Can't Now as a small secondary action | **Engine only.** The reason set and recompute exist; the UI change does not. |
+| 2 — no generic time question | **Done.** Four contextual-capacity prompts added (setting, engagement, interruptibility, privacy), wired into the morning and afternoon guide orders *ahead of* the clock, and `selectQuestion` runs a ladder from most constraining to least. The minutes question is last and gated: asked only when a reply could change which moves are possible, or which can be done in full rather than cut to their minimum. Every question carries `Not sure`. |
+| 3 — move capacity characteristics | **Done end to end.** The five shapes with setup and interruption cost; profiles declared on the moves whose eligibility genuinely depends on one; `selectOutput` runs a third filter after time and capacity that removes a move whose shape the situation forbids; the situation is read from records with a three-hour recency window. Proven by changing one answer and watching the recommendation change. |
+| 4 — Can't Now as a small secondary action | **Done.** Reasons are classified `temporary-context` / `prerequisite` / `preference` (section I's three kinds), reversible prerequisites carry an unlocking action rather than recording an inability, and `chooseDeclineReasons` offers at most five drawn from the situation — always ending in `Other, or not sure`, so the list is never a closed menu. |
+| 11 — recurring context as soft prior | **Done.** `recurringContext.ts` infers what the situation usually is at this hour on this weekday, requiring three comparable days and 70% agreement, one vote per day. It is stored apart from the observed situation and **never reaches `fits`** — enforced by a test that reads `selectOutput`'s source. Fresh explicit context wins immediately. |
 | 5 — real global recomputation | **Done.** `afterDecline.ts` rejects the same move shortened, a reworded twin, and anything from the area just refused, then walks the ranking for a real alternative. |
 | 6 — temporary constraints release | **Done** (verified pre-existing behaviour, now covered by tests). |
 | 7 / 8 — no pestering; optimise per unit capacity | **Done at the decision layer.** Abstention is a first-class result: when nothing genuinely beats carrying on, the recompute returns silence rather than filler. |
 | 9 — association not causation | **Partly pre-existing**; no new work this pass. |
 | 10 — regression tests | **Done.** `tests/unit/v33Capacity.test.ts`, 18 tests, one block per named property. |
-| 11 — recurring context as soft prior | **Not started.** |
 
 ### Not started
 
-Sections **C, D, E, F, G, H, I, J, K**, the **AT33 acceptance scenarios (M)**, and B2's
-hierarchy reorder, **B3, B4, B6, B7, B8, B9**. Clarifications 4 (UI), 9 and 11.
+Sections **C, D, E, F, G, H, J, K**, the **AT33 acceptance scenarios (M)**, B2's hierarchy
+reorder, and **B3, B4, B6, B7, B8, B9**. Clarification **9**. Section **I** is partly done —
+its three-way distinction and prerequisite actions exist, its owner-sovereignty controls
+(pause, modify, block-in-context, permanently forbid, restore) do not.
 
-This is the majority of Prompt 9C by volume. It is stated plainly rather than folded into a
-gate table, because a partial pass reported as anything but partial is worse than no pass.
+This is still the majority of Prompt 9C by volume. It is stated plainly rather than folded
+into a gate table, because a partial pass reported as anything but partial is worse than no
+pass.
+
+The North Star intelligence architecture in the v3.3 amendment — move families and the
+≥100-pattern catalogue, sequence and combination learning, opportunity-cost reasoning,
+sustainability versus immediate effectiveness, bounded experiments, move lifecycle and
+evidence versioning — is untouched. It is the bulk of the remaining work and needs its own
+passes; none of it is started, and nothing in the codebase pretends otherwise.
 
 ## Gate status
 
@@ -320,22 +329,18 @@ edits is the one that matters.
   answer can change at any hour, but nothing fires at a boundary; there is no timer anywhere
   in the product. That is the honest reading of "each time block can change coverage" for an
   app with no background execution.
-- **The capacity model is defined but unpopulated.** `capacity.ts` has the five shapes,
-  `fits()` is tested against every situation, and unknown correctly never blocks — but no
-  domain generator attaches a `CapacityProfile` to a candidate yet, so nothing is ranked by
-  it. Until they do, "parallel moves stay possible when busy" is a proven property of a
-  function rather than an observable property of the app.
-- **The situation ladder is live but currently silent, by design.** `selectQuestion` will ask
-  where you are, what you are in the middle of, whether you can step away and whether you can
-  speak freely — but only when a move on the table has a shape that answer could rule out.
-  No generator declares a shape yet, so today it always falls through to the time question.
-  That is the correct behaviour for the evidence available and it is the reason clarification
-  2 is complete while clarification 3 is not: the gate is built and proven, and nothing has
-  walked through it.
-- **The four contextual-capacity prompts are not yet in a guide order.** They validate and
-  they are classified decisive, so the planner will ask them once they are added to
-  `MORNING_ORDER` and `AFTERNOON_ORDER` — deliberately not done in a pass that could not also
-  re-baseline what every scenario emits.
+- **Only two generators declare capacity shapes so far.** The shared core generator (focus
+  block, unblocking step, recovery pause) and health. The other six domains produce moves
+  with no declared shape, which the gate correctly treats as *unclassified* rather than as
+  *fits anywhere* — so they are never wrongly removed, but they are also never protected from
+  a situation that genuinely rules them out. Extending the remaining six is bounded, mechanical
+  work and the largest remaining piece of clarification 3's intent.
+- **The recovery pause is deliberately shapeless and must stay that way.** It is the move of
+  last resort; if `you cannot step away` could remove it, the app would fall silent in exactly
+  the situation most needing an answer. There is a test that fails if it gains a shape.
+- **A situation report expires after three hours.** Where the owner was this morning is not
+  where they are now. That window is a judgement, not a measurement, and it is the number to
+  revisit first if the app starts asking where you are too often.
 - Carried forward: local database not encrypted at rest; app lock hides the screen only; no
   notifications; `frame-ancestors` unenforceable on Pages; Chromium-only matrix; no router;
   service-worker staleness; deletion semantics undecided.

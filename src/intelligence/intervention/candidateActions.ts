@@ -60,6 +60,11 @@ export function generateCandidates(
         },
       ],
       durationMinutes: dose,
+      /*
+       * A focus block is the definitive exclusive-time move: interrupting it does not
+       * shorten it, it wastes it. That is the whole reason the block exists.
+       */
+      capacity: { shape: 'exclusive-time', interruptionCost: 'total' },
       minimumMinutes: 10,
       minimumVersion: 'Ten minutes still counts',
       fallback: 'Write down the single next step instead',
@@ -98,6 +103,11 @@ export function generateCandidates(
         },
       ],
       durationMinutes: 10,
+      /*
+       * Sending one message is the archetypal transition move: it fits in the seam
+       * between two other things and survives being interrupted halfway.
+       */
+      capacity: { shape: 'transition', interruptionCost: 'none' },
       minimumMinutes: 5,
       minimumVersion: 'Send the one message that unblocks it',
       fallback: 'Note who you are waiting on and when you last asked',
@@ -129,6 +139,11 @@ export function generateCandidates(
         },
       ],
       durationMinutes: 10,
+      /*
+       * Deliberately no capacity profile. A pause is the move that has to stay available
+       * when everything else has been ruled out — declaring a shape for it would let a
+       * bad situation remove the only response to a bad situation.
+       */
       minimumMinutes: 5,
       minimumVersion: 'Five minutes away from a screen',
       fallback: 'Stand up and stop working for a moment',

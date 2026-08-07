@@ -123,6 +123,15 @@ export interface GuidePlan {
 const MORNING_ORDER: readonly string[] = [
   'state:sleep-recovery',
   'state:energy',
+  /*
+   * The situation, ahead of the clock (`V33-023`, clarification 2). Where you are and
+   * whether you can step away decide which shapes of move are possible at all; a minute
+   * count only separates the survivors, so it comes after them rather than before.
+   */
+  'context:setting',
+  'context:engagement',
+  'context:interruptibility',
+  'context:privacy',
   'context:available-minutes',
   'state:readiness',
   'context:protected',
@@ -136,6 +145,10 @@ const MORNING_ORDER: readonly string[] = [
 
 const AFTERNOON_ORDER: readonly string[] = [
   'state:energy',
+  'context:setting',
+  'context:engagement',
+  'context:interruptibility',
+  'context:privacy',
   'context:available-minutes',
   'state:stress',
   'context:protected',
