@@ -81,6 +81,7 @@ test.describe('cadence narrows, and never offers a way to widen', () => {
     await goTo(page, 'Direction');
     await switchOn(page, 'Money');
 
+    await openAreaDrawer(page);
     await manageAreas(page)
       .getByRole('group', { name: /^How often money/ })
       .getByRole('button', { name: 'Only when I open it' })
@@ -91,6 +92,8 @@ test.describe('cadence narrows, and never offers a way to widen', () => {
 
     await page.reload();
     await goTo(page, 'Direction');
+    /* A reload is a fresh mount, so the drawer starts closed again — as it should. */
+    await openAreaDrawer(page);
     await expect(
       manageAreas(page)
         .getByRole('group', { name: /^How often money/ })

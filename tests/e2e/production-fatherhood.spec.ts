@@ -173,6 +173,7 @@ test.describe('the area works end to end on a fresh profile', () => {
 
     const before = await recordCount(page);
 
+    await openAreaDrawer(page);
     await manageAreas(page)
       .getByRole('button', { name: `Switch off ${AREA.toLowerCase()}` })
       .click();

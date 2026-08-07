@@ -165,6 +165,7 @@ test.describe('the whole journey, on the shipped build', () => {
     await map(page).getByRole('button', { name: 'Done' }).click();
     const beforeOff = await recordCount(page);
 
+    await openAreaDrawer(page);
     await manageAreas(page)
       .getByRole('button', { name: `Switch off ${AREA.toLowerCase()}` })
       .click();

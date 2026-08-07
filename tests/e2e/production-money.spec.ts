@@ -299,6 +299,7 @@ test.describe('the area stays in its place', () => {
     await choose(page, 'On your mind', 'Heavy');
     await page.getByRole('button', { name: 'Done' }).click();
 
+    await openAreaDrawer(page);
     await manageAreas(page)
       .getByRole('button', { name: `Switch off ${AREA.toLowerCase()}` })
       .click();

@@ -192,6 +192,7 @@ test.describe('once is an event, twice is a pattern — on the shipped build', (
     await recordFriction(page);
     await page.getByRole('button', { name: 'Done' }).click();
 
+    await openAreaDrawer(page);
     await manageAreas(page)
       .getByRole('button', { name: `Switch off ${AREA.toLowerCase()}` })
       .click();

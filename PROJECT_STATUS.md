@@ -342,6 +342,12 @@ edits is the one that matters.
 - **The recovery pause is deliberately shapeless and must stay that way.** It is the move of
   last resort; if `you cannot step away` could remove it, the app would fall silent in exactly
   the situation most needing an answer. There is a test that fails if it gains a shape.
+- **One high-severity advisory, dev-only.** `nanoid <3.3.17` reaches the tree through
+  `vite → postcss`. The flaw is an infinite loop when a *custom generator* is called with
+  size zero; nothing in this project calls nanoid at all, and postcss runs at build time and
+  ships nothing to the browser. A fix is available and it is a lockfile bump — deliberately
+  not taken at the end of a pass whose verification had already completed, because changing
+  the dependency tree after the last full run would make the run describe a different tree.
 - **A situation report expires after three hours.** Where the owner was this morning is not
   where they are now. That window is a judgement, not a measurement, and it is the number to
   revisit first if the app starts asking where you are too often.

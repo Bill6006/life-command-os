@@ -137,6 +137,7 @@ test.describe('the whole journey, on the shipped build', () => {
     await nameIt(page, 'What matters', 'Add', VALUE);
     await page.getByRole('button', { name: 'Done' }).click();
 
+    await openAreaDrawer(page);
     await manageAreas(page)
       .getByRole('button', { name: `Switch off ${AREA.toLowerCase()}` })
       .click();
