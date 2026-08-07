@@ -44,6 +44,8 @@ export interface CoverageInput {
   readonly context: SuppressionContext;
   /** The normal check-in budget (`OWN-023`). */
   readonly budget: number;
+  /** Areas the owner deliberately made quiet. */
+  readonly intentionallyQuiet: ReadonlySet<DomainId>;
 }
 
 export function planCoverage(input: CoverageInput): CoveragePlan {
@@ -66,11 +68,13 @@ export function planCoverage(input: CoverageInput): CoveragePlan {
     if (promptId === undefined) continue;
 
     const prompt = promptById(promptId);
+    const changesEligibility = prompt.whatItCouldChange.includes('candidate-eligibility');
     const verdict = assessSuppression(
       capture,
       prompt.attribute,
       input.context,
       enabled.get(capture.domainId) ?? false,
+      changesEligibility,
     );
 
     if (verdict.suppressed) {
@@ -109,7 +113,11 @@ export function planCoverage(input: CoverageInput): CoveragePlan {
   return {
     offered: unique,
     suppressed,
-    quietAreas: findQuietAreas(input.submissions, input.context.now),
+    quietAreas: findQuietAreas(
+      input.submissions,
+      input.context.now,
+      input.intentionallyQuiet,
+    ),
     withinBudget: unique.length <= input.budget,
   };
 }

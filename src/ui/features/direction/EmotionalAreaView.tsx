@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Panel } from '../../components/primitives';
+import { EMOTIONAL_TOPICS, TopicPermissions } from './TopicPermissions';
 import {
   BOUNDARY_OUTCOMES,
   CONNECTION_KINDS,
@@ -9,10 +10,6 @@ import {
   SOCIAL_PRACTICES,
 } from '../../../domain/emotional/social';
 import {
-  PERMISSIBLE_SURFACES,
-  PROTECTED_TOPICS,
-  PROTECTED_TOPIC_LABELS,
-  SURFACE_LABELS,
   type PermissibleSurface,
   type ProtectedTopic,
 } from '../../../domain/records/permissions';
@@ -310,49 +307,12 @@ export function EmotionalAreaView({
         )}
       </Panel>
 
-      <Panel label="Where sensitive topics may appear" wide>
-        <p className="fine">
-          Everything starts denied. Each of these is a place something could reach you without
-          you having opened it, so each is a separate decision.
-        </p>
-
-        {PROTECTED_TOPICS.map((topic) => {
-          const granted = state.grants.get(topic) ?? [];
-          return (
-            <div className="permission" key={topic}>
-              <p className="panel-label">{PROTECTED_TOPIC_LABELS[topic]}</p>
-              <div
-                className="scale scale-choices"
-                role="group"
-                aria-label={`Where ${PROTECTED_TOPIC_LABELS[topic].toLowerCase()} may appear`}
-              >
-                {PERMISSIBLE_SURFACES.map((surface) => {
-                  const on = granted.includes(surface);
-                  return (
-                    <button
-                      type="button"
-                      key={surface}
-                      className={`scale-step${on ? ' scale-step-on' : ''}`}
-                      aria-pressed={on}
-                      disabled={busy}
-                      onClick={() => {
-                        onSetPermission(topic, surface, !on);
-                      }}
-                    >
-                      <span className="scale-label">{SURFACE_LABELS[surface]}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-
-        <p className="fine why">
-          Opening a screen yourself is not on this list. These are the places the app could show
-          something you did not ask for, which is why none of them is on.
-        </p>
-      </Panel>
+      <TopicPermissions
+        topics={EMOTIONAL_TOPICS}
+        grants={state.grants}
+        busy={busy}
+        onSetPermission={onSetPermission}
+      />
     </div>
   );
 }

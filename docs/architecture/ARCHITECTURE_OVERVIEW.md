@@ -238,6 +238,54 @@ moves, because no slice is reachable from here.
 
 ---
 
+## 3b. Research-rule versioning, and how Command Core upgrades coexist
+
+Every recommendation records `rulesVersion` — the version of the deterministic rules that
+produced it. The constant and its history live in `src/command-core/rules.ts`.
+
+### What is versioned
+
+The rules Command Core applies: the North Star gate's four routes, the merge definition,
+the suppression policy, the quiet-area thresholds, and the constraint order `selectOutput`
+uses. **Not** the owner's records, which are versioned by `RECORD_SCHEMA_VERSION`, and not
+the domain vocabularies, which each slice owns.
+
+It is app metadata, not an owner fact. It says what computed an interpretation and restates
+nothing the owner reported.
+
+### Why a trace needs it
+
+A decision trace is only readable against the rules that produced it. "Removed before
+ranking for not serving the recorded direction" means one thing under today's gate and could
+mean something narrower tomorrow. Without the version on the record, a trace from March read
+in September is quietly reinterpreted under rules it never saw.
+
+It also protects the learning layer: `evaluateEffectiveness` compares what was recommended
+against what happened, and a rules change part-way through a series makes two systems look
+like one improving system.
+
+### The migration policy, in three rules
+
+1. **Nothing is rewritten.** A recommendation keeps the version that produced it forever.
+   Upgrading the rules never touches a record — the same append-oriented guarantee as
+   everything else (ADR-0005).
+2. **Absent means unknown, never zero.** Records written before the field existed carry no
+   version, and a reader treats that as "cannot be compared" rather than assuming the
+   earliest one. `comparableUnderSameRules` returns `false` for any absent side.
+3. **Comparison is opt-in and segmented.** Anything comparing recommendations over time
+   groups by version first and says so. Two versions may coexist in one export, one review,
+   and one evaluation — provided the boundary is stated rather than smoothed.
+
+A future Command Core that replaces the arbitration bumps `DECISION_RULES_VERSION` and
+changes nothing else. Old traces remain valid statements about what the old rules did.
+
+### Format
+
+`YYYY.MM-n`. Deliberately not semver: these are not an API and there is no compatibility
+contract to express, only a question of which set was in force.
+
+---
+
 ## 4. Core record families
 
 The first vertical slice requires **twenty** families. All are implemented in Phase 2.

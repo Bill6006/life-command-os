@@ -57,6 +57,18 @@ export const candidateActionRecord = withEnvelopeInvariants(
      * a single existing record.
      */
     originDomainId: z.enum(DOMAIN_IDS).optional(),
+    /**
+     * The generator's own identifier for this action, e.g. `home:make-the-change`.
+     *
+     * The record id is unique per decision; this is stable across them, which is what lets
+     * a later episode recognise that the owner has already declined *this action* rather
+     * than merely some action. Without it, "Can't now" could be answered by re-offering the
+     * same thing a second later — the engine had no way to know it was the same thing.
+     *
+     * Optional because records written before Phase 8's repair pass do not carry one, and a
+     * missing id means "cannot be matched", never "matches everything".
+     */
+    engineCandidateId: z.string().min(1).max(120).optional(),
     /** Required. What this is for, in terms something could later be observed against. */
     intendedOutcome: z.string().min(1).max(300),
     /** Required. How the result gets observed, and by when. */
@@ -216,6 +228,19 @@ export const recommendationRecord = withEnvelopeInvariants(
     consideredCandidateActionIds: z.array(z.uuid()),
     /** What materially changed since the last useful assessment (`INTEL-008`). */
     whatChanged: z.array(z.string().min(1).max(300)),
+    /**
+     * The version of the deterministic decision rules that produced this (Phase 8).
+     *
+     * Recorded so a trace stays readable after the rules change. A recommendation made
+     * under `2026.08-1` and one made under a later set are not directly comparable, and an
+     * evaluation that treated them as one series would be measuring two different systems
+     * and calling the difference learning.
+     *
+     * It is **app metadata, not an owner fact**: it says what computed the interpretation,
+     * and duplicates nothing the owner reported. Optional because records written before
+     * this existed carry none, and absent means "unknown version" rather than "version 0".
+     */
+    rulesVersion: z.string().min(1).max(40).optional(),
   }),
 );
 export type RecommendationRecord = z.infer<typeof recommendationRecord>;

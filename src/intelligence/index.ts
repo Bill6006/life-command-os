@@ -49,6 +49,7 @@ import { buildFaithScan } from './domains/faith';
 import { buildHomeScan } from './domains/home';
 import { buildMoneyScan } from './domains/money';
 import { enabledTopics } from '../domain/emotional/permissions';
+import { cadenceSettings, intentionallyQuiet } from '../domain/domains/cadence';
 import { resolveDomains } from './domains/registry';
 import { runCommandCore, type CommandCoreResult, type DomainSubmission } from '../command-core';
 
@@ -253,6 +254,15 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
     ),
     predictions: effects,
     enabledTopics: new Set<string>(enabledTopics(records)),
+    cadence: new Map(
+      cadenceSettings(records, now).map((setting) => [setting.domainId, setting.cadence]),
+    ),
+    snoozedUntil: new Map(
+      cadenceSettings(records, now).flatMap((setting) =>
+        setting.snoozedUntil === undefined ? [] : [[setting.domainId, setting.snoozedUntil]],
+      ),
+    ),
+    intentionallyQuiet: intentionallyQuiet(records),
   });
 
   const { output, rejected } = { output: commandCore.output, rejected: commandCore.rejected };

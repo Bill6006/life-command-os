@@ -6,6 +6,7 @@ import type {
   RejectedCandidate,
 } from '../../intelligence/types';
 import type { CommandCoreInput } from '../boundary';
+import { activeDeclines } from './declined';
 import { dedupeCandidates } from './dedupe';
 import { applyNorthStarGate, type NorthStarGateResult } from './northStar';
 
@@ -55,7 +56,25 @@ export function arbitrate(input: CommandCoreInput): ArbitrationResult {
     ),
   ];
 
-  const deduped = dedupeCandidates(all);
+  /*
+   * What the owner just declined, removed before anything else looks at it.
+   *
+   * First, because re-offering a declined action is the one outcome no amount of merging or
+   * gating can excuse — and because it must hold on every re-run, not only the one directly
+   * after the button.
+   */
+  const declined = activeDeclines(input.records);
+  const offered = all.filter((candidate) => !declined.has(candidate.id));
+  const declinedRejections: RejectedCandidate[] = all
+    .filter((candidate) => declined.has(candidate.id))
+    .map((candidate) => ({
+      candidateId: candidate.id,
+      stage: 'declined',
+      reason:
+        'You said not now, and nothing has been recorded since that would change the answer',
+    }));
+
+  const deduped = dedupeCandidates(offered);
   const northStar = applyNorthStarGate(input.records, deduped.merged);
 
   const selection = selectOutput(
@@ -66,9 +85,41 @@ export function arbitrate(input: CommandCoreInput): ArbitrationResult {
     input.forecast,
   );
 
+  /*
+   * A decline must not silence a question that would unblock the decline.
+   *
+   * The first version of this exclusion removed the declined candidate and stopped there.
+   * When it was the only candidate, `selectOutput` had nothing left to reason about and
+   * emitted silence — so declining with "I'm not sure how much time I have" produced
+   * "nothing requires attention right now" instead of asking about the time. That is
+   * strictly worse than the behaviour it replaced, and the browser suite caught it.
+   *
+   * A question is not the declined action coming back. It is the one thing that produces
+   * the evidence which releases the decline, and it is only asked here when the unfiltered
+   * set would have asked it anyway. The action itself stays excluded either way.
+   */
+  const rescuedQuestion =
+    selection.output.kind === 'silence' && declinedRejections.length > 0
+      ? selectOutput(
+          input.records,
+          input.state,
+          applyNorthStarGate(input.records, dedupeCandidates(all).merged).eligible,
+          input.predictions,
+          input.forecast,
+        )
+      : undefined;
+
+  const output =
+    rescuedQuestion?.output.kind === 'question' ? rescuedQuestion.output : selection.output;
+
   return {
-    output: selection.output,
-    rejected: [...deduped.rejected, ...northStar.rejected, ...selection.rejected],
+    output,
+    rejected: [
+      ...declinedRejections,
+      ...deduped.rejected,
+      ...northStar.rejected,
+      ...selection.rejected,
+    ],
     considered: northStar.eligible,
     northStar,
   };

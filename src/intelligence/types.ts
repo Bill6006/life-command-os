@@ -184,6 +184,8 @@ export interface RejectedCandidate {
     | 'north-star'
     /** Merged into an equivalent candidate rather than shown twice (Phase 8). */
     | 'duplicate'
+    /** The owner declined it, and nothing has been recorded since (Phase 8). */
+    | 'declined'
     | 'comparison';
   readonly reason: string;
 }

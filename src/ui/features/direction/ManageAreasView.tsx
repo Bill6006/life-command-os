@@ -2,6 +2,12 @@ import { Panel } from '../../components/primitives';
 import { implementedDomains, unimplementedDomains } from '../../../domain/domains/availability';
 import type { DomainId } from '../../../domain/domains/definitions';
 import type { DomainState } from '../../../domain/records/domains';
+import {
+  CADENCE_EXPLANATIONS,
+  CADENCE_LABELS,
+  COVERAGE_CADENCES,
+  type CoverageCadence,
+} from '../../../domain/domains/cadence';
 
 /**
  * Manage areas — the control that makes a domain reachable.
@@ -26,12 +32,20 @@ import type { DomainState } from '../../../domain/records/domains';
  */
 export function ManageAreasView({
   states,
+  cadences,
+  snoozes,
   busy,
   onSetState,
+  onSetCadence,
+  onSnooze,
 }: {
   readonly states: ReadonlyMap<DomainId, DomainState>;
+  readonly cadences: ReadonlyMap<DomainId, CoverageCadence>;
+  readonly snoozes: ReadonlyMap<DomainId, string>;
   readonly busy: boolean;
   readonly onSetState: (domainId: DomainId, state: DomainState) => void;
+  readonly onSetCadence: (domainId: DomainId, cadence: CoverageCadence) => void;
+  readonly onSnooze: (domainId: DomainId, untilIso: string) => void;
 }): React.JSX.Element {
   const available = implementedDomains();
   const notYet = unimplementedDomains();
@@ -53,6 +67,59 @@ export function ManageAreasView({
               <div className="area-main">
                 <span className="change-main">{definition.label}</span>
                 <span className="fine">{definition.question}</span>
+                {on ? (
+                  <>
+                    {/*
+                      How often this area may raise something. Every option narrows; there
+                      is no "more often", because a preference cannot make a question able
+                      to change a decision it could not change before.
+                    */}
+                    <div
+                      className="scale scale-choices"
+                      role="group"
+                      aria-label={`How often ${definition.label.toLowerCase()} may come up`}
+                    >
+                      {COVERAGE_CADENCES.map((option) => {
+                        const chosen = (cadences.get(definition.id) ?? 'normal') === option;
+                        return (
+                          <button
+                            type="button"
+                            key={option}
+                            className={`scale-step${chosen ? ' scale-step-on' : ''}`}
+                            aria-pressed={chosen}
+                            disabled={busy}
+                            onClick={() => {
+                              onSetCadence(definition.id, option);
+                            }}
+                          >
+                            <span className="scale-label">{CADENCE_LABELS[option]}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <span className="fine why">
+                      {CADENCE_EXPLANATIONS[cadences.get(definition.id) ?? 'normal']}
+                    </span>
+                    {snoozes.get(definition.id) === undefined ? (
+                      <button
+                        type="button"
+                        className="btn btn-link"
+                        disabled={busy}
+                        onClick={() => {
+                          const until = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+                          onSnooze(definition.id, until.toISOString());
+                        }}
+                      >
+                        Snooze for a fortnight
+                      </button>
+                    ) : (
+                      <span className="fine">
+                        Snoozed until {(snoozes.get(definition.id) ?? '').slice(0, 10)}. Nothing
+                        is owed when it ends.
+                      </span>
+                    )}
+                  </>
+                ) : null}
               </div>
               <button
                 type="button"

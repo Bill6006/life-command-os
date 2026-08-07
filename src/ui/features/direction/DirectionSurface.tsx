@@ -3,6 +3,8 @@ import { GraphFigure } from '../../components/GraphFigure';
 import { DomainPanelView } from './DomainPanelView';
 import type { DomainId } from '../../../domain/domains/definitions';
 import type { DomainState } from '../../../domain/records/domains';
+import { domainDefinition } from '../../../domain/domains/definitions';
+import { cadenceSettings, type CoverageCadence } from '../../../domain/domains/cadence';
 import { resolveDomains } from '../../../intelligence/domains/registry';
 import { ManageAreasView } from './ManageAreasView';
 import { ManualFocusView } from './ManualFocusView';
@@ -32,6 +34,8 @@ export function DirectionSurface({
   busy = false,
   onUpdateArea,
   onSetAreaState,
+  onSetCadence,
+  onSnooze,
 }: {
   episode: EpisodeResult;
   records: readonly CanonicalRecord[];
@@ -40,12 +44,26 @@ export function DirectionSurface({
   onUpdateArea?: ((domainId: DomainId) => void) | undefined;
   /** Switches one area on or off. The only route to a domain preference. */
   onSetAreaState?: ((domainId: DomainId, state: DomainState) => void) | undefined;
+  /** How often an area may raise something. Narrows only — never promotes. */
+  onSetCadence?: ((domainId: DomainId, cadence: CoverageCadence) => void) | undefined;
+  onSnooze?: ((domainId: DomainId, untilIso: string) => void) | undefined;
 }): React.JSX.Element {
   const star = records.find((record) => record.recordType === 'north-star');
   const goals = records.filter((record) => record.recordType === 'goal');
 
   const areaStates = new Map<DomainId, DomainState>(
     resolveDomains(records).map((domain) => [domain.definition.id, domain.state]),
+  );
+
+  /*
+   * Categories a visible domain panel already reports on.
+   *
+   * `reads[0]` is each domain's own category; the shared ones it also reads (time and
+   * capacity, direction and commitments) stay visible because several domains touch them
+   * and none of them owns the reading.
+   */
+  const coveredByDomain = new Set(
+    episode.domains.map((panel) => domainDefinition(panel.domainId).reads[0]),
   );
 
   return (
@@ -78,7 +96,28 @@ export function DirectionSurface({
         The control that switches them on lives here and nowhere else.
       */}
       {onSetAreaState === undefined ? null : (
-        <ManageAreasView states={areaStates} busy={busy} onSetState={onSetAreaState} />
+        <ManageAreasView
+          states={areaStates}
+          cadences={
+            new Map(
+              cadenceSettings(records, new Date(episode.at)).map((s) => [
+                s.domainId,
+                s.cadence,
+              ]),
+            )
+          }
+          snoozes={
+            new Map(
+              cadenceSettings(records, new Date(episode.at)).flatMap((s) =>
+                s.snoozedUntil === undefined ? [] : [[s.domainId, s.snoozedUntil] as const],
+              ),
+            )
+          }
+          busy={busy}
+          onSetState={onSetAreaState}
+          onSetCadence={onSetCadence ?? (() => undefined)}
+          onSnooze={onSnooze ?? (() => undefined)}
+        />
       )}
       {episode.domains.length > 0 ? (
         <Panel label="Areas of life" tone="quiet" wide>
@@ -93,29 +132,41 @@ export function DirectionSurface({
         <DomainPanelView panel={panel} key={panel.domainId} onUpdate={onUpdateArea} />
       ))}
 
-      {episode.categories.map((category) => (
-        <Panel label={categoryLabel(category.category)} key={category.category}>
-          <p className="lead">{category.condition}</p>
-          <p className="fine">
-            Trajectory: <strong>{trajectoryLabel(category.trajectory)}</strong> ·{' '}
-            {confidenceLabel(category.confidence)} · {freshnessLabel(category.freshness)}
-          </p>
+      {/*
+        Category summaries, minus anything a domain panel already covers.
 
-          <p className="panel-label">Principal drivers</p>
-          <ul className="changes">
-            {category.drivers.map((driver) => (
-              <li key={driver}>
-                <span className="fine">{driver}</span>
-              </li>
-            ))}
-          </ul>
+        A switched-on area renders its own panel with the same condition, trajectory,
+        confidence, freshness, and drivers — so showing the category beside it printed the
+        same reading twice under two nearly identical headings, and for money under the
+        *same* heading until 8H worked around it. The domain panel is the richer of the two
+        and wins; categories no domain reads (time and capacity, direction and commitments)
+        still get one, because otherwise nothing would show them.
+      */}
+      {episode.categories
+        .filter((category) => !coveredByDomain.has(category.category))
+        .map((category) => (
+          <Panel label={categoryLabel(category.category)} key={category.category}>
+            <p className="lead">{category.condition}</p>
+            <p className="fine">
+              Trajectory: <strong>{trajectoryLabel(category.trajectory)}</strong> ·{' '}
+              {confidenceLabel(category.confidence)} · {freshnessLabel(category.freshness)}
+            </p>
 
-          <p className="panel-label">Metrics</p>
-          <KeyValues entries={category.metrics} />
+            <p className="panel-label">Principal drivers</p>
+            <ul className="changes">
+              {category.drivers.map((driver) => (
+                <li key={driver}>
+                  <span className="fine">{driver}</span>
+                </li>
+              ))}
+            </ul>
 
-          <p className="fine why">Would change it: {category.wouldChangeIt}</p>
-        </Panel>
-      ))}
+            <p className="panel-label">Metrics</p>
+            <KeyValues entries={category.metrics} />
+
+            <p className="fine why">Would change it: {category.wouldChangeIt}</p>
+          </Panel>
+        ))}
 
       <Panel label="Expected effects of the current best move" wide>
         {episode.output.kind === 'action' ? (
@@ -173,7 +224,13 @@ export function DirectionSurface({
       {episode.learning.graphs
         .filter((graph) => ['focused-hours', 'capacity', 'north-star'].includes(graph.id))
         .map((graph) => (
-          <Panel label="Trend" wide key={graph.id}>
+          /*
+            Labelled by the question the graph answers, not by the word "Trend".
+            Three panels all called "Trend" gave the surface three landmarks with the same
+            accessible name — indistinguishable to anyone navigating by heading, and the
+            same defect as the domain/category collision one line up.
+          */
+          <Panel label={graph.question} wide key={graph.id}>
             <GraphFigure graph={graph} />
           </Panel>
         ))}

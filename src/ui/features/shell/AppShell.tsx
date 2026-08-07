@@ -35,7 +35,11 @@ import {
   suggestedGuide,
 } from '../../../intelligence/guides/planGuide';
 import { isLockEnabled, unlock } from '../../../application/commands/appLock';
-import { setDomainState } from '../../../application/commands/domainPreference';
+import {
+  setCoverageCadence,
+  snoozeArea,
+  setDomainState,
+} from '../../../application/commands/domainPreference';
 import {
   recordSkillEvidence,
   respondToProgression,
@@ -47,6 +51,7 @@ import { LearningMapView } from '../direction/LearningMapView';
 import { EmotionalAreaView } from '../direction/EmotionalAreaView';
 import { FaithAreaView } from '../direction/FaithAreaView';
 import { HomeAreaView } from '../direction/HomeAreaView';
+import { FAITH_TOPICS } from '../direction/TopicPermissions';
 import { ReviewSurface } from '../review/ReviewSurface';
 import { MoneyAreaView } from '../direction/MoneyAreaView';
 import {
@@ -354,7 +359,20 @@ export function AppShell(): React.JSX.Element {
   /* --- Flows that take over the main region -------------------------------- */
   const flow = ((): React.JSX.Element | undefined => {
     if (mode.kind === 'guide') {
-      const plan = planGuide(mode.guide, mode.depth, records, now, mode.domainId);
+      /*
+       * Command Core decides coverage; the planner arranges it. Passing the decision in is
+       * what makes cooldown, expiry, repeated-skip, cadence, and snooze change what the
+       * owner is actually asked rather than only what a panel reports.
+       */
+      const plan = planGuide(mode.guide, mode.depth, records, now, mode.domainId, {
+        suppressed: new Map(
+          episode.commandCore.coverage.suppressed.map((item) => [item.promptId, item.detail]),
+        ),
+        offered: episode.commandCore.coverage.offered.map((item) => ({
+          promptId: item.promptId,
+          surface: item.surface,
+        })),
+      });
       return (
         <GuideSurface
           plan={plan}
@@ -506,6 +524,9 @@ export function AppShell(): React.JSX.Element {
       return (
         <FaithAreaView
           state={{
+            grants: new Map(
+              FAITH_TOPICS.map((topic) => [topic, grantedSurfaces(records, topic)]),
+            ),
             values: evidence.values.map((value) => ({
               recordId: value.recordId,
               statement: value.statement,
@@ -547,6 +568,11 @@ export function AppShell(): React.JSX.Element {
           }}
           onStruggle={(text) => {
             void run(() => recordFaithStruggle(text, new Date()), { stay: true });
+          }}
+          onSetPermission={(topic, surface, granted) => {
+            void run(() => setSurfacePermission({ topic, surface, granted }, new Date()), {
+              stay: true,
+            });
           }}
           onOpenGuided={() => {
             setMode({
@@ -873,6 +899,12 @@ export function AppShell(): React.JSX.Element {
               }}
               onSetAreaState={(domainId, state) => {
                 void run(() => setDomainState(records, { domainId, state }, new Date()));
+              }}
+              onSetCadence={(domainId, cadence) => {
+                void run(() => setCoverageCadence({ domainId, cadence }, new Date()));
+              }}
+              onSnooze={(domainId, untilIso) => {
+                void run(() => snoozeArea({ domainId, untilIso }, new Date()));
               }}
             />
           ) : null}

@@ -109,10 +109,18 @@ test.describe('the panel holds his words and has no view', () => {
     }
   });
 
-  test('offers a quiet practice at two minutes, in his words', async ({ page }) => {
+  test('offers a quiet practice at two minutes, without quoting it', async ({ page }) => {
+    /*
+     * Changed in the Phase 8 repair pass. A practice the owner named is protected content
+     * on Now, and the panel's move is what Now renders — so the words appear only where he
+     * granted that surface. The offer itself is unchanged: same action, same two minutes.
+     */
     await openArea(page, 'faith-enabled');
-    await expect(panel(page)).toContainText('Two minutes of: Write to someone');
+    await expect(panel(page)).toContainText(
+      'Two minutes of something you said you wanted to do',
+    );
     await expect(panel(page)).toContainText('Optional move in faith and meaning');
+    await expect(panel(page)).not.toContainText('Two minutes of: Write to someone');
   });
 
   test('offers a repair he named, without interpreting it', async ({ page }) => {

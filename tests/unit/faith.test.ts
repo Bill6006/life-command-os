@@ -12,14 +12,18 @@ import { quickCaptureOptions } from '../../src/domain/capture/registry';
 import { ALL_PROMPTS, FAITH_PROMPTS } from '../../src/domain/prompts/definitions';
 import { ownerOf } from '../../src/domain/prompts/ownership';
 import { validatePromptDefinition } from '../../src/domain/prompts/policy';
-import { RECORD_TYPES, parseCanonicalRecord } from '../../src/domain/records';
+import {
+  RECORD_TYPES,
+  parseCanonicalRecord,
+  type CanonicalRecord,
+} from '../../src/domain/records';
 import { assessFaith } from '../../src/intelligence/domains/faith/assessFaith';
 import { generateFaithCandidate } from '../../src/intelligence/domains/faith/faithCandidate';
 import { buildFaithScan } from '../../src/intelligence/domains/faith/scan';
 import { planGuide } from '../../src/intelligence/guides/planGuide';
 import { runEpisode } from '../../src/intelligence';
 import { scenarioById } from '../../src/app/scenarios';
-import { aFaithAnchor, resetFixtureIds } from '../fixtures/records';
+import { aFaithAnchor, aSurfacePermission, resetFixtureIds } from '../fixtures/records';
 import { required } from '../support/required';
 
 /**
@@ -210,13 +214,57 @@ describe('the one candidate, and the one thing it refuses to answer', () => {
     expect(candidate.statement).toBe('Do the thing you decided to put right');
   });
 
-  it('offers a quiet practice at two minutes, in his words', () => {
+  it('offers a quiet practice at two minutes, without quoting it on Now', () => {
+    /*
+     * Changed in the Phase 8 repair pass. Prompt 8F put the practice into the statement,
+     * and the statement is what Now renders — while `buildFaithScan` had withheld the same
+     * words from the weekly review since the day it was written, on the grounds that a
+     * surface showing several areas at once is not one whose audience he controls.
+     *
+     * Now is that argument at its strongest: the default landing screen, seen most often
+     * and chosen least. Switching the area on is not consent to put his words there.
+     */
     const result = candidateFor('faith-enabled');
     const candidate = required(result.candidate, 'the candidate');
 
     expect(candidate.id).toBe('faith:do-the-smallest-version');
+    expect(candidate.statement).toBe('Two minutes of something you said you wanted to do');
+    expect(JSON.stringify(candidate)).not.toContain('Write to someone who would not expect it');
+    expect(result.because).toMatch(/The words stay on the page you opened/);
+  });
+
+  it('quotes the practice once the owner permits the Now surface', () => {
+    /*
+     * The help is unchanged either way — the app still knows the practice has gone quiet,
+     * still counts it, still shows the words on the page he opened. Only the quoting is
+     * gated, which is the difference between withholding content and withholding help.
+     */
+    const scenario = scenarioById('faith-enabled');
+    const at = new Date(scenario.nowIso);
+    const permitted = [
+      ...scenario.records,
+      aSurfacePermission({ topic: 'faith-practice', surface: 'now', granted: true }),
+    ] as CanonicalRecord[];
+
+    const result = generateFaithCandidate(permitted, assessFaith(permitted, at));
+    const candidate = required(result.candidate, 'the candidate');
+
     expect(candidate.statement).toContain('Write to someone who would not expect it');
     expect(result.because).toMatch(/Not doing it is not recorded as anything/);
+  });
+
+  it('needs the Now surface specifically, not merely some permission', () => {
+    const scenario = scenarioById('faith-enabled');
+    const at = new Date(scenario.nowIso);
+    const elsewhere = [
+      ...scenario.records,
+      aSurfacePermission({ topic: 'faith-practice', surface: 'weekly-scan', granted: true }),
+    ] as CanonicalRecord[];
+
+    const result = generateFaithCandidate(elsewhere, assessFaith(elsewhere, at));
+    expect(required(result.candidate, 'the candidate').statement).toBe(
+      'Two minutes of something you said you wanted to do',
+    );
   });
 
   it('does absolutely nothing with a struggle note', () => {

@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Panel } from '../../components/primitives';
+import { FAITH_TOPICS, TopicPermissions } from './TopicPermissions';
 import { FAITH_ATTRIBUTES, PRACTICE_OUTCOMES } from '../../../domain/faith/meaning';
 import type { FaithAnchorKind } from '../../../domain/records/faith';
 import type { PracticeReading } from '../../../intelligence/domains/faith/assessFaith';
+import type { PermissibleSurface, ProtectedTopic } from '../../../domain/records/permissions';
 
 /**
  * Faith and meaning, as a page (Prompt 8F).
@@ -29,6 +31,8 @@ import type { PracticeReading } from '../../../intelligence/domains/faith/assess
 const OUTCOME_LABELS = PRACTICE_OUTCOMES.map((outcome) => outcome.label);
 
 export interface FaithAreaState {
+  /** Which surfaces each of this area's protected topics may appear on. */
+  readonly grants: ReadonlyMap<ProtectedTopic, readonly PermissibleSurface[]>;
   readonly values: readonly { readonly recordId: string; readonly statement: string }[];
   readonly purpose: string | undefined;
   readonly practices: readonly PracticeReading[];
@@ -93,11 +97,17 @@ export function FaithAreaView({
   onRecordOccasion,
   onRecord,
   onStruggle,
+  onSetPermission,
   onOpenGuided,
   onClose,
 }: {
   readonly state: FaithAreaState;
   readonly busy: boolean;
+  readonly onSetPermission: (
+    topic: ProtectedTopic,
+    surface: PermissibleSurface,
+    granted: boolean,
+  ) => void;
   readonly onName: (kind: FaithAnchorKind, statement: string) => void;
   readonly onRetire: (practice: PracticeReading) => void;
   readonly onRecordOccasion: (practice: PracticeReading, outcome: string) => void;
@@ -356,6 +366,18 @@ export function FaithAreaView({
           </p>
         )}
       </Panel>
+
+      {/*
+        Where these words may appear. Added in the Phase 8 repair pass: switching the area
+        on says he wants somewhere to record a practice, and says nothing about whether the
+        sentence may sit on the front page. Denied until he says otherwise.
+      */}
+      <TopicPermissions
+        topics={FAITH_TOPICS}
+        grants={state.grants}
+        busy={busy}
+        onSetPermission={onSetPermission}
+      />
     </div>
   );
 }

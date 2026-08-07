@@ -1,5 +1,6 @@
 import type { CanonicalRecord } from '../domain/records';
 import type { DomainId } from '../domain/domains/definitions';
+import type { CoverageCadence } from '../domain/domains/cadence';
 import type {
   CandidateAction,
   CategorySummary,
@@ -118,6 +119,18 @@ export interface CommandCoreInput {
    * topics exist. It checks membership; it never enumerates.
    */
   readonly enabledTopics: ReadonlySet<string>;
+  /**
+   * The owner's coverage cadence per area, and any snooze in force.
+   *
+   * Both narrow what may be raised and neither can widen it: there is no cadence that makes
+   * a question eligible which was not eligible already. Keyed by domain id as a plain
+   * string, for the same reason `enabledTopics` is — the core checks membership and never
+   * enumerates.
+   */
+  readonly cadence: ReadonlyMap<string, CoverageCadence>;
+  readonly snoozedUntil: ReadonlyMap<string, string>;
+  /** Areas the owner deliberately made quiet. Never reported as forgotten. */
+  readonly intentionallyQuiet: ReadonlySet<DomainId>;
 }
 
 export interface CommandCoreResult {
@@ -148,6 +161,10 @@ export type SuppressionReason =
   | 'protected-context'
   | 'topic-not-permitted'
   | 'no-decision-value'
+  /** The owner asked for this area less often, or only when they open it. */
+  | 'cadence'
+  /** The owner snoozed this area until a date. */
+  | 'snoozed'
   | 'beyond-budget';
 
 export interface CoverageItem {

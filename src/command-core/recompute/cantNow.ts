@@ -47,9 +47,9 @@ export interface RecomputeResult extends ArbitrationResult {
 /**
  * Applies the constraint to the state, then arbitrates again from scratch.
  *
- * The declined candidate is excluded by id — that is the one thing carried over, because
- * offering back the thing somebody just declined is the single most irritating behaviour a
- * recommender can have.
+ * The declined candidate is excluded here for the immediate answer, and by `activeDeclines`
+ * for every subsequent re-run once the decline is on record. One rule, two moments: this
+ * function has no records to read yet, because the write has not landed.
  */
 export function recomputeAfterCantNow(
   input: CommandCoreInput,

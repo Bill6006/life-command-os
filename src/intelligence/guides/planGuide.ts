@@ -219,6 +219,31 @@ function awaitingOutcome(
  * `records` is the full local history; `now` is supplied by the caller. The planner
  * neither reads the clock nor touches storage.
  */
+/**
+ * What Command Core decided about coverage (Phase 8 repair pass).
+ *
+ * The planner used to apply only its own twelve-hour freshness rule, which meant the
+ * domains' declared cooldowns, expiries, repeated-skip behaviour, cadence, and snooze were
+ * computed and then ignored. A rule that governs nothing the owner is asked is not a rule.
+ *
+ * Two effects, and both narrow:
+ *
+ * - **`suppressed` removes.** A prompt Command Core suppressed never becomes a step, and
+ *   the reason it gave is recorded in `omitted` rather than replaced with the planner's own.
+ * - **`offered` may add, but only what a guide already owns.** A capture whose owning
+ *   surface is `guide` is appended after the planner's own questions, at the back of the
+ *   queue and inside the same depth budget. Nothing an area declared for its own page can
+ *   reach a check-in this way.
+ *
+ * There is deliberately no path by which coverage promotes a question ahead of the
+ * planner's, and none by which time alone adds one: every offered item earned its place by
+ * being declared decision-relevant *and* surviving suppression.
+ */
+export interface CoverageDecision {
+  readonly suppressed: ReadonlyMap<string, string>;
+  readonly offered: readonly { readonly promptId: string; readonly surface: string }[];
+}
+
 export function planGuide(
   kind: GuideKind,
   depth: GuideDepth,
@@ -226,6 +251,7 @@ export function planGuide(
   now: Date,
   /** Required for `update-area`, ignored otherwise. */
   domainId?: DomainId,
+  coverage?: CoverageDecision,
 ): GuidePlan {
   const omitted: OmittedStep[] = [];
   const steps: GuideStep[] = [];
@@ -241,6 +267,21 @@ export function planGuide(
     prompt: CapturePrompt,
     extra?: { readonly aboutRecordId?: string; readonly context?: string },
   ): void => {
+    /*
+     * Command Core's decision comes first and is reported in its own words. Its rules read
+     * the domains' declarations — cooldown, expiry, repeated skip, cadence, snooze — which
+     * the planner has no view of and should not acquire one of.
+     *
+     * `update-area` is exempt: the owner opened that page, and a question he went looking
+     * for is never suppressed. Suppression governs what the app raises, not what he asks.
+     */
+    const suppressedBecause =
+      kind === 'update-area' ? undefined : coverage?.suppressed.get(prompt.promptId);
+    if (suppressedBecause !== undefined) {
+      omitted.push({ promptId: prompt.promptId, because: suppressedBecause });
+      return;
+    }
+
     if (!askRegardless && alreadyCurrent(records, prompt, now)) {
       omitted.push({
         promptId: prompt.promptId,
@@ -333,6 +374,26 @@ export function planGuide(
       consider(OUTCOME_PROMPTS['still-interfering'], { aboutRecordId: executionId, context });
     }
     for (const promptId of EVENING_TAIL) consider(promptById(promptId));
+  }
+
+  /*
+   * Coverage may add, at the back, and only what a guide owns.
+   *
+   * A triggered domain question that survived suppression has already proved it could
+   * change what is eligible right now — which is the only thing that justifies interrupting.
+   * It goes behind the planner's own questions and inside the same budget, so a domain
+   * cannot push its way to the front of a morning.
+   */
+  if (coverage !== undefined && kind !== 'update-area') {
+    const already = new Set(
+      steps.flatMap((step) => (step.kind === 'prompt' ? [step.prompt.promptId] : [])),
+    );
+    for (const item of coverage.offered) {
+      if (item.surface !== 'guide') continue;
+      if (already.has(item.promptId)) continue;
+      already.add(item.promptId);
+      steps.push({ kind: 'prompt', prompt: promptById(item.promptId) });
+    }
   }
 
   const limit = MAX_STEPS[depth];

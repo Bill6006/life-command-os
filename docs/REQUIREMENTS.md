@@ -1130,6 +1130,111 @@ Recorded because each was live in the working tree and each passed the tests as 
 
 ---
 
+## 3p. Active requirement records — Phase 8 repair pass (Prompt 9)
+
+| ID | Implementation | Test IDs | Notes |
+|---|---|---|---|
+| Deliverables 4, 6, 9, 10 | `planGuide` takes a `CoverageDecision`; `AppShell` supplies it | `the coverage plan changes what the owner is asked` (6) | Suppression removes and reports in Command Core's words; offered items append at the back |
+| Deliverable 21 | `command-core/arbitration/declined.ts`, consumed by `arbitrate` | `a declined action cannot immediately return` (5) | Held until evidence recorded strictly after the decline |
+| Deliverables 23, 24 | `DirectionSurface` filters covered categories; graph panels named by their question | production `renders no two panels with the same accessible name` (4) | The 8H label workaround is reverted |
+| Deliverable 32 | `command-core/rules.ts`; `rulesVersion` on `RecommendationRecord` | `a recommendation records which rules produced it` (3) | Migration policy in `ARCHITECTURE_OVERVIEW.md` §3b |
+| Deliverable 19 | `domain/domains/cadence.ts`; controls in Manage Areas | `cadence narrows and never promotes` (4), production (3) | No option widens; deliberate quiet is not forgotten |
+| Deliverable 39 | — | — | Deferred, as the plan permits. Recorded below |
+| v3.2 §11 | `faith-practice` topic, `now` surface, gate in `faithCandidate` | `a faith practice is protected on Now` (4), production (3) | Owner decision, applied |
+
+### The coverage plan now governs what is asked
+
+Before this pass the suppression rules were computed, rendered on the Review surface, and
+ignored by the planner — which applied only its own twelve-hour freshness window. A rule
+that governs nothing is not a rule.
+
+`planGuide` now takes the decision and narrows twice over:
+
+- **Suppression removes**, and the omission carries Command Core's reason rather than the
+  planner's. Cooldown, expiry, repeated skip, cadence, and snooze therefore change what the
+  owner is actually asked.
+- **Offered items may append**, at the back, and only where the capture's owning surface is
+  `guide`. A domain cannot push its way to the front of a morning, and nothing an area
+  declared for its own page can reach a check-in.
+
+`update-area` is exempt from suppression: a question the owner went looking for is a
+different act from one the app raised.
+
+**Nothing is added because time passed.** Every offered item earned its place by being
+declared decision-relevant *and* surviving suppression. A test runs the planner five months
+apart on identical records and asserts the step count is unchanged.
+
+### A declined action cannot come straight back
+
+`Not the right action` implies no constraint, so the re-run used to arrive at the same
+answer. `activeDeclines` now holds a declined action out of arbitration **until an
+observation or context snapshot is recorded strictly after the decline** — not a fixed
+cooldown, not the rest of the day, and not permanently, each of which would be the app
+deciding how long a "no" lasts.
+
+The comparison is strict because `declineRecommendation` writes its own snapshot at the same
+instant: a decline must not be the evidence that reverses itself.
+
+Matching is on `engineCandidateId`, a new optional field on `CandidateActionRecord`. It is
+the generator's stable id; the record id is unique per decision and could never match. Absent
+means "cannot be matched", never "matches everything".
+
+### Same-surface duplication, removed at the source
+
+Direction rendered a domain panel and its category summary side by side — the same
+condition, trajectory, confidence, freshness, and drivers twice, under near-identical
+headings and, for money, identical ones. A category a domain panel already reports on is no
+longer rendered separately; categories no domain reads still appear. The 8H workaround that
+renamed money's category label is reverted.
+
+The browser test that proves it found a second instance: three graph panels all titled
+"Trend", giving the surface three landmarks with the same accessible name. They are now
+named by the question each answers.
+
+### Cadence narrows and can never promote
+
+Three settings — `Normal`, `Less often`, `Only when I open it` — and no fourth. There is no
+"more often" and no code path that promotes, because eligibility is a statement about
+evidence and a preference cannot make that statement true. The multiplier applied to a
+domain's declared freshness window is never below one.
+
+**Deliberate quiet is not neglect.** An area set to `Only when I open it` is not reported as
+forgotten. Somebody who decided to leave money alone this season has made a decision, and
+flagging it would be overriding that while calling it protection.
+
+Snooze names a date, accumulates nothing, and leaves nothing owed. There is deliberately
+nowhere to record that an area was snoozed repeatedly.
+
+### A faith practice is protected content on Now
+
+The owner's decision, applied. `buildFaithScan` withheld his words from the weekly review
+from the day it was written; Now is that argument at its strongest — the default landing
+screen, seen most often and chosen least.
+
+`faith-practice` is a protected topic and `now` is a permissible surface. Without the grant
+the candidate still appears, still counts the practice, and still shows the words on the
+page he opened; only the quoting stops. Withholding the content is not withholding the help.
+
+The permissions control was extracted from the emotional area, which had been rendering
+**every** topic — so the switch governing money figures and the one governing a faith
+practice both lived under "Emotional state and relationships". Each area now shows its own.
+
+### Model tournament: deferred, and recorded
+
+Master plan line 734 permits it: *"If model-tournament entry criteria are absent, defer it
+without blocking the synthesis gate."* All three are absent.
+
+- **No useful transparent baseline.** The arbitration is a deterministic integer score with
+  an inspectable trace. There is nothing to beat that could be compared like for like.
+- **No proven deficiency.** Nothing in the corpus or on the deployed build shows the
+  selection making a wrong call that a different model would get right.
+- **No two meaningful candidates.** A second approach would have to be invented to be
+  compared, which is building the thing in order to justify building it.
+
+It will not be built without objective comparison criteria and safe synthetic fixtures.
+
+---
+
 ---
 
 ## 4. Traceability fields used when a requirement becomes active

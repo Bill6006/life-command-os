@@ -2,6 +2,11 @@ import { newRecordId, RECORD_SCHEMA_VERSION, type CanonicalRecord } from '../../
 import type { DomainPreferenceRecord, DomainState } from '../../domain/records/domains';
 import type { DomainId } from '../../domain/domains/definitions';
 import { isImplementedId } from '../../domain/domains/availability';
+import {
+  CADENCE_ATTRIBUTE,
+  SNOOZE_ATTRIBUTE,
+  type CoverageCadence,
+} from '../../domain/domains/cadence';
 import { localTimeContextFor } from './capture';
 import { writeRecord, type WriteResult } from './writeRecord';
 
@@ -86,5 +91,70 @@ export async function setDomainState(
     domainId: input.domainId,
     state: input.state,
     ...(input.reason === undefined ? {} : { reason: input.reason }),
+  });
+}
+
+/**
+ * Coverage cadence, and snooze (Phase 8 deliverable 19).
+ *
+ * Both are preferences about **how often the app may raise an area**, not about the area's
+ * content, so they are ordinary observations rather than a new record family — there is no
+ * fact about the owner's life here to make canonical.
+ *
+ * Neither can widen eligibility. `cadenceFor` and `snoozedUntil` are read only by the
+ * suppression pass, which removes questions and never adds one; there is no code path by
+ * which either setting promotes anything.
+ */
+export async function setCoverageCadence(
+  input: { readonly domainId: DomainId; readonly cadence: CoverageCadence },
+  now: Date,
+): Promise<WriteResult> {
+  const instant = now.toISOString();
+  return writeRecord({
+    recordId: newRecordId(),
+    recordType: 'observation',
+    schemaVersion: RECORD_SCHEMA_VERSION,
+    occurredAt: instant,
+    recordedAt: instant,
+    localTime: localTimeContextFor(now),
+    source: 'user-entry',
+    provenance: { method: 'direct-report' },
+    privacy: 'general',
+    category: 'direction-and-commitments',
+    attribute: `${CADENCE_ATTRIBUTE}:${input.domainId}`,
+    value: { kind: 'state', state: input.cadence },
+  });
+}
+
+/**
+ * Snooze one area until a date.
+ *
+ * Nothing accumulates while it runs and nothing is owed when it lapses. There is
+ * deliberately nowhere to record that an area was snoozed repeatedly — a count like that
+ * only ever becomes a way of making somebody feel watched.
+ */
+export async function snoozeArea(
+  input: { readonly domainId: DomainId; readonly untilIso: string },
+  now: Date,
+): Promise<WriteResult> {
+  const until = Date.parse(input.untilIso);
+  if (Number.isNaN(until)) {
+    return { ok: false, reason: 'schema-violation', issues: ['That is not a date'] };
+  }
+
+  const instant = now.toISOString();
+  return writeRecord({
+    recordId: newRecordId(),
+    recordType: 'observation',
+    schemaVersion: RECORD_SCHEMA_VERSION,
+    occurredAt: instant,
+    recordedAt: instant,
+    localTime: localTimeContextFor(now),
+    source: 'user-entry',
+    provenance: { method: 'direct-report' },
+    privacy: 'general',
+    category: 'direction-and-commitments',
+    attribute: `${SNOOZE_ATTRIBUTE}:${input.domainId}`,
+    value: { kind: 'state', state: new Date(until).toISOString() },
   });
 }

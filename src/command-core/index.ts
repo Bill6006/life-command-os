@@ -94,12 +94,15 @@ export function runCommandCore(input: CommandCoreInput): CommandCoreResult {
     now: input.now,
     protectedContexts: input.state.protectedContexts,
     enabledTopics: input.enabledTopics,
+    cadence: input.cadence,
+    snoozedUntil: input.snoozedUntil,
   };
 
   const coverage = planCoverage({
     submissions: input.submissions,
     context: suppressionContext,
     budget: NORMAL_RESPONSE_BUDGET,
+    intentionallyQuiet: input.intentionallyQuiet,
   });
 
   const synthesis = buildSynthesis(input.submissions, input.categories, input.trajectory);

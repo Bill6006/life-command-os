@@ -15,7 +15,12 @@ import {
 } from '../../src/command-core';
 import { LONG_FORGOTTEN_DAYS, QUIET_AFTER_DAYS } from '../../src/command-core';
 import type { CommandCoreInput, DomainSubmission } from '../../src/command-core';
-import { DOMAIN_DEFINITIONS, DOMAIN_IDS } from '../../src/domain/domains/definitions';
+import {
+  DOMAIN_DEFINITIONS,
+  DOMAIN_IDS,
+  type DomainId,
+} from '../../src/domain/domains/definitions';
+import type { CoverageCadence } from '../../src/domain/domains/cadence';
 import type { CandidateAction } from '../../src/intelligence/types';
 import { runEpisode } from '../../src/intelligence';
 import { SCENARIOS, scenarioById } from '../../src/app/scenarios';
@@ -441,6 +446,9 @@ describe('Can’t Now recomputes rather than picking the runner-up', () => {
         submissions,
         predictions: episode.internal.effects,
         enabledTopics: new Set<string>(),
+        cadence: new Map<string, CoverageCadence>(),
+        snoozedUntil: new Map<string, string>(),
+        intentionallyQuiet: new Set<DomainId>(),
       },
     };
   }

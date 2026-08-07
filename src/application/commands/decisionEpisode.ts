@@ -8,6 +8,7 @@ import { OUTCOME_PROMPTS, UNSURE } from '../../domain/prompts/definitions';
 import type { EpisodeResult, RecommendedAction } from '../../intelligence';
 import { localTimeContextFor, observationDrafts, type AnsweredPrompt } from './capture';
 import { writeRecords, type WriteResult } from './writeRecord';
+import { DECISION_RULES_VERSION } from '../../command-core/rules';
 
 /**
  * The decision episode, written down (Prompt 7A tasks 2–4).
@@ -197,6 +198,12 @@ function decisionDrafts(episode: EpisodeResult, now: Date): PersistedDecision | 
     ...(action.candidate.originDomainId === undefined
       ? {}
       : { originDomainId: action.candidate.originDomainId }),
+    /*
+     * The generator's own id, so a later episode can tell that the owner declined *this
+     * action* rather than merely some action. Without it, "Can't now" could be answered by
+     * re-offering the same thing a second later.
+     */
+    engineCandidateId: action.candidate.id,
     ...(action.northStar === undefined ? {} : { northStarLink: action.northStar.relevance }),
     timing: {},
     durationMinutes: action.candidate.durationMinutes,
@@ -213,6 +220,8 @@ function decisionDrafts(episode: EpisodeResult, now: Date): PersistedDecision | 
     ...common,
     recordId: recommendationRecordId,
     recordType: 'recommendation',
+    /* Which deterministic rule set produced this. See `command-core/rules.ts`. */
+    rulesVersion: DECISION_RULES_VERSION,
     provenance: {
       method: 'derived',
       derivedFromRecordIds: [candidateRecordId, ...basis],

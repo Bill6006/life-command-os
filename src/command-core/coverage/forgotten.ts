@@ -47,11 +47,19 @@ function daysSince(iso: string | undefined, now: Date): number | undefined {
 export function findQuietAreas(
   submissions: readonly DomainSubmission[],
   now: Date,
+  /** Areas the owner deliberately made quiet. Never reported as forgotten. */
+  intentionallyQuiet: ReadonlySet<DomainId> = new Set(),
 ): readonly QuietArea[] {
   const quiet: QuietArea[] = [];
 
   for (const submission of submissions) {
     if (!submission.enabled) continue;
+    /*
+     * A decision, not neglect. Somebody who set an area to "only when I open it" has said
+     * what they want; raising it as forgotten would be overriding that and calling it
+     * protection.
+     */
+    if (intentionallyQuiet.has(submission.domainId)) continue;
 
     const days = daysSince(submission.scan.lastMeaningfulUpdate, now);
 

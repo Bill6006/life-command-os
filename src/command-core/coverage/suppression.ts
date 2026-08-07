@@ -1,6 +1,10 @@
 import { assessFreshness, type CanonicalRecord } from '../../domain/records';
 import type { ContextualCapture } from '../../domain/capture/contextualCapture';
 import type { ProtectedContext } from '../../domain/records/categories';
+import {
+  CADENCE_FRESHNESS_MULTIPLIER,
+  type CoverageCadence,
+} from '../../domain/domains/cadence';
 import type { SuppressedItem, SuppressionReason } from '../boundary';
 
 /**
@@ -36,6 +40,10 @@ export interface SuppressionContext {
   readonly protectedContexts: readonly ProtectedContext[];
   /** Protected topics the owner has switched on. Absent means the topic is off. */
   readonly enabledTopics: ReadonlySet<string>;
+  /** The owner's cadence for each area. Narrows what may be raised; never widens it. */
+  readonly cadence: ReadonlyMap<string, CoverageCadence>;
+  /** Areas snoozed until a date, by area. */
+  readonly snoozedUntil: ReadonlyMap<string, string>;
 }
 
 function lastAnsweredAt(
@@ -96,11 +104,44 @@ export function assessSuppression(
   attribute: string,
   context: SuppressionContext,
   areaEnabled: boolean,
+  canChangeEligibility: boolean,
 ): SuppressionVerdict {
   const promptId = capture.promptId ?? capture.id;
 
   if (!areaEnabled) {
     return deny(promptId, 'area-switched-off', 'This area is switched off');
+  }
+
+  const cadence = context.cadence.get(capture.domainId) ?? 'normal';
+
+  /*
+   * Deliberate quiet. Not raised on its own, and — read by `findQuietAreas` — not counted
+   * as forgotten either. Somebody who decided to leave an area alone has made a decision,
+   * and flagging it would be overriding that while calling it protection.
+   */
+  if (cadence === 'only-when-i-open-it') {
+    return deny(
+      promptId,
+      'cadence',
+      'You asked for this area only when you open it yourself',
+    );
+  }
+
+  const snoozed = context.snoozedUntil.get(capture.domainId);
+  if (snoozed !== undefined) {
+    return deny(promptId, 'snoozed', `Snoozed until ${snoozed.slice(0, 10)}`);
+  }
+
+  /*
+   * `less-often` keeps only what could change eligibility. It narrows and never promotes:
+   * there is no cadence that makes a question eligible which was not eligible already.
+   */
+  if (cadence === 'less-often' && !canChangeEligibility) {
+    return deny(
+      promptId,
+      'cadence',
+      'Kept for now: at this cadence only questions that change what is possible are raised',
+    );
   }
 
   if (capture.protectedTopic !== undefined && !context.enabledTopics.has(capture.protectedTopic)) {
@@ -131,16 +172,17 @@ export function assessSuppression(
   const answeredAt = lastAnsweredAt(context.records, attribute);
 
   if (answeredAt !== undefined && capture.freshnessHours > 0) {
-    const status = assessFreshness(
-      answeredAt,
-      context.now,
-      capture.freshnessHours * HOUR_MS,
-    ).status;
-    if (status !== 'stale') {
+    /*
+     * Cadence stretches the domain's own freshness window rather than adding a second
+     * timer beside it. One declaration, one multiplier — and because the multiplier is
+     * never below one, a cadence can only ever make the app quieter.
+     */
+    const window = capture.freshnessHours * CADENCE_FRESHNESS_MULTIPLIER[cadence] * HOUR_MS;
+    if (assessFreshness(answeredAt, context.now, window).status !== 'stale') {
       return deny(
         promptId,
         'answered-recently',
-        `Answered inside its ${String(capture.freshnessHours)}-hour window`,
+        `Answered inside its ${String(capture.freshnessHours * CADENCE_FRESHNESS_MULTIPLIER[cadence])}-hour window`,
       );
     }
   }

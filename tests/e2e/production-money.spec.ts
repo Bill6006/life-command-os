@@ -285,7 +285,16 @@ test.describe('the area stays in its place', () => {
     await manageAreas(page)
       .getByRole('button', { name: `Switch off ${AREA.toLowerCase()}` })
       .click();
-    await expect(panel(page)).toHaveCount(0);
+
+    /*
+     * The *domain* panel is gone. A category summary named "Money" remains, as one does for
+     * every switched-off area — checking the region name alone stopped distinguishing the
+     * two once the Phase 8 repair pass reverted the "Money & pressure" label workaround.
+     * The update control is the unambiguous marker: only a domain panel carries one. The
+     * area's question is not — Manage Areas prints it as the subtitle of every switchable
+     * area, switched on or not.
+     */
+    await expect(page.getByRole('button', { name: 'Update this area' })).toHaveCount(0);
 
     await switchOn(page);
     await expect(panel(page)).toContainText('Heavy on your mind');

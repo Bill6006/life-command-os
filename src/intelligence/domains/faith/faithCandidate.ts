@@ -1,6 +1,7 @@
 import { FAITH_ACTIONS, type FaithAction } from '../../../domain/faith/meaning';
 import type { CanonicalRecord } from '../../../domain/records';
 import type { CandidateAction } from '../../types';
+import { maySurface } from '../../../domain/emotional/permissions';
 import { mayGenerateCandidate } from '../registry';
 import type { FaithEvidence } from './assessFaith';
 
@@ -91,19 +92,34 @@ export function generateFaithCandidate(
     };
   }
 
-  /* 2. A practice that has gone quiet. Offered small, and offered once. */
+  /*
+   * 2. A practice that has gone quiet. Offered small, and offered once.
+   *
+   * **His words appear only where he said they may.** Switching the area on says he wants
+   * somewhere to record a practice; it does not say the sentence may sit on the front page,
+   * which is the surface he sees most and chooses least. The scan has withheld the same
+   * content since Prompt 8F, and this brings Now into line with it.
+   *
+   * Without the permission the offer still happens — the app still knows a practice has
+   * gone quiet, still counts it, still puts the words on the area page he opened. Only the
+   * quoting stops. Withholding the content is not withholding the help.
+   */
   const quiet = evidence.quietPractices[0];
   if (quiet !== undefined) {
+    const mayQuote = maySurface(records, 'faith-practice', 'now');
     return {
       candidate: toCandidate(
         FAITH_ACTIONS['do-the-smallest-version'],
         quiet.lastAt === undefined
           ? 'Nothing recorded against this yet'
           : 'Nothing recorded against this for a while',
-        `Two minutes of: ${quiet.statement}`,
+        mayQuote
+          ? `Two minutes of: ${quiet.statement}`
+          : 'Two minutes of something you said you wanted to do',
       ),
-      because:
-        'Your words, offered back at the size that survives a bad week. Not doing it is not recorded as anything.',
+      because: mayQuote
+        ? 'Your words, offered back at the size that survives a bad week. Not doing it is not recorded as anything.'
+        : 'One of the things you said you wanted to do, at the size that survives a bad week. The words stay on the page you opened.',
     };
   }
 

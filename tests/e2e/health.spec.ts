@@ -94,7 +94,15 @@ test.describe('the health panel', () => {
     for (const label of labels) {
       expect(label, label).not.toMatch(/^[a-z]+(-[a-z]+)+$/);
     }
-    expect(labels).toContain('Health, recovery & energy');
+    /*
+     * A category no domain owns, so it is always rendered.
+     *
+     * This used to name the health category, which the health domain panel now covers —
+     * Direction stopped printing both after the Phase 8 repair pass removed the duplicate
+     * projection. The guarantee under test is that `categoryLabel` renders words rather
+     * than a slug, and that is unaffected by which category is used to check it.
+     */
+    expect(labels).toContain('Time, attention & capacity');
   });
 
   test('never grades the person, in any state', async ({ page }) => {
