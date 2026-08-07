@@ -10,6 +10,8 @@ import { ManageAreasView } from './ManageAreasView';
 import { ManualFocusView } from './ManualFocusView';
 import type { EpisodeResult } from '../../../intelligence';
 import type { CanonicalRecord } from '../../../domain/records';
+import { moveStances } from '../../../command-core/arbitration/stances';
+import type { SituationalCapacity } from '../../../domain/domains/capacity';
 import {
   categoryLabel,
   confidenceLabel,
@@ -28,6 +30,61 @@ import {
  *
  * Reachable from Now in one interaction via the Trajectory panel (`UX-005`).
  */
+/**
+ * Moves the owner has set aside, and the way back.
+ *
+ * Renders nothing when there are none, so it costs a quiet profile no space at all. Every
+ * entry says which stance is in force and, where the stance has an end or a scope, what it
+ * is — a pause the owner cannot see the end of is indistinguishable from a prohibition.
+ */
+function SetAsideMoves({
+  records,
+  situation,
+  busy,
+  onRestoreMove,
+}: {
+  readonly records: readonly CanonicalRecord[];
+  readonly situation: SituationalCapacity;
+  readonly busy: boolean;
+  readonly onRestoreMove?:
+    | ((move: { readonly engineCandidateId: string; readonly statement: string }) => void)
+    | undefined;
+}): React.JSX.Element | null {
+  const stances = moveStances(records, new Date(), situation).filter(
+    (entry) => entry.stance !== 'restored',
+  );
+  if (stances.length === 0 || onRestoreMove === undefined) return null;
+
+  return (
+    <Panel label="Moves you have set aside" wide>
+      <ul className="changes">
+        {stances.map((entry) => (
+          <li key={entry.engineCandidateId}>
+            <span className="change-main">{entry.moveStatement}</span>
+            <span className="fine">{entry.because}</span>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              disabled={busy}
+              onClick={() => {
+                onRestoreMove({
+                  engineCandidateId: entry.engineCandidateId,
+                  statement: entry.moveStatement,
+                });
+              }}
+            >
+              {`Put back: ${entry.moveStatement}`}
+            </button>
+          </li>
+        ))}
+      </ul>
+      <p className="fine">
+        Putting one back is immediate, and you can set it aside again afterwards.
+      </p>
+    </Panel>
+  );
+}
+
 export function DirectionSurface({
   episode,
   records,
@@ -36,6 +93,7 @@ export function DirectionSurface({
   onSetAreaState,
   onSetCadence,
   onSnooze,
+  onRestoreMove,
 }: {
   episode: EpisodeResult;
   records: readonly CanonicalRecord[];
@@ -47,6 +105,17 @@ export function DirectionSurface({
   /** How often an area may raise something. Narrows only — never promotes. */
   onSetCadence?: ((domainId: DomainId, cadence: CoverageCadence) => void) | undefined;
   onSnooze?: ((domainId: DomainId, untilIso: string) => void) | undefined;
+  /**
+   * Puts a move the owner set aside back into play (`V33-032`, section I).
+   *
+   * Section I requires restoring to be discoverable and reversible. It lives here rather
+   * than beside `Can't now`, because by the time a move is forbidden it no longer appears
+   * on Now at all — the one place it could never be found is the surface it disappeared
+   * from.
+   */
+  onRestoreMove?:
+    | ((move: { readonly engineCandidateId: string; readonly statement: string }) => void)
+    | undefined;
 }): React.JSX.Element {
   const star = records.find((record) => record.recordType === 'north-star');
   const goals = records.filter((record) => record.recordType === 'goal');
@@ -220,6 +289,13 @@ export function DirectionSurface({
           </p>
         )}
       </Panel>
+
+      <SetAsideMoves
+        records={records}
+        situation={episode.state.situation}
+        busy={busy}
+        onRestoreMove={onRestoreMove}
+      />
 
       {episode.learning.graphs
         .filter((graph) => ['focused-hours', 'capacity', 'north-star'].includes(graph.id))

@@ -71,6 +71,14 @@ export const movePreferenceRecord = withEnvelopeInvariants(
        * stance would apply to exactly one episode and never be found again.
        */
       engineCandidateId: z.string().min(1).max(160),
+      /**
+       * The move's wording when the stance was set, for display.
+       *
+       * Needed because a forbidden move stops being generated as a candidate, so there is
+       * nowhere else left to read its name from — and a `Restore` list that could only say
+       * `health:meditate` would not be a way back, it would be a puzzle.
+       */
+      moveStatement: z.string().min(1).max(300),
       stance: z.enum(MOVE_STANCES),
       /** Required by `paused`. When the pause ends by itself. */
       until: z.iso.datetime().optional(),

@@ -1,6 +1,22 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
+ * Opens the Manage areas drawer (`V33-016`, v3.3 B7).
+ *
+ * The panel leads with a count and keeps its switches behind a disclosure, because
+ * management is rare and deliberate while Direction's job is showing what is going on.
+ * Anything reaching for a switch opens it first, exactly as the owner does.
+ */
+async function openAreaDrawer(page: Page): Promise<void> {
+  const drawer = page
+    .getByRole('region', { name: 'Manage areas' })
+    .locator('details.areas-drawer');
+  if ((await drawer.count()) === 0) return;
+  if (await drawer.evaluate((node: HTMLDetailsElement) => node.open)) return;
+  await drawer.locator('summary').click();
+}
+
+/**
  * Phase 7 Prompt 8A gate evidence: the shared domain framework, on screen.
  *
  * The gate is mostly about what must *not* appear. Now stays compact, no score wall
@@ -160,6 +176,7 @@ test.describe('one area switched on', () => {
     await goTo(page, 'Direction');
 
     const manage = page.getByRole('region', { name: 'Manage areas' });
+    await openAreaDrawer(page);
     // Career is enabled and health is deprioritised in this scenario — both are on,
     // so both offer to switch off rather than on.
     for (const label of ['career and learning', 'health, recovery, and energy']) {
@@ -174,6 +191,7 @@ test.describe('one area switched on', () => {
     await goTo(page, 'Direction');
 
     await expect(page.getByRole('region', { name: 'Career and learning' })).toBeVisible();
+    await openAreaDrawer(page);
     await page
       .getByRole('region', { name: 'Manage areas' })
       .getByRole('button', { name: 'Switch off career and learning' })

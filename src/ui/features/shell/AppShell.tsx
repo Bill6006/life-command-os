@@ -11,9 +11,22 @@ import {
   OutcomeSurface,
   QuickCaptureSurface,
   type OpenEpisode,
+  type StanceChoice,
 } from '../respond/RespondSurfaces';
+import {
+  blockMoveHere,
+  forbidMove,
+  modifyMove,
+  pauseMove,
+  restoreMove,
+} from '../../../application/commands/moveSovereignty';
 import { useLocalRecords } from '../../state/useLocalRecords';
-import type { GuideDepth, GuideKind, GuideOutcome } from '../../../domain/records';
+import type {
+  BlockedContext,
+  GuideDepth,
+  GuideKind,
+  GuideOutcome,
+} from '../../../domain/records';
 import type { AnsweredPrompt } from '../../../application/commands/capture';
 import {
   chooseDeclineReasons,
@@ -214,6 +227,28 @@ const GUIDE_ENTRY: Record<GuideKind, GuideEntry> = {
   },
 };
 
+/**
+ * The situation, as something a block can be scoped to.
+ *
+ * Drops the minute count, which is far too fine-grained to block on — "not while I am at
+ * work" is a rule someone might mean and "not while I have 23 minutes free" is not.
+ */
+function situationForBlocking(situation: {
+  readonly setting?: string | undefined;
+  readonly engagement?: string | undefined;
+  readonly interruptibility?: string | undefined;
+  readonly privacy?: string | undefined;
+}): BlockedContext {
+  return {
+    ...(situation.setting === undefined ? {} : { setting: situation.setting }),
+    ...(situation.engagement === undefined ? {} : { engagement: situation.engagement }),
+    ...(situation.interruptibility === undefined
+      ? {}
+      : { interruptibility: situation.interruptibility }),
+    ...(situation.privacy === undefined ? {} : { privacy: situation.privacy }),
+  } as BlockedContext;
+}
+
 function useIsOffline(): boolean {
   const [offline, setOffline] = useState(() => !navigator.onLine);
   useEffect(() => {
@@ -381,6 +416,38 @@ export function AppShell(): React.JSX.Element {
     void run(() => declineRecommendation(episode, reason, new Date()));
   };
 
+  /**
+   * A standing decision about the move (`V33-032`, section I).
+   *
+   * Distinct from `decline` above, and deliberately so: that one records what was true this
+   * afternoon, this one records what the move should do from now on. Both end by returning
+   * to Now, where the whole episode recomputes from records — which is what makes "recompute
+   * globally after any selection" true rather than aspirational. Nothing here shrinks the
+   * refused move and offers it back; the arbiter never sees it again until the stance lifts.
+   */
+  const applyStance = (choice: StanceChoice): void => {
+    if (episode.output.kind !== 'action') return;
+    const now = new Date();
+    const move = {
+      engineCandidateId: episode.output.candidate.id,
+      statement: episode.output.candidate.statement,
+    };
+
+    void run(async () => {
+      switch (choice.kind) {
+        case 'pause':
+          return pauseMove(move, new Date(now.getTime() + choice.days * 86_400_000), now);
+        case 'block-here':
+          return blockMoveHere(move, situationForBlocking(episode.state.situation), now);
+        case 'modify':
+          return modifyMove(move, choice.statement, now);
+        case 'forbid':
+          return forbidMove(move, now);
+      }
+    });
+    setMode({ kind: 'console' });
+  };
+
   const submitOutcome = (target: OpenEpisode, answers: readonly AnsweredPrompt[]): void => {
     void run(() =>
       recordOutcome(
@@ -459,7 +526,10 @@ export function AppShell(): React.JSX.Element {
               (episode.state.capacity.value === 'low' ||
                 episode.state.capacity.value === 'depleted'),
           })}
+          currentContext={situationForBlocking(episode.state.situation)}
+          now={now}
           onDecline={decline}
+          onStance={applyStance}
           onCancel={() => {
             setMode({ kind: 'console' });
           }}
@@ -1021,6 +1091,9 @@ export function AppShell(): React.JSX.Element {
               }}
               onSnooze={(domainId, untilIso) => {
                 void run(() => snoozeArea({ domainId, untilIso }, new Date()));
+              }}
+              onRestoreMove={(move) => {
+                void run(() => restoreMove(move, new Date()));
               }}
             />
           ) : null}

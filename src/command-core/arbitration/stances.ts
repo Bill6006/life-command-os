@@ -25,6 +25,8 @@ import type { SituationalCapacity } from '../../domain/domains/capacity';
 
 export interface ResolvedStance {
   readonly engineCandidateId: string;
+  /** The move's wording when the stance was set. The only place it survives. */
+  readonly moveStatement: string;
   readonly stance: MoveStance;
   /** True when this stance stops the move being offered right now. */
   readonly suppressed: boolean;
@@ -37,6 +39,7 @@ export interface ResolvedStance {
 
 interface Declared {
   readonly engineCandidateId: string;
+  readonly moveStatement: string;
   readonly stance: MoveStance;
   readonly recordedAt: string;
   readonly until?: string | undefined;
@@ -80,6 +83,7 @@ function latestPerMove(records: readonly CanonicalRecord[]): Map<string, Declare
     if (record.recordType !== 'move-preference') continue;
     const entry: Declared = {
       engineCandidateId: record.engineCandidateId,
+      moveStatement: record.moveStatement,
       stance: record.stance,
       recordedAt: record.recordedAt,
       until: record.until,
@@ -113,6 +117,7 @@ export function moveStances(
   for (const declared of latestPerMove(records).values()) {
     const base = {
       engineCandidateId: declared.engineCandidateId,
+      moveStatement: declared.moveStatement,
       stance: declared.stance,
       ...(declared.replacementStatement === undefined
         ? {}

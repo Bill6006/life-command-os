@@ -595,6 +595,7 @@ export function aMovePreference(
     ...envelope('move-preference', 41),
     ...OBSERVED,
     engineCandidateId: 'health:meditate',
+    moveStatement: 'Sit quietly for ten minutes',
     stance: 'blocked-here',
     inContext: { setting: 'work', privacy: 'public' },
     ...overrides,

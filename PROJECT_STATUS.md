@@ -29,6 +29,9 @@ the app behaves differently but incompletely.
 | **B1** check-in card (`V33-011`) | One component for morning, afternoon and evening. Was 94/116/135px tall across the three blocks with 12.5px type and a bare "Open" link; now a uniform 151px with a title at reading size and a full-width target. |
 | **B2** (part) audit metadata (`V33-012`) | "What changed" was printing `kind:anchored-scale, scaleId:energy, scaleVersion:1, ordinal:1, label:Drained` on Now. Replaced with a real per-kind summary. The provenance is intact in Timeline, which is where it belongs. |
 | **B10** (part) mobile type (`V33-030`) | A narrow-viewport scale in `tokens.css`, so legibility is a token decision rather than something each new component must remember. |
+| **B2** command hierarchy (`V33-013`, `V33-014`) | Now leads with the premise — where you are, what is in the way — then the decision, then the minimum version as an offer rather than a caveat. Expected effect and `Why this` are collapsed. No numeric effect is rendered anywhere, because nothing in the product produces one backed by a defined metric. The panel is `Do now`, not `Best move`. |
+| **B7** Manage areas (`V33-016`) | Leads with `Areas enabled: n of 7`; every toggle, cadence control and snooze button moved behind a drawer. Direction was spending most of its height on a settings screen. |
+| **Section I UI** (`V33-032`) | The lifecycle is reachable. `Can't now` keeps its short reason list and gains a disclosure worded about the *move* rather than the moment: pause with a visible return date, block scoped to the situation it names, reword, and a two-press `Never suggest this`. `Restore` lives on Direction under `Moves you have set aside` — the one surface a forbidden move has not vanished from. 7 browser tests. |
 | **Section I** owner sovereignty (`V33-032`) | A 28th record family, `move-preference`, carrying the owner's standing say over a move: `paused` (must name an end — a pause without one is a prohibition in softer wording), `blocked-here` (must name the context, and never matches an unknown one), `modified` (changes the words, never the eligibility), `forbidden`, `restored`. Resolved in `stances.ts`, applied in `arbitrate`, written only by explicit commands in `moveSovereignty.ts`. |
 
 ### The eleven clarifications
@@ -48,12 +51,10 @@ the app behaves differently but incompletely.
 
 ### Not started
 
-Sections **C, D, E, F, G, H, J, K**, the **AT33 acceptance scenarios (M)**, B2's hierarchy
-reorder, and **B3, B4, B6, B7, B8, B9**. Clarification **9**. Section **I** is partly done —
-its three-way distinction, prerequisite actions, and the full owner-control lifecycle
-(pause, block-here, modify, forbid, restore) now exist in the domain, command and
-arbitration layers with 17 focused tests. What it still lacks is the **UI** to reach them:
-`Can't now` offers reasons, not stances.
+Sections **C, D, E, F, G, H, J, K**, the **AT33 acceptance scenarios (M)**, and **B3, B4,
+B6, B8, B9**. Section **I** is complete —
+three-way distinction, prerequisite actions, the full owner-control lifecycle, and the
+interface to reach all of it.
 
 This is still the majority of Prompt 9C by volume. It is stated plainly rather than folded
 into a gate table, because a partial pass reported as anything but partial is worse than no
@@ -341,11 +342,6 @@ edits is the one that matters.
 - **The recovery pause is deliberately shapeless and must stay that way.** It is the move of
   last resort; if `you cannot step away` could remove it, the app would fall silent in exactly
   the situation most needing an answer. There is a test that fails if it gains a shape.
-- **Section I has no UI.** The full lifecycle — pause, block-here, modify, forbid, restore —
-  exists in the record family, the commands and the arbitration filter, and is covered by 17
-  tests. Nothing on screen reaches it: `Can't now` still offers reasons only. The owner can
-  therefore not yet exercise sovereignty through the app, which is the remaining half of
-  section I.
 - **A situation report expires after three hours.** Where the owner was this morning is not
   where they are now. That window is a judgement, not a measurement, and it is the number to
   revisit first if the app starts asking where you are too often.

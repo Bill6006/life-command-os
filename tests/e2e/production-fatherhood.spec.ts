@@ -1,6 +1,22 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
+ * Opens the Manage areas drawer (`V33-016`, v3.3 B7).
+ *
+ * The panel leads with a count and keeps its switches behind a disclosure, because
+ * management is rare and deliberate while Direction's job is showing what is going on.
+ * Anything reaching for a switch opens it first, exactly as the owner does.
+ */
+async function openAreaDrawer(page: Page): Promise<void> {
+  const drawer = page
+    .getByRole('region', { name: 'Manage areas' })
+    .locator('details.areas-drawer');
+  if ((await drawer.count()) === 0) return;
+  if (await drawer.evaluate((node: HTMLDetailsElement) => node.open)) return;
+  await drawer.locator('summary').click();
+}
+
+/**
  * Fatherhood on the exact production build, from a genuinely fresh profile.
  *
  * **No test bridge and no seeding.** Everything here is created by using the app: the
@@ -41,6 +57,7 @@ const manageAreas = (page: Page) => page.getByRole('region', { name: 'Manage are
 const panel = (page: Page) => page.getByRole('region', { name: AREA });
 
 async function switchOn(page: Page): Promise<void> {
+  await openAreaDrawer(page);
   await manageAreas(page)
     .getByRole('button', { name: `Switch on ${AREA.toLowerCase()}` })
     .click();

@@ -1,6 +1,22 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
 
 /**
+ * Opens the Manage areas drawer (`V33-016`, v3.3 B7).
+ *
+ * The panel leads with a count and keeps its switches behind a disclosure, because
+ * management is rare and deliberate while Direction's job is showing what is going on.
+ * Anything reaching for a switch opens it first, exactly as the owner does.
+ */
+async function openAreaDrawer(page: Page): Promise<void> {
+  const drawer = page
+    .getByRole('region', { name: 'Manage areas' })
+    .locator('details.areas-drawer');
+  if ((await drawer.count()) === 0) return;
+  if (await drawer.evaluate((node: HTMLDetailsElement) => node.open)) return;
+  await drawer.locator('summary').click();
+}
+
+/**
  * v3.3 section A on the production build: the three owner-observed defects.
  *
  * Each is checked on the shipped artifact in a throwaway profile, because all three were
@@ -45,6 +61,7 @@ test.describe('A1. the clock reads the owner’s local time (V33-031)', () => {
     await expect(page.locator('.shell')).toBeVisible();
 
     await goTo(page, 'Direction');
+    await openAreaDrawer(page);
     await page
       .getByRole('region', { name: 'Manage areas' })
       .getByRole('button', { name: 'Switch on money' })

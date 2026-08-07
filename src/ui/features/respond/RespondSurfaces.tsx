@@ -8,6 +8,7 @@ import {
 } from '../../../domain/prompts/definitions';
 import type { Answer, AnsweredPrompt } from '../../../application/commands/capture';
 import { type DeclineReason } from '../../../application/commands/decisionEpisode';
+import type { BlockedContext } from '../../../domain/records';
 import type { QuickCaptureOption } from '../../../domain/capture/registry';
 import type { DomainId } from '../../../domain/domains/definitions';
 
@@ -22,6 +23,217 @@ import type { DomainId } from '../../../domain/domains/definitions';
 /* -------------------------------------------------------------------------- */
 
 /**
+ * A standing decision about the move itself (`V33-032`, section I).
+ *
+ * ## Why this is a separate, second thing on the screen
+ *
+ * Everything above it answers "what is in the way right now" and expires by itself.
+ * Everything here answers "what should this move do from now on" and does not. Putting
+ * them in one list would be the interface making the same mistake the engine is built to
+ * avoid: a tap meant as "not this afternoon" landing as "never".
+ *
+ * So it sits behind a disclosure, worded as being about the move rather than the moment,
+ * and `Never suggest this` is one deliberate press inside it. Nothing here can be reached
+ * by hurrying through the reasons above.
+ */
+export type StanceChoice =
+  | { readonly kind: 'pause'; readonly days: number }
+  | { readonly kind: 'block-here' }
+  | { readonly kind: 'modify'; readonly statement: string }
+  | { readonly kind: 'forbid' };
+
+/** Plain-language descriptions of the situation a block would apply to. */
+const CONTEXT_WORDS: Record<string, Record<string, string>> = {
+  setting: {
+    home: 'at home',
+    work: 'at work',
+    out: 'out and about',
+    travelling: 'travelling',
+    other: 'somewhere else',
+  },
+  engagement: {
+    free: 'with nothing particular on',
+    working: 'while working',
+    'with-family': 'with family',
+    eating: 'while eating',
+    travelling: 'while travelling',
+    'winding-down': 'while winding down',
+  },
+  interruptibility: {
+    free: 'when you can step away',
+    brief: 'when you can only step away briefly',
+    none: 'when you cannot step away',
+  },
+  privacy: {
+    private: 'when you can speak freely',
+    'semi-private': 'when you can only speak quietly',
+    public: 'when you are around other people',
+  },
+};
+
+export function describeContext(context: BlockedContext): string {
+  const parts: string[] = [];
+  for (const [field, value] of Object.entries(context)) {
+    if (typeof value !== 'string') continue;
+    const word = CONTEXT_WORDS[field]?.[value];
+    if (word !== undefined) parts.push(word);
+  }
+  return parts.length === 0 ? 'this situation' : parts.join(', ');
+}
+
+const PAUSE_CHOICES: readonly { readonly label: string; readonly days: number }[] = [
+  { label: 'A week', days: 7 },
+  { label: 'A month', days: 30 },
+  { label: 'Three months', days: 90 },
+];
+
+function StanceControls({
+  statement,
+  busy,
+  now,
+  currentContext,
+  onStance,
+}: {
+  readonly statement: string;
+  readonly busy: boolean;
+  /** The episode's instant, not the wall clock — rendering must stay pure and stable. */
+  readonly now: Date;
+  readonly currentContext: BlockedContext;
+  readonly onStance: (stance: StanceChoice) => void;
+}): React.JSX.Element {
+  const [reword, setReword] = useState(statement);
+  const [confirmForbid, setConfirmForbid] = useState(false);
+  const blockable = Object.keys(currentContext).length > 0;
+
+  return (
+    <details className="stance">
+      <summary>Something about this move, not just right now</summary>
+
+      <p className="fine">
+        These change what happens from now on. Nothing above this line does — those answers
+        describe the moment and lift by themselves.
+      </p>
+
+      <div className="stance-group" role="group" aria-label="Pause this move">
+        <p className="fine stance-label">Pause it, and it comes back on its own:</p>
+        <div className="scale scale-choices">
+          {PAUSE_CHOICES.map((choice) => (
+            <button
+              type="button"
+              key={choice.label}
+              className="scale-step"
+              disabled={busy}
+              onClick={() => {
+                onStance({ kind: 'pause', days: choice.days });
+              }}
+            >
+              <span className="scale-label">{choice.label}</span>
+              <span className="scale-anchor">
+                {`Back on ${new Date(now.getTime() + choice.days * 86_400_000)
+                  .toISOString()
+                  .slice(0, 10)}`}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {blockable ? (
+        <div className="stance-group">
+          <p className="fine stance-label">Or not in this kind of situation:</p>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={busy}
+            onClick={() => {
+              onStance({ kind: 'block-here' });
+            }}
+          >
+            {`Not ${describeContext(currentContext)}`}
+          </button>
+          <p className="fine">
+            {`Applies only ${describeContext(currentContext)}. Anywhere else it stays available.`}
+          </p>
+        </div>
+      ) : (
+        <p className="fine">
+          Blocking this in one kind of situation needs the app to know what the situation is,
+          and it does not yet.
+        </p>
+      )}
+
+      <div className="stance-group">
+        <label className="fine stance-label" htmlFor="stance-reword">
+          Or say it in your own words. This changes the wording, not whether it is offered:
+        </label>
+        <input
+          id="stance-reword"
+          className="field-input"
+          type="text"
+          value={reword}
+          maxLength={300}
+          onChange={(event) => {
+            setReword(event.target.value);
+          }}
+        />
+        <button
+          type="button"
+          className="btn btn-secondary"
+          disabled={busy || reword.trim() === '' || reword.trim() === statement}
+          onClick={() => {
+            onStance({ kind: 'modify', statement: reword.trim() });
+          }}
+        >
+          Save wording
+        </button>
+      </div>
+
+      <div className="stance-group stance-forbid">
+        {confirmForbid ? (
+          <>
+            <p className="fine">
+              This stops it being suggested at all, with no end date. You can put it back later
+              from Direction.
+            </p>
+            <div className="actions">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={busy}
+                onClick={() => {
+                  onStance({ kind: 'forbid' });
+                }}
+              >
+                Yes, never suggest this
+              </button>
+              <button
+                type="button"
+                className="btn btn-link"
+                onClick={() => {
+                  setConfirmForbid(false);
+                }}
+              >
+                Keep it
+              </button>
+            </div>
+          </>
+        ) : (
+          <button
+            type="button"
+            className="btn btn-link"
+            onClick={() => {
+              setConfirmForbid(true);
+            }}
+          >
+            Never suggest this
+          </button>
+        )}
+      </div>
+    </details>
+  );
+}
+
+/**
  * Can’t Now (`OWN-033`, LEG-049).
  *
  * Every reason on this list is a **circumstance**, not a character judgement. There is
@@ -34,7 +246,10 @@ export function DeclineSurface({
   statement,
   busy,
   reasons,
+  currentContext,
+  now,
   onDecline,
+  onStance,
   onCancel,
 }: {
   readonly statement: string;
@@ -47,7 +262,11 @@ export function DeclineSurface({
    * reason was easiest to find.
    */
   readonly reasons: readonly DeclineReason[];
+  /** How the situation reads right now, so a context block can name what it applies to. */
+  readonly currentContext: BlockedContext;
+  readonly now: Date;
   readonly onDecline: (reason: DeclineReason) => void;
+  readonly onStance: (stance: StanceChoice) => void;
   readonly onCancel: () => void;
 }): React.JSX.Element {
   return (
@@ -83,6 +302,14 @@ export function DeclineSurface({
           These are the reasons that look likely from what is already known — not a complete
           list. Anything that does not fit is “Other, or not sure”.
         </p>
+        <StanceControls
+          statement={statement}
+          busy={busy}
+          now={now}
+          currentContext={currentContext}
+          onStance={onStance}
+        />
+
         <div className="actions">
           <button type="button" className="btn btn-link" onClick={onCancel}>
             Back

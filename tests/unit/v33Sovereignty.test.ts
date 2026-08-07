@@ -25,7 +25,11 @@ import { resetDatabase } from '../support/database';
  * ultimately about that boundary.
  */
 
-const MOVE = 'health:meditate';
+const MOVE = {
+  engineCandidateId: 'health:meditate',
+  statement: 'Sit quietly for ten minutes',
+};
+const MOVE_ID = MOVE.engineCandidateId;
 const NOW = new Date('2026-08-07T13:00:00.000Z');
 
 beforeEach(async () => {
@@ -41,12 +45,12 @@ describe('a pause ends by itself', () => {
     const records = await listAllRecords();
 
     const during = suppressedMoveIds(records, new Date('2026-08-08T13:00:00.000Z'), {});
-    expect(during.has(MOVE)).toBe(true);
-    expect(during.get(MOVE)).toMatch(/paused until/i);
+    expect(during.has(MOVE_ID)).toBe(true);
+    expect(during.get(MOVE_ID)).toMatch(/paused until/i);
 
     /* Nothing has to happen for this to lift. The clock is enough. */
     const after = suppressedMoveIds(records, new Date('2026-08-11T13:00:00.000Z'), {});
-    expect(after.has(MOVE)).toBe(false);
+    expect(after.has(MOVE_ID)).toBe(false);
   });
 
   it('refuses a pause that has already ended', async () => {
@@ -68,7 +72,8 @@ describe('a pause ends by itself', () => {
       source: 'user-entry',
       provenance: { method: 'direct-report' },
       privacy: 'general',
-      engineCandidateId: MOVE,
+      engineCandidateId: MOVE_ID,
+      moveStatement: 'Sit quietly for ten minutes',
       stance: 'paused',
     });
     expect(parsed.ok).toBe(false);
@@ -85,10 +90,10 @@ describe('a context block applies only in that context', () => {
     const records = await listAllRecords();
 
     const atWork = suppressedMoveIds(records, NOW, { setting: 'work', privacy: 'public' });
-    expect(atWork.has(MOVE)).toBe(true);
+    expect(atWork.has(MOVE_ID)).toBe(true);
 
     const atHome = suppressedMoveIds(records, NOW, { setting: 'home', privacy: 'private' });
-    expect(atHome.has(MOVE)).toBe(false);
+    expect(atHome.has(MOVE_ID)).toBe(false);
   });
 
   it('does not apply when the situation is unknown', () => {
@@ -124,8 +129,8 @@ describe('a modification changes the words, not the eligibility', () => {
     expect((await modifyMove(MOVE, 'Five minutes on the back step', NOW, 5)).ok).toBe(true);
     const records = await listAllRecords();
 
-    expect(suppressedMoveIds(records, NOW, {}).has(MOVE)).toBe(false);
-    expect(modificationFor(records, NOW, {}, MOVE)).toEqual({
+    expect(suppressedMoveIds(records, NOW, {}).has(MOVE_ID)).toBe(false);
+    expect(modificationFor(records, NOW, {}, MOVE_ID)).toEqual({
       statement: 'Five minutes on the back step',
       minutes: 5,
     });
@@ -145,8 +150,8 @@ describe('forbidding and restoring', () => {
 
     /* A year later, with no intervening evidence, it is still forbidden. */
     const later = suppressedMoveIds(records, new Date('2027-08-07T13:00:00.000Z'), {});
-    expect(later.has(MOVE)).toBe(true);
-    expect(later.get(MOVE)).toMatch(/never/i);
+    expect(later.has(MOVE_ID)).toBe(true);
+    expect(later.get(MOVE_ID)).toMatch(/never/i);
   });
 
   it('comes back the moment the owner restores it', async () => {
@@ -155,7 +160,7 @@ describe('forbidding and restoring', () => {
     const records = await listAllRecords();
 
     const after = suppressedMoveIds(records, new Date('2026-08-07T15:00:00.000Z'), {});
-    expect(after.has(MOVE)).toBe(false);
+    expect(after.has(MOVE_ID)).toBe(false);
   });
 
   it('can be forbidden again after being restored', async () => {
@@ -165,9 +170,9 @@ describe('forbidding and restoring', () => {
     await forbidMove(MOVE, new Date('2026-08-07T15:00:00.000Z'));
 
     const records = await listAllRecords();
-    expect(suppressedMoveIds(records, new Date('2026-08-07T16:00:00.000Z'), {}).has(MOVE)).toBe(
-      true,
-    );
+    expect(
+      suppressedMoveIds(records, new Date('2026-08-07T16:00:00.000Z'), {}).has(MOVE_ID),
+    ).toBe(true);
   });
 
   it('keeps a forbidden move visible so it can be offered back', async () => {
@@ -175,7 +180,7 @@ describe('forbidding and restoring', () => {
     const stances = moveStances(await listAllRecords(), NOW, {});
 
     /* Filtered out of arbitration, but not out of existence — Restore needs to find it. */
-    const found = stances.find((entry) => entry.engineCandidateId === MOVE);
+    const found = stances.find((entry) => entry.engineCandidateId === MOVE_ID);
     expect(found?.stance).toBe('forbidden');
     expect(found?.suppressed).toBe(true);
   });
@@ -186,7 +191,7 @@ describe('forbidding and restoring', () => {
 
     const shuffled = [...(await listAllRecords())].reverse();
     expect(
-      suppressedMoveIds(shuffled, new Date('2026-08-07T15:00:00.000Z'), {}).has(MOVE),
+      suppressedMoveIds(shuffled, new Date('2026-08-07T15:00:00.000Z'), {}).has(MOVE_ID),
     ).toBe(false);
   });
 });

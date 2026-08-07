@@ -48,9 +48,23 @@ async function goTo(page: Page, destination: string): Promise<void> {
 }
 
 const manageAreas = (page: Page) => page.getByRole('region', { name: 'Manage areas' });
+
+/**
+ * Opens the area drawer (`V33-016`, v3.3 B7).
+ *
+ * Manage areas leads with a count and keeps its toggles behind a disclosure, because
+ * management is something the owner does rarely and Direction's job is showing what is
+ * going on. Every test that changes an area has to open it first, as the owner does.
+ */
+async function openAreaDrawer(page: Page): Promise<void> {
+  const drawer = manageAreas(page).locator('details.areas-drawer');
+  if (await drawer.evaluate((node: HTMLDetailsElement) => node.open)) return;
+  await drawer.locator('summary').click();
+}
 const areaPanel = (page: Page, label: string) => page.getByRole('region', { name: label });
 
 async function switchOn(page: Page, label: string): Promise<void> {
+  await openAreaDrawer(page);
   await manageAreas(page)
     .getByRole('button', { name: `Switch on ${label.toLowerCase()}` })
     .click();
@@ -58,6 +72,7 @@ async function switchOn(page: Page, label: string): Promise<void> {
 }
 
 async function switchOff(page: Page, label: string): Promise<void> {
+  await openAreaDrawer(page);
   await manageAreas(page)
     .getByRole('button', { name: `Switch off ${label.toLowerCase()}` })
     .click();
@@ -104,6 +119,10 @@ test.describe('a fresh profile can reach every built area', () => {
 
     const manage = manageAreas(page);
     await expect(manage).toBeVisible();
+
+    /* The count leads; the switches live behind the drawer (B7). */
+    await expect(manage).toContainText('Areas enabled:');
+    await openAreaDrawer(page);
 
     // Seven switches, and only seven.
     const switchable = manage.getByRole('button', { name: /^Switch (on|off) / });
@@ -238,6 +257,8 @@ test.describe('the decision surface is unchanged by any of it', () => {
   test('every switch is a comfortable tap target', async ({ page }) => {
     await open(page);
     await goTo(page, 'Direction');
+
+    await openAreaDrawer(page);
 
     const boxes = await manageAreas(page)
       .getByRole('button')

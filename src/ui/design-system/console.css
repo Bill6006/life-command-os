@@ -1283,3 +1283,137 @@
 .permission:last-of-type {
   border-bottom: 0;
 }
+
+/*
+ * Standing decisions about a move (`V33-032`, section I).
+ *
+ * Behind a disclosure, and visually separated from the reasons above it, because the two
+ * answer different questions. Everything above expires by itself; nothing here does.
+ */
+.stance {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-default);
+}
+
+.stance > summary {
+  cursor: pointer;
+  min-height: var(--tap-min);
+  display: flex;
+  align-items: center;
+  font-size: var(--text-support);
+  color: var(--text-secondary);
+}
+
+.stance-group {
+  margin-top: var(--space-4);
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.stance-label {
+  margin: 0;
+  max-width: 46ch;
+}
+
+/* The one open-ended stance, set apart so it cannot be hit while skimming. */
+.stance-forbid {
+  margin-top: var(--space-5);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--border-subtle);
+}
+
+/*
+ * The command hierarchy on Now (`V33-013`, v3.3 B2).
+ *
+ * Premise, decision, minimum, effect, confidence, why — in that order and at that weight.
+ * The premise lines are quiet by design: they are what the decision rests on, not the
+ * decision, and giving them equal prominence is how a command surface turns into a
+ * dashboard.
+ */
+.premise {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.premise-line {
+  margin: 0;
+  font-size: var(--text-support);
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.premise-label {
+  display: inline-block;
+  margin-right: var(--space-2);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* The smaller version, given its own line so it reads as an offer rather than a caveat. */
+.minimum-win {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-support);
+  color: var(--text-primary);
+  line-height: 1.45;
+}
+
+.minimum-win-label {
+  display: inline-block;
+  margin-right: var(--space-2);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--accent-secondary);
+}
+
+.expected-effect,
+.why-this {
+  margin-top: var(--space-3);
+}
+
+.expected-effect > summary,
+.why-this > summary {
+  cursor: pointer;
+  min-height: var(--tap-min);
+  display: flex;
+  align-items: center;
+  font-size: var(--text-support);
+  color: var(--text-secondary);
+}
+
+.confidence-line {
+  margin-top: var(--space-3);
+}
+
+/* Manage areas: a count worth glancing at, machinery behind a drawer (`V33-016`, B7). */
+.areas-summary {
+  margin: 0;
+}
+
+.areas-count {
+  font-size: var(--text-body);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.areas-drawer {
+  margin-top: var(--space-2);
+}
+
+.areas-drawer > summary {
+  cursor: pointer;
+  min-height: var(--tap-min);
+  display: flex;
+  align-items: center;
+  font-size: var(--text-support);
+  color: var(--text-secondary);
+}

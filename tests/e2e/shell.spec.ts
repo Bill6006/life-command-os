@@ -141,7 +141,7 @@ test.describe('installability and offline startup', () => {
 
       // Offline changes nothing about the answer, which is the point. The engine
       // computed this on-device, so there is nothing for a network to affect.
-      await expect(page.getByRole('main')).toContainText('Best move');
+      await expect(page.getByRole('main')).toContainText('Do now');
       await expect(page.getByRole('main')).toContainText('Goal One');
     } finally {
       await context.setOffline(false);

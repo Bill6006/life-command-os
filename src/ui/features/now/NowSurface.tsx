@@ -6,6 +6,7 @@ import {
   ReasonTrace,
 } from '../../components/primitives';
 import type { EpisodeResult } from '../../../intelligence';
+import type { PredictedEffect } from '../../../intelligence/types';
 import {
   categoryLabel,
   confidenceLabel,
@@ -168,6 +169,109 @@ function SituationPanels({
       </Panel>
     </>
   );
+}
+
+/**
+ * Where I am now, and the main bottleneck (`V33-013`, v3.3 B2 items 1 and 2).
+ *
+ * Two lines above the decision, because a recommendation with no stated premise is
+ * something the owner has to take on trust. The premise was always on the surface — spread
+ * across a `State` table and a set of domain panels further down, which is a different
+ * thing from leading with it.
+ *
+ * Both lines are omitted rather than padded when there is nothing true to say. An empty
+ * "Where I am now" would be the dashboard habit this section exists to remove.
+ */
+function WhereIAmNow({ episode }: { episode: EpisodeResult }): React.JSX.Element | null {
+  const { state } = episode;
+
+  const parts: string[] = [];
+  if (state.capacity.status === 'known') {
+    parts.push(describeCapacity(state.capacity.value));
+  }
+  const setting =
+    state.situation.setting === undefined ? undefined : SETTING_WORDS[state.situation.setting];
+  if (setting !== undefined) parts.push(setting);
+  if (state.situation.interruptibility === 'none') parts.push('cannot step away');
+  if (state.protectedContexts.length > 0) {
+    parts.push(`protecting ${state.protectedContexts.join(', ')}`);
+  }
+
+  /*
+   * The bottleneck comes from whichever enabled area named one. Not invented here, and not
+   * assembled from several — one line or none.
+   */
+  const bottleneck = episode.domains.find(
+    (panel) => panel.bottleneck !== undefined && panel.bottleneck.length > 0,
+  )?.bottleneck;
+
+  if (parts.length === 0 && bottleneck === undefined) return null;
+
+  return (
+    <div className="premise">
+      {parts.length > 0 ? (
+        <p className="premise-line">
+          <span className="premise-label">Where you are</span>
+          {parts.join(' · ')}
+        </p>
+      ) : null}
+      {bottleneck === undefined ? null : (
+        <p className="premise-line">
+          <span className="premise-label">In the way</span>
+          {bottleneck}
+        </p>
+      )}
+    </div>
+  );
+}
+
+const SETTING_WORDS: Record<string, string> = {
+  home: 'at home',
+  work: 'at work',
+  out: 'out and about',
+  travelling: 'travelling',
+  other: 'somewhere else',
+};
+
+function describeCapacity(value: string): string {
+  return `${value.charAt(0).toUpperCase()}${value.slice(1)} capacity`;
+}
+
+/**
+ * The expected effect, in the only terms the evidence supports (`V33-014`, B2 item 5).
+ *
+ * Numbers are allowed only when they come from a defined metric with evidence behind them.
+ * Nothing in this product currently produces one, so this renders the qualitative effects
+ * the engine actually computed and says nothing more. There is no `+25 points` here and no
+ * code path that could produce one.
+ */
+function ExpectedEffect({
+  effects,
+}: {
+  readonly effects: readonly PredictedEffect[];
+}): React.JSX.Element | null {
+  if (effects.length === 0) return null;
+
+  return (
+    <details className="expected-effect">
+      <summary>{`What it should do · ${summariseEffects(effects)}`}</summary>
+      <EffectsTable
+        effects={effects.map((effect) => ({
+          ...effect,
+          category: categoryLabel(effect.category),
+        }))}
+      />
+    </details>
+  );
+}
+
+function summariseEffects(effects: readonly PredictedEffect[]): string {
+  const helps = effects.filter((effect) => effect.direction === 'positive').length;
+  const costs = effects.filter((effect) => effect.direction === 'negative').length;
+  if (helps > 0 && costs > 0)
+    return `${String(helps)} likely to help, ${String(costs)} to cost`;
+  if (helps > 0) return `${String(helps)} likely to help`;
+  return `${String(costs)} likely to cost`;
 }
 
 function Standalone({
@@ -473,44 +577,21 @@ export function NowSurface({
         {banner}
         {returnBanner}
         {guideBar}
-        <Panel label="Best move" tone="decision" wide>
-          <p className="decision-statement">
-            {output.candidate.statement}{' '}
-            <span className="value">· {String(output.candidate.durationMinutes)} min</span>
-          </p>
-          <p className="fine">
-            Min: {output.candidate.minimumVersion} · Stop: {output.candidate.stoppingPoint}
+        <Panel label="Do now" tone="decision" wide>
+          <WhereIAmNow episode={episode} />
+
+          <p className="decision-statement">{output.candidate.statement}</p>
+
+          <p className="minimum-win">
+            <span className="minimum-win-label">If that is too much</span>
+            {output.candidate.minimumVersion}
           </p>
 
-          <EffectsTable
-            effects={output.effects.map((effect) => ({
-              ...effect,
-              category: categoryLabel(effect.category),
-            }))}
-          />
+          <ExpectedEffect effects={output.effects} />
 
-          <dl className="kv">
-            {output.northStar === undefined ? null : (
-              <div className="kv-row">
-                <dt>North Star</dt>
-                <dd>
-                  {output.northStar.relevance} — {output.northStar.statement}
-                </dd>
-              </div>
-            )}
-            <div className="kv-row">
-              <dt>Confidence</dt>
-              <dd>
-                {confidenceLabel(output.confidence)} — {output.confidence.why}
-              </dd>
-            </div>
-            <div className="kv-row">
-              <dt>Because</dt>
-              <dd>
-                <ReasonTrace reasons={output.reasonTrace} />
-              </dd>
-            </div>
-          </dl>
+          <p className="fine confidence-line">
+            {confidenceLabel(output.confidence)} · {output.confidence.why}
+          </p>
 
           <Actions
             primary={output.primaryAction}
@@ -521,10 +602,34 @@ export function NowSurface({
             }}
             onSecondary={onRespond}
           />
-          <p className="fine">
-            Starting records that you began. Declining records why you could not — it changes
-            what is suggested next and is never read as evidence about the suggestion.
-          </p>
+
+          <details className="why-this">
+            <summary>Why this</summary>
+            <ReasonTrace reasons={output.reasonTrace} />
+            <dl className="kv">
+              {output.northStar === undefined ? null : (
+                <div className="kv-row">
+                  <dt>North Star</dt>
+                  <dd>
+                    {output.northStar.relevance} — {output.northStar.statement}
+                  </dd>
+                </div>
+              )}
+              <div className="kv-row">
+                <dt>Stop when</dt>
+                <dd>{output.candidate.stoppingPoint}</dd>
+              </div>
+              <div className="kv-row">
+                <dt>Takes</dt>
+                <dd>{`${String(output.candidate.durationMinutes)} minutes`}</dd>
+              </div>
+            </dl>
+            <p className="fine">
+              Starting records that you began. Declining records why you could not — it changes
+              what is suggested next and is never read as evidence about the suggestion.
+            </p>
+          </details>
+
           <button type="button" className="btn btn-link" onClick={onOpenWeekly}>
             This week’s direction
           </button>

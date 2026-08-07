@@ -26,8 +26,14 @@ export interface StanceResult {
   readonly issues: readonly string[];
 }
 
+export interface MoveIdentity {
+  readonly engineCandidateId: string;
+  /** How the move currently reads, kept so a restore list can name it. */
+  readonly statement: string;
+}
+
 async function write(
-  engineCandidateId: string,
+  move: MoveIdentity,
   stance: MoveStance,
   now: Date,
   extra: Record<string, unknown>,
@@ -43,7 +49,8 @@ async function write(
     source: 'user-entry',
     provenance: { method: 'direct-report' },
     privacy: 'general',
-    engineCandidateId,
+    engineCandidateId: move.engineCandidateId,
+    moveStatement: move.statement,
     stance,
     ...extra,
   });
@@ -59,7 +66,7 @@ async function write(
  * until months had gone by and the move had never come back.
  */
 export async function pauseMove(
-  engineCandidateId: string,
+  move: MoveIdentity,
   until: Date,
   now: Date,
   note?: string,
@@ -67,7 +74,7 @@ export async function pauseMove(
   if (until.getTime() <= now.getTime()) {
     return { ok: false, issues: ['A pause has to end in the future'] };
   }
-  return write(engineCandidateId, 'paused', now, {
+  return write(move, 'paused', now, {
     until: until.toISOString(),
     ...(note === undefined ? {} : { note }),
   });
@@ -81,7 +88,7 @@ export async function pauseMove(
  * carries the situation with it, so it lifts by itself the moment the situation changes.
  */
 export async function blockMoveHere(
-  engineCandidateId: string,
+  move: MoveIdentity,
   inContext: BlockedContext,
   now: Date,
   note?: string,
@@ -92,7 +99,7 @@ export async function blockMoveHere(
       issues: ['A context block has to name a context, or it is a prohibition'],
     };
   }
-  return write(engineCandidateId, 'blocked-here', now, {
+  return write(move, 'blocked-here', now, {
     inContext,
     ...(note === undefined ? {} : { note }),
   });
@@ -107,7 +114,7 @@ export async function blockMoveHere(
  * precisely the wrong thing from being corrected.
  */
 export async function modifyMove(
-  engineCandidateId: string,
+  move: MoveIdentity,
   replacementStatement: string,
   now: Date,
   replacementMinutes?: number,
@@ -116,7 +123,7 @@ export async function modifyMove(
   if (trimmed.length === 0) {
     return { ok: false, issues: ['A modification has to say what the move becomes'] };
   }
-  return write(engineCandidateId, 'modified', now, {
+  return write(move, 'modified', now, {
     replacementStatement: trimmed,
     ...(replacementMinutes === undefined ? {} : { replacementMinutes }),
   });
@@ -130,22 +137,22 @@ export async function modifyMove(
  * owner can only make once is not sovereignty, it is a trapdoor.
  */
 export async function forbidMove(
-  engineCandidateId: string,
+  move: MoveIdentity,
   now: Date,
   note?: string,
 ): Promise<StanceResult> {
-  return write(engineCandidateId, 'forbidden', now, {
+  return write(move, 'forbidden', now, {
     ...(note === undefined ? {} : { note }),
   });
 }
 
 /** Put it back. Supersedes whatever stance was last set, including a prohibition. */
 export async function restoreMove(
-  engineCandidateId: string,
+  move: MoveIdentity,
   now: Date,
   note?: string,
 ): Promise<StanceResult> {
-  return write(engineCandidateId, 'restored', now, {
+  return write(move, 'restored', now, {
     ...(note === undefined ? {} : { note }),
   });
 }
