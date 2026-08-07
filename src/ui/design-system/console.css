@@ -885,11 +885,26 @@
   flex: 0 1 auto;
 }
 
+/*
+ * Coverage chooser. The label is part of the control, not decoration above it — the
+ * unlabelled version was read as a time budget, which is a different question entirely.
+ */
+.depth-choice {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3) 0 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.depth-label {
+  margin: 0 0 var(--space-2);
+  max-width: 46ch;
+}
+
 .depth {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin: var(--space-3) 0 0;
+  margin: 0;
 }
 
 .depth-step {
@@ -908,6 +923,11 @@
   border-color: var(--accent-secondary);
   color: var(--text-primary);
   font-weight: 700;
+}
+
+/* `Not sure` is an answer, so it is offered as plainly as the others — not de-emphasised. */
+.depth-step-unsure {
+  border-style: dashed;
 }
 
 .field {
@@ -953,27 +973,64 @@
  * Blueprint §5.3 wants both on Now; ADR-0008 rule 2 caps Now at five panels. Rendering
  * them as controls keeps both true rather than trading one against the other.
  */
+/*
+ * The check-in card (`V33-011`, v3.3 B1).
+ *
+ * One component for morning, afternoon and evening. It was a baseline-aligned flex row of
+ * 12px text with the action pushed to the far edge by `margin-left: auto`, which on a phone
+ * produced a wrapped caption, a dead gap, and a link too small to aim at — and a card whose
+ * height swung 40px between time blocks because their sentences wrapped differently.
+ *
+ * Now it is a stack. Height still follows content, but the structure is identical for every
+ * block, so the differences are the words rather than the geometry.
+ */
 .guide-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: baseline;
+  display: grid;
+  gap: var(--space-1);
   margin: 0;
   padding: var(--space-3);
   background: var(--surface-panel-raised);
   border: 1px solid var(--border-default);
   border-left: 3px solid var(--accent-secondary);
   border-radius: var(--radius-md);
-  font-size: var(--text-fine);
   color: var(--text-secondary);
 }
 
 .guide-bar .banner-label {
+  margin: 0;
   color: var(--accent-secondary);
 }
 
-.guide-bar button {
-  margin-left: auto;
+/* Reading size, not caption size. This is the title of the card. */
+.guide-bar-title {
+  margin: 0;
+  font-size: var(--text-body);
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.guide-bar-detail {
+  margin: 0;
+  font-size: var(--text-support);
+  color: var(--text-secondary);
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+/*
+ * A real target. Full width while the card is narrow enough that a right-aligned control
+ * would be a thumb-stretch; content width once there is room beside the text.
+ */
+.guide-bar-open {
+  margin-top: var(--space-2);
+  justify-self: stretch;
+}
+
+@media (min-width: 30rem) {
+  .guide-bar-open {
+    justify-self: start;
+  }
 }
 
 .capture-bar {

@@ -3,9 +3,55 @@
 ## Project identity
 
 - Repository: life-command-os (https://github.com/Bill6006/life-command-os)
-- Plan version: **3.2 Coverage, Domain Scan, Learning Map, and AI Review Amendment**
-- Current phase: **Phase 8 — Command Core delivered.** Phases 0–7 remain GREEN.
-- Current prompt: PROMPT 9 / Phase 8, including the bounded repair pass (complete)
+- Plan version: **3.3 UI Clarity and North Star Intelligence Amendment**, plus eleven owner
+  clarifications that supersede it where they conflict
+- Current phase: **Phase 8 closed.** Phases 0–7 remain GREEN.
+- Current prompt: **PROMPT 9C v3.3 — partially delivered. YELLOW.** Sections A, B1, B5 and
+  the capacity/Can't Now clarifications are done and verified; sections C–K and most of B
+  are not started. See "Prompt 9C v3.3" below for the exact line.
+
+## Prompt 9C v3.3 status
+
+**YELLOW — a verified partial delivery, stopped for owner review.**
+
+Everything below the line is complete, tested, and green on the production build. Everything
+in "Not started" is untouched. Nothing is half-built: no section was left in a state where
+the app behaves differently but incompletely.
+
+### Delivered and verified
+
+| Item | What changed |
+| --- | --- |
+| **A1** local time (`V33-031`) | `src/domain/time/localTime.ts`. Every human-facing time goes through `Intl.DateTimeFormat` with an explicit IANA zone. Canonical storage stays UTC — conflating the two was the defect. DST-safe by construction; asserted across the 2026 spring-forward. |
+| **A2** duplicate Timeline writes (`V33-061`) | `idempotencyKey` on the canonical envelope, enforced in `writeRecord`. One logical event, one record. Placed at the write path, not the UI or the projection, so nothing can route around it. |
+| **A3** `Answer it` (`V33-049`, `V33-050`) | `promptId` on `HighValueQuestion`; `leadPromptId` on `planGuide`. The question on screen is the question the guide opens with, even when suppression would have removed it. |
+| **Fresh-profile crash** | Not in the prompt. Found by the production suite: A3 widened `onOpenGuide` to take an optional prompt id, which made it assignable to a `() => void` click slot, so React passed the click event, `promptById` threw, and a new owner got a white screen on the first button in the app. Fixed, and the parameter is now **required** so the same handoff is a compile error. |
+| **B1** check-in card (`V33-011`) | One component for morning, afternoon and evening. Was 94/116/135px tall across the three blocks with 12.5px type and a bare "Open" link; now a uniform 151px with a title at reading size and a full-width target. |
+| **B2** (part) audit metadata (`V33-012`) | "What changed" was printing `kind:anchored-scale, scaleId:energy, scaleVersion:1, ordinal:1, label:Drained` on Now. Replaced with a real per-kind summary. The provenance is intact in Timeline, which is where it belongs. |
+| **B10** (part) mobile type (`V33-030`) | A narrow-viewport scale in `tokens.css`, so legibility is a token decision rather than something each new component must remember. |
+
+### The eleven clarifications
+
+| # | Status |
+| --- | --- |
+| 1 — depth is not a control | **Done.** The `15/30/45/Full` selector is **removed**, not relabelled. `src/intelligence/guides/questionValue.ts` derives length from decision value, coverage/cadence, existing evidence, and marginal value. A caller's `depth` argument now provably cannot change what is asked. |
+| 2 — no generic time question | **Done.** Four contextual-capacity prompts added (setting, engagement, interruptibility, privacy), and `selectQuestion` now runs a ladder from most constraining to least. The minutes question is last and gated: it is asked only when a reply could change which moves are possible, or which can be done in full rather than cut to their minimum. Every question carries `Not sure`. |
+| 3 — move capacity characteristics | **Model done and wired, not yet populated.** `src/domain/domains/capacity.ts` defines the five shapes with setup and interruption cost; `CandidateAction.capacity` accepts a profile; `fits()` and `situationFieldMatters()` are tested. **No domain generator emits a profile yet**, so the situation ladder correctly stays silent and nothing is ranked by shape. This is the largest single gap in the delivery. |
+| 4 — Can't Now as a small secondary action | **Engine only.** The reason set and recompute exist; the UI change does not. |
+| 5 — real global recomputation | **Done.** `afterDecline.ts` rejects the same move shortened, a reworded twin, and anything from the area just refused, then walks the ranking for a real alternative. |
+| 6 — temporary constraints release | **Done** (verified pre-existing behaviour, now covered by tests). |
+| 7 / 8 — no pestering; optimise per unit capacity | **Done at the decision layer.** Abstention is a first-class result: when nothing genuinely beats carrying on, the recompute returns silence rather than filler. |
+| 9 — association not causation | **Partly pre-existing**; no new work this pass. |
+| 10 — regression tests | **Done.** `tests/unit/v33Capacity.test.ts`, 18 tests, one block per named property. |
+| 11 — recurring context as soft prior | **Not started.** |
+
+### Not started
+
+Sections **C, D, E, F, G, H, I, J, K**, the **AT33 acceptance scenarios (M)**, and B2's
+hierarchy reorder, **B3, B4, B6, B7, B8, B9**. Clarifications 4 (UI), 9 and 11.
+
+This is the majority of Prompt 9C by volume. It is stated plainly rather than folded into a
+gate table, because a partial pass reported as anything but partial is worse than no pass.
 
 ## Gate status
 
@@ -274,6 +320,22 @@ edits is the one that matters.
   answer can change at any hour, but nothing fires at a boundary; there is no timer anywhere
   in the product. That is the honest reading of "each time block can change coverage" for an
   app with no background execution.
+- **The capacity model is defined but unpopulated.** `capacity.ts` has the five shapes,
+  `fits()` is tested against every situation, and unknown correctly never blocks — but no
+  domain generator attaches a `CapacityProfile` to a candidate yet, so nothing is ranked by
+  it. Until they do, "parallel moves stay possible when busy" is a proven property of a
+  function rather than an observable property of the app.
+- **The situation ladder is live but currently silent, by design.** `selectQuestion` will ask
+  where you are, what you are in the middle of, whether you can step away and whether you can
+  speak freely — but only when a move on the table has a shape that answer could rule out.
+  No generator declares a shape yet, so today it always falls through to the time question.
+  That is the correct behaviour for the evidence available and it is the reason clarification
+  2 is complete while clarification 3 is not: the gate is built and proven, and nothing has
+  walked through it.
+- **The four contextual-capacity prompts are not yet in a guide order.** They validate and
+  they are classified decisive, so the planner will ask them once they are added to
+  `MORNING_ORDER` and `AFTERNOON_ORDER` — deliberately not done in a pass that could not also
+  re-baseline what every scenario emits.
 - Carried forward: local database not encrypted at rest; app lock hides the screen only; no
   notifications; `frame-ancestors` unenforceable on Pages; Chromium-only matrix; no router;
   service-worker staleness; deletion semantics undecided.
@@ -308,12 +370,38 @@ clone is the only proof.
 **A failed deploy is a CI question, not a patience question.** Twenty minutes of polling told
 me nothing; one API call told me the run had failed and the deploy was skipped.
 
+**Widening a callback signature is an API change, and TypeScript will not always stop you.**
+Making `onOpenGuide` take an *optional* prompt id left it assignable to a `() => void` click
+slot, so `onPrimary={onOpenGuide}` kept compiling and React started passing the click event
+as a prompt id. 720 unit tests and 638 browser tests were green; the app white-screened on
+the first button a new owner ever touches, because the only surface that reaches it is a
+profile with zero records and every seeded test skips past it. Two lessons: **make the
+parameter required** when `undefined` is a real choice rather than an absence, and **the
+fresh-profile path needs its own tests** — no amount of seeded coverage will ever visit it.
+
+**Measure before redesigning.** The B1 card was "oversized with tiny words". Rendering it at
+three time blocks and reading the boxes turned that into 94/116/135px at 12.48px, which named
+both the geometry bug and the type bug precisely and made the fix verifiable.
+
 **A passing suite is not evidence that behaviour is unchanged.**
 630 tests passed while the North Star gate silenced most of the product. Nothing asserted
 what Now emits across the corpus, so nothing could have caught it. When a change sits in the
 path of every decision, assert the output of every scenario before and after.
 
 ## Next permitted prompt
+
+**Continue Prompt 9C v3.3 at section B2.** Phase 9 legacy import remains out of scope and
+is not the next prompt.
+
+The two cheapest high-value items to resume with, because they turn tested modules into
+observable behaviour rather than adding new surface area:
+
+1. Attach a `CapacityProfile` to each domain's candidates, then assert the parallel-move
+   property end to end through the scenario corpus.
+2. Add the four contextual-capacity prompts to the guide orders and re-baseline what every
+   scenario emits, before and after.
+
+### Superseded, for the record
 
 **Phase 9 — optional quarantined legacy import.**
 

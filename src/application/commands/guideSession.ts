@@ -11,6 +11,7 @@ import type { EpisodeResult } from '../../intelligence';
 import { localTimeContextFor, observationDrafts, type AnsweredPrompt } from './capture';
 import { routeFatherhoodAnswers } from '../../domain/fatherhood/routing';
 import { writeRecord, writeRecords, type WriteResult } from './writeRecord';
+import { logicalEventKey } from '../../domain/policies/idempotency';
 
 /**
  * Guide sessions, weekly responses, and Quick Capture (Prompt 7A tasks 10, 15, 16).
@@ -154,9 +155,26 @@ export async function completeGuideSession(
   const skipped = completion.skippedPromptIds.filter((id) => !answeredPromptIds.includes(id));
 
   const sessionRecordId = newRecordId();
+
+  /*
+   * What this completion *is*, so a second attempt at it cannot become a second event.
+   *
+   * Built from the guide, its depth and outcome, and exactly which prompts were answered
+   * and skipped — the things that make two completions the same act or different ones. The
+   * attempt is deliberately not in the key: that is the whole point.
+   */
+  const idempotencyKey = logicalEventKey('guide-session', [
+    completion.kind,
+    completion.depth,
+    completion.outcome,
+    answeredPromptIds,
+    skipped,
+  ]);
+
   const session = {
     recordId: sessionRecordId,
     recordType: 'guide-session',
+    idempotencyKey,
     schemaVersion: RECORD_SCHEMA_VERSION,
     occurredAt: instant,
     recordedAt: instant,

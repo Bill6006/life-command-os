@@ -43,6 +43,8 @@ function healthPanel(scenarioId: string) {
 const NO_STATE: StateAssessment = {
   readings: [],
   availableMinutes: { status: 'unknown' },
+  /* Nothing said about the situation. Every field unknown, and none of them blocking. */
+  situation: {},
   capacity: { status: 'unknown' },
   protectedContexts: [],
   contradictions: [],

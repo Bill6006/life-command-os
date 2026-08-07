@@ -7,6 +7,7 @@ import {
   getAllRecords,
 } from '../../infrastructure/database/recordRepository';
 import { clearProjections } from '../../infrastructure/database/projectionStore';
+import { existingWithKey } from '../../domain/policies/idempotency';
 
 /**
  * The write path (`ARCH-001`, ADR-0004).
@@ -91,6 +92,24 @@ export async function writeRecord(input: unknown): Promise<WriteResult> {
   }
 
   const database = await openDatabase();
+
+  /*
+   * One logical event, one canonical record.
+   *
+   * Checked here rather than in a caller or a projection: this is the only path into the
+   * store, so a guard anywhere else is a guard something can go around. A repeat inside the
+   * window returns the record that already exists, so the caller sees success and does not
+   * retry into a third copy.
+   */
+  const key = parsed.record.idempotencyKey;
+  if (key !== undefined) {
+    const existing = existingWithKey(
+      await getAllRecords(database),
+      key,
+      new Date(parsed.record.recordedAt),
+    );
+    if (existing !== undefined) return { ok: true, record: existing };
+  }
 
   try {
     await appendRecord(database, parsed.record);

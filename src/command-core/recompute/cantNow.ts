@@ -2,6 +2,7 @@ import type { ProtectedContext } from '../../domain/records/categories';
 import type { CandidateAction, StateAssessment } from '../../intelligence/types';
 import type { CommandCoreInput } from '../boundary';
 import { arbitrate, type ArbitrationResult } from '../arbitration/arbitrate';
+import { firstRealAlternative, judgeReplacement } from './afterDecline';
 
 /**
  * Full recomputation after a new constraint (Phase 8 deliverable 21).
@@ -70,6 +71,57 @@ export function recomputeAfterCantNow(
   };
 
   const result = arbitrate(withoutDeclined);
+
+  /*
+   * The rerank is honest but not yet sufficient (`V33-027`, clarifications 5 and 7). A
+   * shortened version of the refused move, a reworded twin, or another move from the area
+   * just stepped away from all rank legitimately and all read as the app negotiating.
+   * They are filtered here, against what was declined, and what survives is a real answer
+   * or nothing at all.
+   */
+  if (result.output.kind === 'action') {
+    const verdict = judgeReplacement(declined, result.output.candidate);
+    if (verdict.rejected) {
+      const { candidate, rejected } = firstRealAlternative(declined, result.considered);
+      if (candidate === undefined) {
+        return {
+          ...result,
+          output: {
+            kind: 'silence',
+            statement: 'Nothing else worth starting right now',
+            rationale:
+              'Carrying on, resting, or waiting beats everything else available. That is the answer, not a gap in it.',
+            confidence: input.state.confidence,
+            reasonTrace: [
+              verdict.because,
+              'Reranked across every area rather than dropping to the next row of the old list',
+            ],
+            nextCheck: 'Next look when something about the situation changes',
+            secondaryActions: [],
+          },
+          rejected: [
+            ...result.rejected,
+            ...rejected.map((detail) => ({
+              candidateId: detail,
+              stage: 'duplicate' as const,
+              reason: verdict.because,
+            })),
+          ],
+          declined: declined.id,
+          changed: true,
+          note: 'Reranked across every area and nothing genuinely different came back. Offering a smaller version of what was just refused would be haggling, not helping.',
+        };
+      }
+      return {
+        ...result,
+        output: { ...result.output, candidate },
+        declined: declined.id,
+        changed: true,
+        note: `Reranked across every area. ${verdict.because}, so it was passed over.`,
+      };
+    }
+  }
+
   const nowShowing = result.output.kind === 'action' ? result.output.candidate.id : undefined;
 
   return {

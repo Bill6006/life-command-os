@@ -129,7 +129,7 @@ test.describe('Can’t Now creates a constraint', () => {
     // response is to ask how much there is rather than to suggest into the dark.
     await page.reload();
     await expect(page.locator('.grid')).toBeVisible();
-    await expect(page.getByRole('main')).toContainText(/How much time is actually free/i);
+    await expect(page.getByRole('main')).toContainText(/How many minutes are genuinely free/i);
   });
 });
 
@@ -222,18 +222,22 @@ test.describe('the guides', () => {
     }
   });
 
-  test('depth changes how much is asked, not what a question means', async ({ page }) => {
+  test('offers no length control, because length is not the owner’s to set', async ({
+    page,
+  }) => {
+    /*
+     * `15 min / 30 min / 45 min / Full` used to sit at the foot of every guide, mapping to
+     * a question count. It is gone: how much a check-in asks follows decision value,
+     * coverage, and existing evidence, none of which the owner is placed to predict.
+     */
     await open(page);
-    await page.locator('.guide-bar').getByRole('button', { name: 'Open' }).click();
+    await page.locator('.guide-bar').getByRole('button', { name: /^Open/ }).click();
+    await expect(page.getByRole('main')).toContainText(/Question 1 of/);
 
-    const firstQuestion = await page.locator('.decision-statement').textContent();
-
-    await page.getByRole('button', { name: '15 min' }).click();
-    await expect(page.getByRole('main')).toContainText(/Question 1 of 3/);
-    expect(await page.locator('.decision-statement').textContent()).toBe(firstQuestion);
-
-    await page.getByRole('button', { name: 'Full' }).click();
-    expect(await page.locator('.decision-statement').textContent()).toBe(firstQuestion);
+    for (const label of ['15 min', '30 min', '45 min', 'Full']) {
+      await expect(page.getByRole('button', { name: label, exact: true })).toHaveCount(0);
+    }
+    await expect(page.locator('.depth-step')).toHaveCount(0);
   });
 });
 

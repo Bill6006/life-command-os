@@ -2,12 +2,8 @@ import { useState } from 'react';
 import { Panel } from '../../components/primitives';
 import { PromptControl } from './PromptControl';
 import type { Answer, AnsweredPrompt } from '../../../application/commands/capture';
-import type { GuideDepth, GuideOutcome } from '../../../domain/records';
-import {
-  MAX_STEPS,
-  NORMAL_RESPONSE_BUDGET,
-  type GuidePlan,
-} from '../../../intelligence/guides/planGuide';
+import type { GuideOutcome } from '../../../domain/records';
+import { NORMAL_RESPONSE_BUDGET, type GuidePlan } from '../../../intelligence/guides/planGuide';
 
 /**
  * A guide, one question at a time (`OWN-022`, Blueprint §6).
@@ -23,8 +19,6 @@ import {
 
 export interface GuideSurfaceProps {
   readonly plan: GuidePlan;
-  readonly depth: GuideDepth;
-  readonly onDepthChange: (depth: GuideDepth) => void;
   readonly onFinish: (
     outcome: GuideOutcome,
     answers: readonly AnsweredPrompt[],
@@ -33,13 +27,6 @@ export interface GuideSurfaceProps {
   readonly onWeeklyStep: () => void;
   readonly onCancel: () => void;
 }
-
-const DEPTH_LABELS: Record<GuideDepth, string> = {
-  '15': '15 min',
-  '30': '30 min',
-  '45': '45 min',
-  full: 'Full',
-};
 
 const GUIDE_TITLES: Record<GuidePlan['kind'], string> = {
   morning: 'Morning',
@@ -53,8 +40,6 @@ const GUIDE_TITLES: Record<GuidePlan['kind'], string> = {
 
 export function GuideSurface({
   plan,
-  depth,
-  onDepthChange,
   onFinish,
   onWeeklyStep,
   onCancel,
@@ -103,25 +88,6 @@ export function GuideSurface({
       <button type="button" className="btn btn-link" onClick={onCancel}>
         Close
       </button>
-    </div>
-  );
-
-  const depthPicker = (
-    <div className="depth" role="group" aria-label="How long you have">
-      {(Object.keys(DEPTH_LABELS) as GuideDepth[]).map((option) => (
-        <button
-          type="button"
-          key={option}
-          className={`depth-step${depth === option ? ' depth-step-on' : ''}`}
-          aria-pressed={depth === option}
-          onClick={() => {
-            onDepthChange(option);
-            setIndex(0);
-          }}
-        >
-          {DEPTH_LABELS[option]}
-        </button>
-      ))}
     </div>
   );
 
@@ -215,7 +181,7 @@ export function GuideSurface({
           {`Question ${String(index + 1)} of ${String(plan.steps.length)}`}
           {plan.withinNormalBudget
             ? ` · within the ${String(NORMAL_RESPONSE_BUDGET)}-response budget`
-            : ` · deeper than usual, up to ${String(MAX_STEPS[depth])}`}
+            : ' · longer than usual, because more than one answer is blocking the call'}
         </p>
         {step.context === undefined ? null : <p className="fine why">{step.context}</p>}
 
@@ -263,7 +229,6 @@ export function GuideSurface({
           failure and neither counts against anything.
         </p>
 
-        {depthPicker}
         {controls}
       </Panel>
     </div>

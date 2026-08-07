@@ -241,7 +241,7 @@ test.describe('the engine, not the interface, produces the content', () => {
     await open(page);
     await select(page, 'one-question');
 
-    await expect(page.getByRole('main')).toContainText(/How much time is actually free/i);
+    await expect(page.getByRole('main')).toContainText(/How many minutes are genuinely free/i);
     await expect(page.getByRole('main')).toContainText(/Candidate eligibility/i);
   });
 

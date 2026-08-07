@@ -1,3 +1,4 @@
+import type { CapacityProfile, SituationalCapacity } from '../domain/domains/capacity';
 import type {
   CanonicalRecord,
   ConfidenceLabel,
@@ -60,6 +61,13 @@ export interface StateAssessment {
   readonly readings: readonly Reading[];
   /** Minutes genuinely free, or absent. Absence is not zero. */
   readonly availableMinutes: EvidenceValue<number>;
+  /**
+   * Where the owner is and what they are in the middle of (`V33-023`, clarification 2).
+   *
+   * The situation decides which *shapes* of move are possible — a duration cannot. Every
+   * field is independently unknown, and an unknown never rules anything out.
+   */
+  readonly situation: SituationalCapacity;
   readonly capacity: EvidenceValue<'depleted' | 'low' | 'moderate' | 'high'>;
   readonly protectedContexts: readonly ProtectedContext[];
   /** Attributes where credible records disagree. Reduces confidence; never hidden. */
@@ -143,6 +151,14 @@ export interface CandidateAction {
   /** Qualitative, never netted, structurally unable to become a score. */
   readonly capabilityEffects: readonly CapabilityEffect[];
   readonly durationMinutes: number;
+  /**
+   * What shape of capacity this needs (`V33-026`, clarification 3).
+   *
+   * Optional while domains adopt it. Absent means "not yet classified", which `fits`
+   * treats as no constraint — never as "fits anywhere", and never as a reason to ask the
+   * owner about a situation nothing would read.
+   */
+  readonly capacity?: CapacityProfile | undefined;
   readonly minimumMinutes: number;
   readonly minimumVersion: string;
   readonly fallback: string;
@@ -207,6 +223,14 @@ export interface RecommendedAction {
 
 export interface HighValueQuestion {
   readonly kind: 'question';
+  /**
+   * Which question this is, not merely how it reads (v3.3 `V33-049`).
+   *
+   * Without it the interface could render the question and had no way to route to it, so
+   * `Answer it` opened a generic guide and the displayed question was lost. Identity has to
+   * travel with the output for the handoff to be exact.
+   */
+  readonly promptId: string;
   readonly prompt: string;
   readonly whyItMatters: string;
   readonly couldChange: readonly string[];

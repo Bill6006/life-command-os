@@ -8,6 +8,7 @@ import {
   latestContext,
 } from '../support';
 import type { Reading, StateAssessment } from '../types';
+import type { SituationalCapacity } from '../../domain/domains/capacity';
 
 /**
  * Deterministic current-state understanding (`STATE-CAPACITY`).
@@ -45,6 +46,70 @@ function describeMinutes(value: EvidenceValue<number>): EvidenceValue<string> {
   if (value.status !== 'known') return value;
   return { status: 'known', value: `${String(Math.round(value.value))} min` };
 }
+
+/**
+ * The situation, read from what the owner has actually said (`V33-023`, clarification 2).
+ *
+ * Four plain observations — where they are, what they are in the middle of, whether they
+ * can step away, whether they can speak freely — plus the minute count when one exists.
+ * Together these decide which *shapes* of move are possible, which is the question a
+ * duration alone can never answer.
+ *
+ * Anything unsaid stays `undefined` and blocks nothing. See `capacity.fits`.
+ */
+function readSituation(
+  observations: readonly { readonly attribute: string; readonly value: unknown }[],
+  availableMinutes: EvidenceValue<number>,
+): SituationalCapacity {
+  const answerTo = (attribute: string): string | undefined => {
+    const found = observations.find((observation) => observation.attribute === attribute);
+    const value = found?.value as { kind?: string; state?: string } | undefined;
+    return value?.kind === 'state' ? value.state : undefined;
+  };
+
+  const minutes = knownValue(availableMinutes);
+
+  return {
+    setting: SETTINGS[answerTo('context:setting') ?? ''],
+    engagement: ENGAGEMENTS[answerTo('context:engagement') ?? ''],
+    interruptibility: INTERRUPTIBILITY[answerTo('context:interruptibility') ?? ''],
+    privacy: PRIVACY[answerTo('context:privacy') ?? ''],
+    minutesFree: minutes,
+  };
+}
+
+/*
+ * Answer text to model value. Explicit maps rather than string munging, so a reworded
+ * answer is a compile-time gap rather than a silent `undefined` that reads as "unknown".
+ */
+const SETTINGS: Record<string, SituationalCapacity['setting']> = {
+  Home: 'home',
+  Work: 'work',
+  'Out and about': 'out',
+  Travelling: 'travelling',
+  'Somewhere else': 'other',
+};
+
+const ENGAGEMENTS: Record<string, SituationalCapacity['engagement']> = {
+  'Nothing in particular': 'free',
+  Working: 'working',
+  'With family': 'with-family',
+  Eating: 'eating',
+  Travelling: 'travelling',
+  'Winding down': 'winding-down',
+};
+
+const INTERRUPTIBILITY: Record<string, SituationalCapacity['interruptibility']> = {
+  'Yes, freely': 'free',
+  Briefly: 'brief',
+  'Not right now': 'none',
+};
+
+const PRIVACY: Record<string, SituationalCapacity['privacy']> = {
+  Yes: 'private',
+  'Only quietly': 'semi-private',
+  'No — around other people': 'public',
+};
 
 export function assessState(records: readonly CanonicalRecord[], now: Date): StateAssessment {
   const context = latestContext(records);
@@ -146,6 +211,7 @@ export function assessState(records: readonly CanonicalRecord[], now: Date): Sta
   return {
     readings,
     availableMinutes,
+    situation: readSituation(observations, availableMinutes),
     capacity,
     protectedContexts,
     contradictions,

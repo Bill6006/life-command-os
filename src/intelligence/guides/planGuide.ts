@@ -15,6 +15,8 @@ import {
 } from '../../domain/prompts/definitions';
 import { currentObservations } from '../support';
 import { outcomeWindows } from '../evaluation/outcomeWindows';
+import { isAfterMorning, isSunday, timeBlockAt } from '../../domain/time/localTime';
+import { HARD_CEILING, NORMAL_RESPONSE_BUDGET, appraise, choose } from './questionValue';
 
 /**
  * Guide planning (`OWN-016`–`OWN-023`, Blueprint §6).
@@ -52,25 +54,31 @@ const STILL_CURRENT_MS: Record<string, number> = {
 const DEFAULT_STILL_CURRENT_MS = 12 * HOUR_MS;
 
 /**
- * Steps per depth (`OWN-021`).
+ * Historic question counts per depth (`OWN-021`), retained for reading old records only.
  *
- * Depth changes how many questions are worth the owner's time, never what a question
- * means. A fifteen-minute morning and a full morning record the same kinds of
- * observation and neither invents a value.
+ * **Nothing plans a guide from this any more** (`V33-024`, owner clarification 1). Depth
+ * stopped being an input the day it stopped being something the owner could sensibly
+ * answer; see `questionValue.ts` for what decides length now. A stored `depth` describes
+ * the session that happened, and records are append-only, so the mapping stays readable.
  */
 export const MAX_STEPS: Record<GuideDepth, number> = { '15': 3, '30': 5, '45': 7, full: 10 };
 
 /** The normal check-in budget (`OWN-023`, `CI-016`). */
-export const NORMAL_RESPONSE_BUDGET = 5;
-
-/** The depth a guide opens at unless the owner chooses otherwise. */
-export const DEFAULT_DEPTH: GuideDepth = '30';
+export { NORMAL_RESPONSE_BUDGET } from './questionValue';
 
 /**
- * Depths that count as a normal check-in.
+ * The depth stamped on a session that nobody chose a depth for.
  *
- * `45` and `full` are the owner deliberately asking for more, and are the only way to
- * exceed five responses. Nothing reaches them by default.
+ * Every session, now. It is provenance on the record rather than a setting, and it names
+ * the briefest level so an old reader cannot mistake it for the owner having asked for
+ * more than the app decided to ask.
+ */
+export const DEFAULT_DEPTH: GuideDepth = '15';
+
+/**
+ * Whether a stored session stayed inside the normal check-in budget.
+ *
+ * Reads a historic record. Not consulted when planning.
  */
 export function isNormalDepth(depth: GuideDepth): boolean {
   return MAX_STEPS[depth] <= NORMAL_RESPONSE_BUDGET;
@@ -99,6 +107,14 @@ export interface GuidePlan {
   /** What was deliberately not asked, and why. Inspectable rather than invisible. */
   readonly omitted: readonly OmittedStep[];
   readonly withinNormalBudget: boolean;
+  /**
+   * Questions this guide would ask at a deeper level and is not asking now (`V33-020`).
+   *
+   * Zero means every level covers the same ground, so offering the owner a coverage
+   * control would be offering a choice that changes nothing. The surface uses this to
+   * decide whether the control is worth showing at all.
+   */
+  readonly moreAvailable: number;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -252,6 +268,14 @@ export function planGuide(
   /** Required for `update-area`, ignored otherwise. */
   domainId?: DomainId,
   coverage?: CoverageDecision,
+  /**
+   * The exact question to ask first (v3.3 `V33-049`).
+   *
+   * Set when the owner tapped `Answer it` on a question Command Core displayed. It leads,
+   * unconditionally — freshness cannot rule out the question the app just said it needed,
+   * and neither can suppression, because the owner is answering it on purpose.
+   */
+  leadPromptId?: string,
 ): GuidePlan {
   const omitted: OmittedStep[] = [];
   const steps: GuideStep[] = [];
@@ -267,6 +291,8 @@ export function planGuide(
     prompt: CapturePrompt,
     extra?: { readonly aboutRecordId?: string; readonly context?: string },
   ): void => {
+    // Already leading. Asking it twice in one flow would be its own defect.
+    if (prompt.promptId === leadPromptId) return;
     /*
      * Command Core's decision comes first and is reported in its own words. Its rules read
      * the domains' declarations — cooldown, expiry, repeated skip, cadence, snooze — which
@@ -297,6 +323,17 @@ export function planGuide(
     });
   };
 
+  /*
+   * The displayed question, first and always.
+   *
+   * Pushed before any of the planner's own ordering so `Answer it` opens on exactly what
+   * Now was showing, rather than dropping the owner into a generic check-in that starts
+   * somewhere else.
+   */
+  if (leadPromptId !== undefined) {
+    steps.push({ kind: 'prompt', prompt: promptById(leadPromptId) });
+  }
+
   if (kind === 'weekly') {
     // The weekly guide proposes; it does not interrogate. One decision, four responses.
     return {
@@ -305,6 +342,8 @@ export function planGuide(
       steps: [{ kind: 'weekly-direction' }],
       omitted,
       withinNormalBudget: true,
+      /* One decision. Coverage does not apply, so the control must not appear. */
+      moreAvailable: 0,
     };
   }
 
@@ -384,6 +423,7 @@ export function planGuide(
    * It goes behind the planner's own questions and inside the same budget, so a domain
    * cannot push its way to the front of a morning.
    */
+  const dueByCoverage = new Set<string>();
   if (coverage !== undefined && kind !== 'update-area') {
     const already = new Set(
       steps.flatMap((step) => (step.kind === 'prompt' ? [step.prompt.promptId] : [])),
@@ -392,20 +432,41 @@ export function planGuide(
       if (item.surface !== 'guide') continue;
       if (already.has(item.promptId)) continue;
       already.add(item.promptId);
+      dueByCoverage.add(item.promptId);
       steps.push({ kind: 'prompt', prompt: promptById(item.promptId) });
     }
   }
 
-  const limit = MAX_STEPS[depth];
-  const kept = steps.slice(0, limit);
-  for (const step of steps.slice(limit)) {
-    if (step.kind === 'prompt') {
-      omitted.push({
-        promptId: step.prompt.promptId,
-        because: `Beyond the ${depth === 'full' ? 'full' : `${depth}-minute`} depth you chose`,
-      });
+  /*
+   * How many questions this asks is decided here, by what the answers could do — never by
+   * a number the owner picked in advance (`V33-024`, owner clarification 1). Suppression
+   * and freshness have already removed their candidates above; what remains is ranked by
+   * whether it can change what is possible, and cut at the response budget.
+   */
+  const appraisals = steps.flatMap((step) => {
+    if (step.kind !== 'prompt') return [];
+    const { promptId } = step.prompt;
+    if (dueByCoverage.has(promptId)) {
+      return [{ promptId, worth: 'due' as const, because: 'This area is due a look' }];
     }
-  }
+    return [
+      appraise(step.prompt, {
+        hasCurrentAnswer: false,
+        suppressedBecause: undefined,
+        askedFor: askRegardless || promptId === leadPromptId,
+      }),
+    ];
+  });
+  /*
+   * A guide the owner opened themselves may run past the normal budget — they came
+   * looking. One the app raised may not: five responses is the whole promise (`OWN-023`).
+   */
+  const selection = choose(appraisals, askRegardless ? HARD_CEILING : NORMAL_RESPONSE_BUDGET);
+  const askedIds = new Set(selection.asked);
+  const kept = steps.filter(
+    (step) => step.kind !== 'prompt' || askedIds.has(step.prompt.promptId),
+  );
+  for (const item of selection.held) omitted.push(item);
 
   return {
     kind,
@@ -413,6 +474,7 @@ export function planGuide(
     steps: kept,
     omitted,
     withinNormalBudget: kept.length <= NORMAL_RESPONSE_BUDGET,
+    moreAvailable: selection.held.length,
   };
 }
 
@@ -426,11 +488,17 @@ export function planGuide(
  * (`OWN-007`).
  */
 export function suggestedGuide(now: Date): GuideKind {
-  if (now.getDay() === 0) return 'weekly';
-  const hour = now.getHours();
-  if (hour < 11) return 'morning';
-  if (hour < 17) return 'afternoon';
-  return 'evening';
+  /*
+   * The owner's zone, not the runtime's.
+   *
+   * `Date#getDay` and `getHours` read whatever timezone the process is set to. In a browser
+   * that is the device and was right by accident; in a test runner it is the machine, which
+   * made this untestable and would be wrong for anyone whose device differs. One time
+   * service now decides what part of the day it is, everywhere (`V33-031`).
+   */
+  if (isSunday(now)) return 'weekly';
+  const block = timeBlockAt(now);
+  return block === 'morning' ? 'morning' : block === 'afternoon' ? 'afternoon' : 'evening';
 }
 
 /**
@@ -440,7 +508,7 @@ export function suggestedGuide(now: Date): GuideKind {
  * asks less, not more, and records nothing about having been late.
  */
 export function isLateMorning(now: Date): boolean {
-  return now.getHours() >= 11;
+  return isAfterMorning(now);
 }
 
 export { SLEEP_PROMPTS, FOOD_PROMPTS, STATE_PROMPTS, CONTEXT_PROMPTS };

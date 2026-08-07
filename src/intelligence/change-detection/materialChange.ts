@@ -80,20 +80,63 @@ function freeText(record: CanonicalRecord & { recordType: 'observation' }): bool
   return record.value.kind === 'note';
 }
 
+/**
+ * An attribute id as something a person would say (`V33-012`).
+ *
+ * `state:sleep-recovery` became `Recorded state:sleep recovery` on the owner's main
+ * surface: half a namespace, a stray colon, and a hyphen half-removed. The namespace is
+ * real and useful internally; it is not what the change was.
+ */
+function attributeLabel(attribute: string): string {
+  const withoutNamespace = attribute.slice(attribute.indexOf(':') + 1);
+  const spaced = withoutNamespace.replace(/-/g, ' ');
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+/**
+ * What was recorded, in the owner's terms (`V33-012`, v3.3 B2).
+ *
+ * This used to be `JSON.stringify(value)` with the braces stripped, which put
+ * `kind:anchored-scale, scaleId:energy, scaleVersion:1, ordinal:1, label:Drained` on Now.
+ * Every one of those fields exists for a reason — versioned anchors are how a reading stays
+ * comparable after a rewording — but they are provenance, and Now is not an audit log. The
+ * full value is still one tap away in Timeline, which is where it belongs.
+ */
+function valueSummary(value: CanonicalRecord & { recordType: 'observation' }): string {
+  const inner = value.value;
+  switch (inner.kind) {
+    case 'anchored-scale':
+      return inner.label;
+    case 'state':
+      return inner.state;
+    case 'quantity':
+      return `${String(inner.amount)} ${inner.unit}`;
+    case 'duration':
+      return `${String(inner.minutes)} minutes`;
+    case 'count':
+      return String(inner.count);
+    case 'unsure':
+      return 'Could not tell';
+    case 'note':
+      /* Never echoed. `freeText` routes here only as a guard. */
+      return 'Open the area to read it';
+  }
+}
+
 function describe(record: CanonicalRecord): { change: string; detail: string } {
   switch (record.recordType) {
     case 'observation':
       return {
-        change: `Recorded ${record.attribute.replace(/-/g, ' ')}`,
+        change: attributeLabel(record.attribute),
         detail: !quotable(record)
           ? 'Kept private — open the area to see it'
           : freeText(record)
             ? 'Open the area to read it'
-            : JSON.stringify(record.value).replace(/[{}"]/g, '').replace(/,/g, ', '),
+            : valueSummary(record),
       };
     case 'observation-correction':
       return {
-        change: `Corrected ${record.attribute.replace(/-/g, ' ')}`,
+        change: `Corrected ${attributeLabel(record.attribute).toLowerCase()}`,
         detail: quotable(record) ? record.reason : 'Kept private — open the area to see it',
       };
     case 'context-snapshot':

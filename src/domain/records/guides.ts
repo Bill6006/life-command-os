@@ -41,11 +41,23 @@ export const GUIDE_KINDS = [
 export type GuideKind = (typeof GUIDE_KINDS)[number];
 
 /**
- * Depth modes (`OWN-021`).
+ * Depth modes (`OWN-021`, `V33-018`).
  *
- * Depth changes how many questions are worth asking. It never changes the truth
- * model: a fifteen-minute morning and a full morning record the same kinds of
- * observation, and neither invents a value the owner did not give.
+ * Depth is **how much this check-in covers** — how many questions are worth asking. It
+ * never changes the truth model: a brief morning and a thorough morning record the same
+ * kinds of observation, and neither invents a value the owner did not give.
+ *
+ * ## What depth is not
+ *
+ * Depth is **not** how many minutes the owner has free, and never has been. That is a
+ * separate, canonical observation with its own prompt (`context:available-minutes`) and its
+ * own record. Conflating them was the reported defect: the stored values below are
+ * minute-shaped strings, which made a coverage control read as a time budget, so the app
+ * appeared to ask the owner for their free time and then do nothing with the answer.
+ *
+ * The wire values are kept because canonical records already carry them and records are
+ * append-only. They are opaque level identifiers. Nothing may render them as minutes —
+ * `tests/unit/v33GuideDepth.test.ts` fails the build if anything does.
  */
 export const GUIDE_DEPTHS = ['15', '30', '45', 'full'] as const;
 export type GuideDepth = (typeof GUIDE_DEPTHS)[number];

@@ -52,10 +52,20 @@ interface NowProps {
   /** Phase 6: the response controls now write canonical records. */
   readonly onRespond: (label: string) => void;
   readonly onWeeklyRespond: (label: string) => void;
-  readonly onOpenGuide: () => void;
+  /**
+   * Open a guide. `undefined` means the check-in for the hour; a prompt id means the owner
+   * tapped `Answer it` on that exact question (`V33-049`).
+   *
+   * The parameter is **required, not optional**, and that is load-bearing. As an optional
+   * parameter this signature was assignable to the `() => void` slot of a click handler, so
+   * `onPrimary={onOpenGuide}` type-checked and React handed it the click event — which
+   * arrived here as a `promptId`, reached `promptById`, and took the whole app down on a
+   * fresh profile. A required parameter makes that handoff a compile error.
+   */
+  readonly onOpenGuide: (promptId: string | undefined) => void;
   readonly onQuickCapture: () => void;
   readonly onRecordOutcome: () => void;
-  readonly guideEntry: string;
+  readonly guideEntry: { readonly title: string; readonly detail: string };
   readonly openEpisodeCount: number;
   readonly busy: boolean;
   readonly errorDetail?: string | undefined;
@@ -226,7 +236,9 @@ export function NowSurface({
           primary="Start a check-in"
           secondary={['Note something down']}
           busy={busy}
-          onPrimary={onOpenGuide}
+          onPrimary={() => {
+            onOpenGuide(undefined);
+          }}
           onSecondary={onQuickCapture}
         />
       </Standalone>
@@ -412,13 +424,23 @@ export function NowSurface({
    * satisfies both instead of trading one off against the other.
    */
   const guideBar = (
-    <p className="guide-bar" role="status">
-      <span className="banner-label">Check in</span>
-      <span>{guideEntry}</span>
-      <button type="button" className="btn btn-link" onClick={onOpenGuide} disabled={busy}>
-        Open
+    <section className="guide-bar" aria-labelledby="check-in-title">
+      <p className="banner-label">Check in</p>
+      <p className="guide-bar-title" id="check-in-title">
+        {guideEntry.title}
+      </p>
+      <p className="guide-bar-detail">{guideEntry.detail}</p>
+      <button
+        type="button"
+        className="btn btn-secondary guide-bar-open"
+        onClick={() => {
+          onOpenGuide(undefined);
+        }}
+        disabled={busy}
+      >
+        {`Open ${guideEntry.title.toLowerCase()}`}
       </button>
-    </p>
+    </section>
   );
 
   const captureBar = (
@@ -527,7 +549,9 @@ export function NowSurface({
             primary="Answer it"
             secondary={['Not now']}
             busy={busy}
-            onPrimary={onOpenGuide}
+            onPrimary={() => {
+              onOpenGuide(output.promptId);
+            }}
             onSecondary={() => {
               onBack();
             }}
@@ -566,7 +590,9 @@ export function NowSurface({
             primary="Start a check-in"
             secondary={['Note something down']}
             busy={busy}
-            onPrimary={onOpenGuide}
+            onPrimary={() => {
+              onOpenGuide(undefined);
+            }}
             onSecondary={onQuickCapture}
           />
           <button type="button" className="btn btn-link" onClick={onOpenWeekly}>
@@ -609,7 +635,7 @@ export function NowSurface({
           secondary={output.secondaryActions}
           busy={busy}
           onSecondary={(label) => {
-            if (label === 'Something changed') onOpenGuide();
+            if (label === 'Something changed') onOpenGuide(undefined);
             else onOpenChanges();
           }}
         />

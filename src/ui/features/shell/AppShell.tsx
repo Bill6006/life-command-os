@@ -139,7 +139,14 @@ type Mode =
   /** The home area page: what got in the way, and the one change. */
   | { readonly kind: 'home-area' }
   /** The money area page: pressure, cover, and the one decision. */
-  | { readonly kind: 'money-area' };
+  | { readonly kind: 'money-area' }
+  /**
+   * The exact question Command Core displayed, opened from `Answer it` (`V33-049`).
+   *
+   * A distinct mode rather than a flag on `guide`, so it is impossible to reach this
+   * routing by accident from anywhere that opens an ordinary check-in.
+   */
+  | { readonly kind: 'answer-question'; readonly promptId: string };
 
 const PRIMARY: readonly { id: Destination; label: string }[] = [
   { id: 'now', label: 'Now' },
@@ -159,14 +166,51 @@ const UNDER_MORE: readonly { id: Destination; label: string }[] = [
   { id: 'data-privacy', label: 'Data & Privacy' },
 ];
 
-const GUIDE_ENTRY: Record<GuideKind, string> = {
-  morning: 'Morning check-in — sleep, energy, and what today allows.',
-  'morning-catch-up': 'Starting late is fine. A shorter check-in, only what still matters.',
-  afternoon: 'Afternoon check-in — only what has changed since this morning.',
-  evening: 'Evening — close any loops that are open.',
-  weekly: 'Sunday — one direction proposed for the week.',
-  'quick-check-in': 'A quick update on where things stand.',
-  'update-area': 'Updating one area of life.',
+/**
+ * The check-in entry, as a title and one supporting line (`V33-011`).
+ *
+ * This was a single sentence rendered at 12px inside a bar tall enough for four, so the
+ * whole card read as a caption floating in an empty panel — and the three time blocks came
+ * out 94, 116 and 135 pixels tall purely because their sentences wrapped differently.
+ *
+ * Splitting it lets one component give every block the same shape: a title at reading size,
+ * a support line, an action. The blocks still differ in what they say. They no longer
+ * differ in how large they are for no reason.
+ */
+export interface GuideEntry {
+  readonly title: string;
+  readonly detail: string;
+}
+
+const GUIDE_ENTRY: Record<GuideKind, GuideEntry> = {
+  morning: {
+    title: 'Morning check-in',
+    detail: 'Sleep, energy, and what today allows.',
+  },
+  'morning-catch-up': {
+    title: 'Catching up',
+    detail: 'Starting late is fine. Only what still matters.',
+  },
+  afternoon: {
+    title: 'Afternoon check-in',
+    detail: 'Only what has changed since this morning.',
+  },
+  evening: {
+    title: 'Evening check-in',
+    detail: 'Close any loops that are still open.',
+  },
+  weekly: {
+    title: 'This week’s direction',
+    detail: 'One direction proposed for the week ahead.',
+  },
+  'quick-check-in': {
+    title: 'Quick update',
+    detail: 'Where things stand right now.',
+  },
+  'update-area': {
+    title: 'Update one area',
+    detail: 'Just the questions that area asks.',
+  },
 };
 
 function useIsOffline(): boolean {
@@ -376,10 +420,6 @@ export function AppShell(): React.JSX.Element {
       return (
         <GuideSurface
           plan={plan}
-          depth={mode.depth}
-          onDepthChange={(depth) => {
-            setMode({ kind: 'guide', guide: mode.guide, depth, domainId: mode.domainId });
-          }}
           onFinish={(outcome, answers, skippedPromptIds) => {
             finishGuide(mode.guide, mode.depth, outcome, answers, skippedPromptIds);
           }}
@@ -706,6 +746,54 @@ export function AppShell(): React.JSX.Element {
       );
     }
 
+    if (mode.kind === 'answer-question') {
+      /*
+       * The exact question Now displayed, asked first (`V33-049`).
+       *
+       * A quick check-in rather than the suggested guide for the hour: the owner tapped
+       * `Answer it` on one question, not "take me through the morning". Depth `15` keeps
+       * the flow to the shortest useful shape, and `leadPromptId` guarantees the first step
+       * is the question they were looking at.
+       *
+       * The coverage decision still applies to anything *after* it — so a follow-up appears
+       * only when it can still change the decision (`V33-050`), and never as a generic
+       * interrogation chain.
+       */
+      const plan = planGuide(
+        'quick-check-in',
+        '15',
+        records,
+        now,
+        undefined,
+        {
+          suppressed: new Map(
+            episode.commandCore.coverage.suppressed.map((item) => [item.promptId, item.detail]),
+          ),
+          offered: episode.commandCore.coverage.offered.map((item) => ({
+            promptId: item.promptId,
+            surface: item.surface,
+          })),
+        },
+        mode.promptId,
+      );
+
+      return (
+        <GuideSurface
+          plan={plan}
+          onFinish={(outcome, answers, skippedPromptIds) => {
+            finishGuide('quick-check-in', '15', outcome, answers, skippedPromptIds);
+          }}
+          onWeeklyStep={() => {
+            setMode({ kind: 'console' });
+            setNowView('weekly-direction');
+          }}
+          onCancel={() => {
+            setMode({ kind: 'console' });
+          }}
+        />
+      );
+    }
+
     if (mode.kind === 'capture') {
       return (
         <QuickCaptureSurface
@@ -849,8 +937,16 @@ export function AppShell(): React.JSX.Element {
                 }}
                 onRespond={respond}
                 onWeeklyRespond={weeklyRespond}
-                onOpenGuide={() => {
-                  setMode({ kind: 'guide', guide: suggested, depth: DEFAULT_DEPTH });
+                onOpenGuide={(promptId) => {
+                  /*
+                   * `Answer it` asks the question that was on screen. Everything else that
+                   * opens a guide from Now still gets the check-in for the hour.
+                   */
+                  setMode(
+                    promptId === undefined
+                      ? { kind: 'guide', guide: suggested, depth: DEFAULT_DEPTH }
+                      : { kind: 'answer-question', promptId },
+                  );
                 }}
                 onQuickCapture={() => {
                   setMode({ kind: 'capture' });

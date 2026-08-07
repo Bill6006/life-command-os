@@ -1,3 +1,4 @@
+import { formatLocalShortDate } from '../domain/time/localTime';
 import type {
   CanonicalRecord,
   CommitmentRecord,
@@ -135,9 +136,15 @@ export function weekEnd(at: Date): Date {
   return new Date(start.getTime() + 7 * DAY_MS);
 }
 
+/**
+ * A short date for evidence lines.
+ *
+ * Local, not UTC. An observation recorded at 21:30 on the 8th in New York is stored as the
+ * 9th in UTC, and labelling it "9 Aug" told the owner something happened on a day they were
+ * asleep for (`V33-031`).
+ */
 export function shortLabel(iso: string): string {
-  const date = new Date(Date.parse(iso));
-  return `${String(date.getUTCDate())} ${date.toLocaleString('en-GB', { month: 'short', timeZone: 'UTC' })}`;
+  return formatLocalShortDate(new Date(Date.parse(iso)));
 }
 
 /** Human elapsed time. Deliberately coarse — false precision has no place here. */

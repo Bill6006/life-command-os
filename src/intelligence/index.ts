@@ -23,6 +23,7 @@ import { assessState } from './state/assessState';
 import { summariseCategories } from './state/categorySummaries';
 import { focusedHoursTrajectory } from './state/trajectories';
 import type { EpisodeCore } from './types';
+import { formatLocalClock } from '../domain/time/localTime';
 
 import { buildDomainPanels, type DomainPanel } from './domains/domainPanel';
 import { enforceOneCandidatePerDomain } from './domains/candidateLimit';
@@ -318,13 +319,15 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
   return {
     episodeId: `episode-${now.toISOString()}`,
     at: now.toISOString(),
-    clock: now.toLocaleString('en-GB', {
-      weekday: 'long',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'UTC',
-      hour12: false,
-    }),
+    /*
+     * The owner's wall clock, not the canonical instant's.
+     *
+     * This read `timeZone: 'UTC'`, which showed the stored instant as though the owner
+     * lived in it — four hours ahead of the phone during EDT, which is what owner testing
+     * reported. `at` above stays UTC because that is the canonical fact; this is the
+     * human-facing projection of it (`V33-031`).
+     */
+    clock: formatLocalClock(now),
     state,
     trajectory,
     categories,

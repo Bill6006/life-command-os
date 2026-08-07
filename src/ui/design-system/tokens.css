@@ -71,6 +71,7 @@
   /* Console runs compact. Every size is relative so 200% zoom reflows. */
   --text-label: 0.62rem; /* small-caps label rails */
   --text-fine: 0.78rem; /* supporting detail */
+  --text-support: 0.85rem; /* a line meant to be read, not scanned */
   --text-body: 0.88rem;
   --text-value: 0.9rem; /* monospace readings */
   --text-lead: 1.15rem; /* panel leads */
@@ -101,6 +102,27 @@
   --content-max: 78rem;
 
   color-scheme: dark;
+}
+
+/*
+ * The phone scale (`V33-030`, v3.3 B10).
+ *
+ * Console runs compact because a desktop rail can afford it. A phone cannot: the same
+ * `0.78rem` that reads as dense on a monitor arrives as 12.5px at arm's length, which is
+ * what "tiny words" meant. Lifting the three smallest steps on narrow screens costs a few
+ * pixels of density and buys back legibility where the app is actually used.
+ *
+ * This is deliberately a scale change, not a per-component override — otherwise every new
+ * component would have to remember, and one of them would not.
+ */
+@media (max-width: 30rem) {
+  :root {
+    --text-label: 0.68rem;
+    --text-fine: 0.84rem;
+    --text-support: 0.92rem;
+    --text-body: 1rem;
+    --leading-body: 1.55;
+  }
 }
 
 /*

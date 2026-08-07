@@ -251,6 +251,17 @@ export function envelopeShape<T extends string>(recordType: T, basis: EvidenceBa
         note: z.string().max(300).optional(),
       })
       .optional(),
+    /**
+     * What happened, rather than which attempt wrote it (v3.3 `V33-061`).
+     *
+     * Two attempts at one logical event carry the same key; two different events carry
+     * different keys. The write path refuses the second attempt inside a short window, so a
+     * double submit, a retried write, or a handler that ran twice cannot append a duplicate
+     * canonical event — while the same act repeated tomorrow still records normally.
+     *
+     * Optional: most records are written once by construction and need no key.
+     */
+    idempotencyKey: z.string().min(1).max(200).optional(),
     /** The record this one replaces. Backwards-pointing only, never mutated in. */
     supersedesRecordId: z.uuid().optional(),
     /** Links the full chain of one decision episode together. */

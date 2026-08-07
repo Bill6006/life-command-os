@@ -103,7 +103,90 @@ export const STATE_PROMPTS: readonly CapturePrompt[] = SCALE_LIST.map((scale) =>
 /* Capacity and context                                                        */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Contextual action capacity (`V33-023`, owner clarification 2).
+ *
+ * ## Why the clock question was the wrong first question
+ *
+ * The app used to open by asking how many minutes were free. It is a reasonable-sounding
+ * question that almost never earns its place, because minutes are the *last* thing that
+ * decides whether a move is possible. Forty free minutes at a desk in an open-plan office
+ * with a call in the calendar rules out most of what forty minutes at home would allow.
+ * Asking for a number first collects the one input that cannot be acted on alone, and
+ * spends the owner's attention doing it.
+ *
+ * These prompts model the situation instead: where the owner is, what they are in the
+ * middle of, whether they can be interrupted or overheard, and what is to hand. Each is a
+ * plain observation with a `Not sure` route, and each changes which moves are *eligible* —
+ * not merely how they rank.
+ *
+ * The minutes question survives, further down, for the narrow case it is genuinely good
+ * at: two moves are both eligible and the only thing separating them is length. It is
+ * asked then and not before.
+ */
 export const CONTEXT_PROMPTS: readonly CapturePrompt[] = [
+  {
+    promptId: 'context:setting',
+    text: 'Where are you right now?',
+    kind: 'observable',
+    answers: ['Home', 'Work', 'Out and about', 'Travelling', 'Somewhere else'],
+    allowsUnknown: true,
+    whatItCouldChange: ['candidate-eligibility', 'recommendation'],
+    input: choice(['Home', 'Work', 'Out and about', 'Travelling', 'Somewhere else']),
+    attribute: 'context:setting',
+    category: 'time-attention-capacity',
+    privacy: 'general',
+  },
+  {
+    promptId: 'context:engagement',
+    text: 'What are you in the middle of?',
+    kind: 'observable',
+    answers: [
+      'Nothing in particular',
+      'Working',
+      'With family',
+      'Eating',
+      'Travelling',
+      'Winding down',
+    ],
+    allowsUnknown: true,
+    whatItCouldChange: ['candidate-eligibility', 'recommendation'],
+    input: choice([
+      'Nothing in particular',
+      'Working',
+      'With family',
+      'Eating',
+      'Travelling',
+      'Winding down',
+    ]),
+    attribute: 'context:engagement',
+    category: 'time-attention-capacity',
+    privacy: 'general',
+  },
+  {
+    promptId: 'context:interruptibility',
+    text: 'Could you step away and focus without being interrupted?',
+    kind: 'observable',
+    answers: ['Yes, freely', 'Briefly', 'Not right now'],
+    allowsUnknown: true,
+    whatItCouldChange: ['candidate-eligibility', 'recommendation'],
+    input: choice(['Yes, freely', 'Briefly', 'Not right now']),
+    attribute: 'context:interruptibility',
+    category: 'time-attention-capacity',
+    privacy: 'general',
+  },
+  {
+    promptId: 'context:privacy',
+    text: 'Are you somewhere you could speak or move freely?',
+    kind: 'observable',
+    answers: ['Yes', 'Only quietly', 'No — around other people'],
+    allowsUnknown: true,
+    whatItCouldChange: ['candidate-eligibility'],
+    input: choice(['Yes', 'Only quietly', 'No — around other people']),
+    attribute: 'context:privacy',
+    category: 'time-attention-capacity',
+    privacy: 'general',
+  },
   {
     promptId: 'context:available-minutes',
     text: 'How many minutes are genuinely free before your next commitment?',

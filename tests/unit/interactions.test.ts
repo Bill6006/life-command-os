@@ -15,6 +15,7 @@ import {
   respondToWeeklyDirection,
 } from '../../src/application/commands/guideSession';
 import { OUTCOME_PROMPTS, STATE_PROMPTS } from '../../src/domain/prompts/definitions';
+import type { GuideDepth } from '../../src/domain/records';
 import { planGuide, suggestedGuide } from '../../src/intelligence/guides/planGuide';
 import { runEpisode } from '../../src/intelligence';
 import { outcomeWindows } from '../../src/intelligence/evaluation/outcomeWindows';
@@ -269,17 +270,23 @@ describe('guides', () => {
     expect(plan.withinNormalBudget).toBe(true);
   });
 
-  it('changes depth without changing what a question means', async () => {
+  it('plans the same check-in whatever depth a caller passes (V33-024)', async () => {
+    /*
+     * Depth was an owner-set question count until v3.3. It is now provenance stamped on
+     * the record, and the planner does not read it — so these four calls, which used to
+     * produce three, five, seven and ten questions, must now be indistinguishable.
+     */
     const records = await seed('action');
-    const short = planGuide('morning', '15', records, NOW);
-    const full = planGuide('morning', 'full', records, NOW);
+    const ids = (depth: GuideDepth): string[] =>
+      planGuide('morning', depth, records, NOW).steps.flatMap((step) =>
+        step.kind === 'prompt' ? [step.prompt.promptId] : [],
+      );
 
-    expect(short.steps.length).toBeLessThan(full.steps.length);
-
-    // Every question the short guide asks, the full guide asks identically.
-    const ids = (plan: typeof short): string[] =>
-      plan.steps.flatMap((step) => (step.kind === 'prompt' ? [step.prompt.promptId] : []));
-    expect(ids(full).slice(0, ids(short).length)).toEqual(ids(short));
+    const brief = ids('15');
+    expect(brief.length).toBeGreaterThan(0);
+    for (const depth of ['30', '45', 'full'] as const) {
+      expect(ids(depth)).toEqual(brief);
+    }
   });
 
   it('catch-up asks only questions that are still worth asking', async () => {
@@ -290,14 +297,29 @@ describe('guides', () => {
     const ids = (plan: typeof morning): string[] =>
       plan.steps.flatMap((step) => (step.kind === 'prompt' ? [step.prompt.promptId] : []));
 
-    expect(ids(morning)).toContain('sleep:awakenings');
+    /*
+     * Asserted against the drop rule rather than the asked list. Both guides now cut at
+     * the response budget, so a question sitting tenth in the morning order is absent
+     * from either for a reason that has nothing to do with catching up. What has to
+     * hold is that catch-up drops it *by rule* and the morning does not.
+     */
+    const droppedForCatchUp = (plan: typeof morning): string[] =>
+      plan.omitted
+        .filter((entry) =>
+          entry.because.toLowerCase().includes('the morning it would have shaped has passed'),
+        )
+        .map((entry) => entry.promptId);
+
+    expect(droppedForCatchUp(catchUp)).toContain('sleep:awakenings');
+    expect(droppedForCatchUp(catchUp)).toContain('sleep:onset-minutes');
+    expect(droppedForCatchUp(morning)).toEqual([]);
     expect(ids(catchUp)).not.toContain('sleep:awakenings');
     expect(ids(catchUp)).not.toContain('sleep:onset-minutes');
 
     // Bedtime and wake time survive: they are settled facts, and sleep duration
     // cannot be calculated without them.
-    expect(ids(catchUp)).toContain('sleep:bedtime');
-    expect(ids(catchUp)).toContain('sleep:wake-time');
+    expect(droppedForCatchUp(catchUp)).not.toContain('sleep:bedtime');
+    expect(droppedForCatchUp(catchUp)).not.toContain('sleep:wake-time');
 
     // And every omission says why, rather than silently disappearing.
     for (const omission of catchUp.omitted) expect(omission.because.length).toBeGreaterThan(0);
