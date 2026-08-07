@@ -29,6 +29,7 @@ the app behaves differently but incompletely.
 | **B1** check-in card (`V33-011`) | One component for morning, afternoon and evening. Was 94/116/135px tall across the three blocks with 12.5px type and a bare "Open" link; now a uniform 151px with a title at reading size and a full-width target. |
 | **B2** (part) audit metadata (`V33-012`) | "What changed" was printing `kind:anchored-scale, scaleId:energy, scaleVersion:1, ordinal:1, label:Drained` on Now. Replaced with a real per-kind summary. The provenance is intact in Timeline, which is where it belongs. |
 | **B10** (part) mobile type (`V33-030`) | A narrow-viewport scale in `tokens.css`, so legibility is a token decision rather than something each new component must remember. |
+| **Section I** owner sovereignty (`V33-032`) | A 28th record family, `move-preference`, carrying the owner's standing say over a move: `paused` (must name an end — a pause without one is a prohibition in softer wording), `blocked-here` (must name the context, and never matches an unknown one), `modified` (changes the words, never the eligibility), `forbidden`, `restored`. Resolved in `stances.ts`, applied in `arbitrate`, written only by explicit commands in `moveSovereignty.ts`. |
 
 ### The eleven clarifications
 
@@ -42,15 +43,17 @@ the app behaves differently but incompletely.
 | 5 — real global recomputation | **Done.** `afterDecline.ts` rejects the same move shortened, a reworded twin, and anything from the area just refused, then walks the ranking for a real alternative. |
 | 6 — temporary constraints release | **Done** (verified pre-existing behaviour, now covered by tests). |
 | 7 / 8 — no pestering; optimise per unit capacity | **Done at the decision layer.** Abstention is a first-class result: when nothing genuinely beats carrying on, the recompute returns silence rather than filler. |
-| 9 — association not causation | **Partly pre-existing**; no new work this pass. |
+| 9 — association not causation | **Done for owner sovereignty.** The specific inference this forbids — repeated declines becoming a standing preference — is now structurally impossible: declines live on `execution` records and release themselves, stances live in their own family and are only ever written by explicit commands, and tests read both sources to prove no path connects them. The wider "often followed by" association language in section G is still not started. |
 | 10 — regression tests | **Done.** `tests/unit/v33Capacity.test.ts`, 18 tests, one block per named property. |
 
 ### Not started
 
 Sections **C, D, E, F, G, H, J, K**, the **AT33 acceptance scenarios (M)**, B2's hierarchy
 reorder, and **B3, B4, B6, B7, B8, B9**. Clarification **9**. Section **I** is partly done —
-its three-way distinction and prerequisite actions exist, its owner-sovereignty controls
-(pause, modify, block-in-context, permanently forbid, restore) do not.
+its three-way distinction, prerequisite actions, and the full owner-control lifecycle
+(pause, block-here, modify, forbid, restore) now exist in the domain, command and
+arbitration layers with 17 focused tests. What it still lacks is the **UI** to reach them:
+`Can't now` offers reasons, not stances.
 
 This is still the majority of Prompt 9C by volume. It is stated plainly rather than folded
 into a gate table, because a partial pass reported as anything but partial is worse than no
@@ -338,6 +341,11 @@ edits is the one that matters.
 - **The recovery pause is deliberately shapeless and must stay that way.** It is the move of
   last resort; if `you cannot step away` could remove it, the app would fall silent in exactly
   the situation most needing an answer. There is a test that fails if it gains a shape.
+- **Section I has no UI.** The full lifecycle — pause, block-here, modify, forbid, restore —
+  exists in the record family, the commands and the arbitration filter, and is covered by 17
+  tests. Nothing on screen reaches it: `Can't now` still offers reasons only. The owner can
+  therefore not yet exercise sovereignty through the app, which is the remaining half of
+  section I.
 - **A situation report expires after three hours.** Where the owner was this morning is not
   where they are now. That window is a judgement, not a measurement, and it is the number to
   revisit first if the app starts asking where you are too often.
@@ -383,6 +391,11 @@ the first button a new owner ever touches, because the only surface that reaches
 profile with zero records and every seeded test skips past it. Two lessons: **make the
 parameter required** when `undefined` is a real choice rather than an absence, and **the
 fresh-profile path needs its own tests** — no amount of seeded coverage will ever visit it.
+
+**A locator that passes in isolation and fails in the full run is ambiguous, not flaky.**
+`production-faith` created two practices whose names share a prefix and matched them with a
+substring locator, so which one got clicked was a coin toss. It had been passing for weeks.
+Reach for `exact: true` before reaching for a retry.
 
 **Measure before redesigning.** The B1 card was "oversized with tiny words". Rendering it at
 three time blocks and reading the boxes turned that into 94/116/135px at 12.48px, which named

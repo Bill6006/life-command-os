@@ -59,7 +59,12 @@ describe('determinism', () => {
       const second = runEpisode(scenario.records, new Date(scenario.nowIso));
       expect(JSON.stringify(second), scenario.id).toEqual(JSON.stringify(first));
     }
-  });
+  } /*
+   * Two full episodes for every scenario in the corpus, which is over a hundred runs of
+   * the whole engine. The default five seconds is not a statement about determinism and
+   * this test failing on it says nothing — it timed out once under load and the
+   * assertion itself has never disagreed.
+   */, 30_000);
 });
 
 describe('exactly one output, always', () => {

@@ -6,6 +6,7 @@ import type {
   RejectedCandidate,
 } from '../../intelligence/types';
 import type { CommandCoreInput } from '../boundary';
+import { modificationFor, suppressedMoveIds } from './stances';
 import { activeDeclines } from './declined';
 import { dedupeCandidates } from './dedupe';
 import { applyNorthStarGate, type NorthStarGateResult } from './northStar';
@@ -64,15 +65,53 @@ export function arbitrate(input: CommandCoreInput): ArbitrationResult {
    * after the button.
    */
   const declined = activeDeclines(input.records);
-  const offered = all.filter((candidate) => !declined.has(candidate.id));
-  const declinedRejections: RejectedCandidate[] = all
-    .filter((candidate) => declined.has(candidate.id))
-    .map((candidate) => ({
-      candidateId: candidate.id,
-      stage: 'declined',
-      reason:
-        'You said not now, and nothing has been recorded since that would change the answer',
-    }));
+
+  /*
+   * And what the owner has taken a standing position on (`V33-032`, section I).
+   *
+   * A separate question from the decline above, deliberately. That one asks "did you say
+   * not-now in the last hour"; this asks "what have you decided about this move". A pause
+   * ends by itself, a context block applies only in the situation it was set in, and a
+   * prohibition holds until the owner restores it — none of which any number of declines
+   * can produce.
+   */
+  const stanced = suppressedMoveIds(input.records, input.now, input.state.situation);
+
+  const withOwnerWording = all.map((candidate) => {
+    const reworded = modificationFor(
+      input.records,
+      input.now,
+      input.state.situation,
+      candidate.id,
+    );
+    if (reworded === undefined) return candidate;
+    return {
+      ...candidate,
+      statement: reworded.statement,
+      ...(reworded.minutes === undefined ? {} : { durationMinutes: reworded.minutes }),
+    };
+  });
+
+  const offered = withOwnerWording.filter(
+    (candidate) => !declined.has(candidate.id) && !stanced.has(candidate.id),
+  );
+  const declinedRejections: RejectedCandidate[] = [
+    ...all
+      .filter((candidate) => declined.has(candidate.id))
+      .map((candidate) => ({
+        candidateId: candidate.id,
+        stage: 'declined' as const,
+        reason:
+          'You said not now, and nothing has been recorded since that would change the answer',
+      })),
+    ...all
+      .filter((candidate) => stanced.has(candidate.id))
+      .map((candidate) => ({
+        candidateId: candidate.id,
+        stage: 'declined' as const,
+        reason: stanced.get(candidate.id) ?? 'You set a standing preference on this',
+      })),
+  ];
 
   const deduped = dedupeCandidates(offered);
   const northStar = applyNorthStarGate(input.records, deduped.merged);

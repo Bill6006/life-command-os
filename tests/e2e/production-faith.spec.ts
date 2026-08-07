@@ -90,7 +90,12 @@ test.describe('the whole journey, on the shipped build', () => {
 
     await page
       .getByRole('region', { name: 'Things you do about it' })
-      .getByRole('group', { name: `Record an occasion of ${PRACTICE}` })
+      /*
+       * Exact, because this test deliberately creates a second practice whose name starts
+       * with the first one's. A substring match resolves to both and the click is a coin
+       * toss — it passed in isolation and failed in the full run, which is the signature.
+       */
+      .getByRole('group', { name: `Record an occasion of ${PRACTICE}`, exact: true })
       .getByRole('button', { name: 'Did it' })
       .click();
     await expect(page.getByRole('region', { name: 'Things you do about it' })).toContainText(
@@ -178,7 +183,12 @@ test.describe('the refusals hold on the shipped build', () => {
     await nameIt(page, 'Things you do about it', 'Add something you do', `${PRACTICE} two`);
     await page
       .getByRole('region', { name: 'Things you do about it' })
-      .getByRole('group', { name: `Record an occasion of ${PRACTICE}` })
+      /*
+       * Exact, because this test deliberately creates a second practice whose name starts
+       * with the first one's. A substring match resolves to both and the click is a coin
+       * toss — it passed in isolation and failed in the full run, which is the signature.
+       */
+      .getByRole('group', { name: `Record an occasion of ${PRACTICE}`, exact: true })
       .getByRole('button', { name: 'Did it' })
       .click();
     await page.getByRole('button', { name: 'Done' }).click();

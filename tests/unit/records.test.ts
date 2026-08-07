@@ -24,9 +24,19 @@ beforeEach(() => {
  * Gate requirement: every active core record validates independently.
  */
 describe('core record families', () => {
-  it('registers twenty-seven families, four of them domain content', () => {
-    expect(RECORD_TYPES).toHaveLength(27);
+  it('registers twenty-eight families, four of them domain content', () => {
+    expect(RECORD_TYPES).toHaveLength(28);
     expect(Object.keys(RECORD_SCHEMAS).sort()).toEqual([...RECORD_TYPES].sort());
+  });
+
+  it('registers MovePreferenceRecord, the owner’s standing say over a move (v3.3)', () => {
+    /*
+     * Its own family because it is a different claim from a decline. "Not now, I am at
+     * work" is a fact about the next hour and lives on an execution; "never suggest this"
+     * is a correction about the move. Sharing a family would let the first quietly become
+     * the second, which is the exact failure section I forbids.
+     */
+    expect(RECORD_TYPES).toContain('move-preference');
   });
 
   it('registers SkillClaimRecord, the first domain content family (Prompt 8C)', () => {

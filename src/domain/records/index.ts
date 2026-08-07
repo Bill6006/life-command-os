@@ -55,6 +55,7 @@ import { skillClaimRecord, type SkillClaimRecord } from './career';
 import { milestoneObservationRecord, type MilestoneObservationRecord } from './fatherhood';
 import { surfacePermissionRecord, type SurfacePermissionRecord } from './permissions';
 import { faithAnchorRecord, type FaithAnchorRecord } from './faith';
+import { movePreferenceRecord, type MovePreferenceRecord } from './sovereignty';
 import {
   questionAnswerRecord,
   questionRecord,
@@ -80,6 +81,7 @@ export * from './career';
 export * from './fatherhood';
 export * from './permissions';
 export * from './faith';
+export * from './sovereignty';
 
 /**
  * Twenty-seven canonical record families.
@@ -146,6 +148,7 @@ export const RECORD_TYPES = [
   'milestone-observation',
   'surface-permission',
   'faith-anchor',
+  'move-preference',
 ] as const;
 
 export type RecordType = (typeof RECORD_TYPES)[number];
@@ -177,7 +180,8 @@ export type CanonicalRecord =
   | SkillClaimRecord
   | MilestoneObservationRecord
   | SurfacePermissionRecord
-  | FaithAnchorRecord;
+  | FaithAnchorRecord
+  | MovePreferenceRecord;
 
 /**
  * Schema per family.
@@ -214,6 +218,7 @@ export const RECORD_SCHEMAS: Record<RecordType, z.ZodType> = {
   'milestone-observation': milestoneObservationRecord,
   'surface-permission': surfacePermissionRecord,
   'faith-anchor': faithAnchorRecord,
+  'move-preference': movePreferenceRecord,
 };
 
 /** Families that record first-hand fact rather than system interpretation. */
@@ -233,6 +238,8 @@ export const OBSERVED_RECORD_TYPES = [
   'milestone-observation',
   'surface-permission',
   'faith-anchor',
+  /* A stance is something the owner declared, not something the app worked out. */
+  'move-preference',
 ] as const satisfies readonly RecordType[];
 
 export function isRecordType(value: unknown): value is RecordType {

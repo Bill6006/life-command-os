@@ -24,6 +24,7 @@ import type {
   MilestoneObservationRecord,
   SurfacePermissionRecord,
   FaithAnchorRecord,
+  MovePreferenceRecord,
   TrajectoryRecord,
   UntreatedForecastRecord,
   WeeklyDirectionRecord,
@@ -580,6 +581,26 @@ export function aFaithAnchor(overrides: Partial<FaithAnchorRecord> = {}): FaithA
   } as FaithAnchorRecord;
 }
 
+/**
+ * A standing stance on a move (v3.3, section I).
+ *
+ * `blocked-here` by default rather than `forbidden`, so the fixture exercises the case
+ * that has to carry a context alongside it — the one where getting it wrong turns "not at
+ * my desk" into "never".
+ */
+export function aMovePreference(
+  overrides: Partial<MovePreferenceRecord> = {},
+): MovePreferenceRecord {
+  return {
+    ...envelope('move-preference', 41),
+    ...OBSERVED,
+    engineCandidateId: 'health:meditate',
+    stance: 'blocked-here',
+    inContext: { setting: 'work', privacy: 'public' },
+    ...overrides,
+  } as MovePreferenceRecord;
+}
+
 /** A guide session (Phase 6). Completed with nothing skipped. */
 export function aGuideSession(
   producedRecordIds: readonly string[] = [],
@@ -645,5 +666,6 @@ export function oneOfEveryFamily(): Record<string, unknown> {
     'milestone-observation': aMilestoneObservation(),
     'surface-permission': aSurfacePermission(),
     'faith-anchor': aFaithAnchor(),
+    'move-preference': aMovePreference(),
   };
 }
