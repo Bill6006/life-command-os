@@ -107,11 +107,33 @@ function qualify(
     };
   }
 
-  const restores = candidate.capabilityEffects.find((effect) => effect.effect === 'improves');
+  /*
+   * Timing is not the question here (`V33-057`).
+   *
+   * The first version of this route accepted `improves` on any channel but left
+   * `improves-later` to the foundation route below, which only recognises three channels.
+   * The result was the same bug this file already documents once, in a narrower place: a
+   * move whose benefit lands tomorrow on follow-through, connection, financial resilience
+   * or values alignment qualified on no route at all, and was removed before ranking in
+   * every possible owner state. Nine authored patterns were unreachable that way — not
+   * judged unsuitable, just never asked about.
+   *
+   * `improves` and `improves-later` differ in *when* a capability is restored, never in
+   * *whether*. Going to bed on time and drinking a glass of water are both capability
+   * restoration; only one of them pays out tonight. The qualification records which, so the
+   * trace stays exact, but both pass.
+   */
+  const restores = candidate.capabilityEffects.find(
+    (effect) => effect.effect === 'improves' || effect.effect === 'improves-later',
+  );
   if (restores !== undefined) {
+    const channel = restores.channel.replace(/-/g, ' ');
     return {
       qualification: 'restores-capability',
-      because: `Improves ${restores.channel.replace(/-/g, ' ')}`,
+      because:
+        restores.effect === 'improves'
+          ? `Improves ${channel}`
+          : `Improves ${channel}, though not today`,
     };
   }
 
@@ -132,16 +154,18 @@ function qualify(
   }
 
   /*
-   * Protecting a foundation looks like an action that pays off *later* on a foundation
-   * channel, taken at no risk and reversibly. `improves-later` is the effect kind that
-   * says so: going to bed on time does nothing for tonight and everything for tomorrow,
-   * and a gate that only counted immediate benefit would rule out every such action.
+   * The remaining route, and the only one that admits an *unproven* claim.
+   *
+   * `uncertain` says the app does not know whether this helps. That is too weak to carry a
+   * candidate on its own, so it qualifies only where the stake is a foundation — energy,
+   * regulation, focus — and only at no risk and reversibly. Protecting the ground the rest
+   * of a life stands on is worth acting on under uncertainty; nothing else here is.
+   *
+   * `improves-later` no longer reaches this branch; it qualifies above on any channel.
    */
   if (candidate.risk === 'none-identified' && candidate.reversibility === 'reversible') {
     const protects = candidate.capabilityEffects.find(
-      (effect) =>
-        (effect.effect === 'improves-later' || effect.effect === 'uncertain') &&
-        FOUNDATION_CHANNELS.has(effect.channel),
+      (effect) => effect.effect === 'uncertain' && FOUNDATION_CHANNELS.has(effect.channel),
     );
     if (protects !== undefined) {
       return {

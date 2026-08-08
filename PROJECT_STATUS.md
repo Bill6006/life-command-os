@@ -6,9 +6,10 @@
 - Plan version: **3.3 UI Clarity and North Star Intelligence Amendment**, plus eleven owner
   clarifications that supersede it where they conflict
 - Current phase: **Phase 8 closed.** Phases 0–7 remain GREEN.
-- Current prompt: **PROMPT 9C v3.3 — partially delivered. YELLOW.** Sections **A, B and I**
-  are complete, as are all eleven owner clarifications. Sections **C–H, J, K** and the AT33
-  acceptance scenarios are not started. See "Prompt 9C v3.3" below for the exact line.
+- Current prompt: **PROMPT 9C v3.3 — partially delivered. YELLOW.** Sections **A, B, D, E,
+  F and I** are complete, as are all eleven owner clarifications. Sections **C, G, H, J, K**
+  and the AT33 acceptance scenarios are not started. See "Prompt 9C v3.3" below for the
+  exact line.
 
 ## Prompt 9C v3.3 status
 
@@ -70,25 +71,61 @@ evidence recorded against either resolves to one move. Duration, minimum, fricti
 capacity shape, safety, lifecycle and observation window come from the pattern; a slice may
 override only wording, and only where its own sentence said more.
 
-**Runtime-reachable: 35 of 113**, asserted exactly. That is short of the catalogue and
-honestly so — each slice still selects the handful of patterns it always offered. What
-changed is that those selections are views over one authored source instead of eight.
-Widening them is a separate decision from the migration and has not been taken.
+**Runtime-reachable: 113 of 113 active patterns; 0 accidentally unreachable.**
 
-Nothing is intentionally unreachable. The other 78 are authored, valid, and waiting to be
-selected. Sections **A, B** and **I** are complete. Section **I** is complete —
-three-way distinction, prerequisite actions, the full owner-control lifecycle, and the
-interface to reach all of it.
+Two numbers, kept apart because conflating them is what made the previous report
+misleading:
 
-This is still the majority of Prompt 9C by volume. It is stated plainly rather than folded
-into a gate table, because a partial pass reported as anything but partial is worse than no
-pass.
+- **35** are nominated by a slice's own decision tree, with a reason drawn from the owner's
+  records. Unchanged, and not meant to change.
+- **112 of 113** are produced by the shared generator from a single ordinary owner state
+  (every area on, at home, free, alone, a direction recorded, something open). The 113th
+  declares a prerequisite and appears once that prerequisite has been done.
 
-The North Star intelligence architecture in the v3.3 amendment — move families and the
-≥100-pattern catalogue, sequence and combination learning, opportunity-cost reasoning,
-sustainability versus immediate effectiveness, bounded experiments, move lifecycle and
-evidence versioning — is untouched. It is the bulk of the remaining work and needs its own
-passes; none of it is started, and nothing in the codebase pretends otherwise.
+Selection is no longer a hand-written array. `catalogueEligibility.judge` admits a pattern
+on nine ordered rules over what the pattern itself declares — lifecycle, the family's
+areas, the owner's standing stance, capacity shape, recent completion, contradiction,
+prerequisite, and whether a realigning or unblocking move has anything to act on. The
+honest default is eligible; a pattern is removed only for a stated, checkable reason.
+`moveRuntimeReachability.test.ts` asserts the stranded set is empty by name, so a new
+pattern that nobody can reach fails the build and says which one.
+
+**Two accidental dead zones were found by tracing the real path and fixed:**
+
+1. The North Star gate accepted `improves` on any channel but left `improves-later` to a
+   route that recognised only three "foundation" channels. Nine authored patterns whose
+   benefit lands tomorrow on follow-through, connection, financial resilience or values
+   alignment were removed before ranking in *every* possible owner state. `improves` and
+   `improves-later` differ in when a capability is restored, never in whether, so both now
+   qualify and the verdict records which.
+2. Ranking moved to the contract while the interruption threshold still tested the
+   winner's integer score. Because the contract can rightly prefer a modest move that
+   serves the direction, four home scenarios turned a correctly-identified repeated
+   friction into silence. The threshold now asks the whole set whether *anything* is worth
+   interrupting for, which is the question it was always meant to ask.
+
+**Arbitration (sections E/F) is wired into production, not parallel to it.**
+`selectOutput` ranks on the fourteen-field contract via `episodeFacts` + `weigh` — an
+ordered comparison, no weights and no total, where the first field that separates two
+candidates decides and can be named in one sentence ("Chosen because it serves what you
+said your life is for"). The integer score survives for the interruption threshold alone.
+Unknown is a value throughout and never a reason to reject.
+
+**North Star is operational**, not metadata: relevance is read from the categories of the
+goals the owner keeps active — never by parsing the statement, which the system does not
+score. Reversing the direction reverses the ranking of two real candidates, and the
+direction appears as the named separating reason in real scenario traces.
+
+**Sustainability is `unknown` for every pattern**, deliberately. Nothing has been observed
+often enough to say, and a plausible default would be an unearned judgement inside a
+ranking.
+
+Sections **A, B, D** and **I** are complete.
+
+Still untouched, and the bulk of what remains: sequence and combination learning,
+bounded experiments, evidence-driven lifecycle transitions and evidence versioning
+(sections C, G, H, J, K), and the AT33 acceptance scenarios in section M. None of it is
+started, and nothing in the codebase pretends otherwise.
 
 ## Gate status
 
@@ -421,6 +458,14 @@ clone is the only proof.
 
 **A failed deploy is a CI question, not a patience question.** Twenty minutes of polling told
 me nothing; one API call told me the run had failed and the deploy was skipped.
+
+**A contract nothing calls is a document, not a decision.** Twice in one pass I built the
+right abstraction, tested it thoroughly in isolation, and left it disconnected from the
+engine — eligibility judged 113 patterns that no generator asked, and a fourteen-field
+arbitration contract sat beside a production ranker that still summed integers. Both looked
+finished: the unit tests were green and the modules were sound. The check that found it was
+tracing one candidate end to end through `runEpisode` and printing what survived each stage.
+**Ask what the running program does, not what the module returns.**
 
 **Widening a callback signature is an API change, and TypeScript will not always stop you.**
 Making `onOpenGuide` take an *optional* prompt id left it assignable to a `() => void` click

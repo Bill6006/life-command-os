@@ -8,6 +8,16 @@ import { ENVIRONMENT_ACTIONS, ENVIRONMENT_ACTION_IDS } from '../../src/domain/ho
 import { MONEY_ACTIONS, MONEY_ACTION_IDS } from '../../src/domain/money/strategy';
 import { MOVE_PATTERNS } from '../../src/domain/moves/catalogue';
 import { findPattern, recommendablePatterns } from '../../src/domain/moves/registry';
+import type { MovePattern } from '../../src/domain/moves/families';
+import { catalogueCandidates } from '../../src/intelligence/intervention/catalogueCandidates';
+import {
+  judge,
+  type EligibilityContext,
+} from '../../src/command-core/eligibility/catalogueEligibility';
+import { DOMAIN_IDS, type DomainId } from '../../src/domain/domains/definitions';
+import type { CanonicalRecord } from '../../src/domain/records';
+import type { StateAssessment } from '../../src/intelligence/types';
+import { required } from '../support/required';
 
 /**
  * Runtime reachability, counted honestly (`V33-048`, v3.3 section D).
@@ -15,20 +25,22 @@ import { findPattern, recommendablePatterns } from '../../src/domain/moves/regis
  * ## Why this file is separate from `moveReachability.test.ts`
  *
  * That one asks whether the registry *can* find a pattern. This one asks whether the
- * product can actually offer it, which is a much harder question and currently has a much
- * smaller answer. Keeping them apart stops "102 patterns exist" from being read as "102
- * patterns can be recommended", which was true of the previous commit and is still mostly
- * true of this one.
+ * product can actually offer it — a much harder question, and the one that was answered
+ * dishonestly for two commits. Keeping them apart stops "113 patterns exist" from being
+ * read as "113 patterns can be recommended".
  *
- * ## The number, stated plainly
+ * ## The numbers, stated plainly
  *
- * Only health has been migrated. Its seven actions are now views over catalogue patterns
- * rather than an independent list, so those seven are genuinely reachable through the real
- * generation path. The other six domains still author their own, and the shared core
- * generator still builds three candidates inline.
+ * There are two, and conflating them is what made the old answer misleading:
  *
- * These tests assert that number rather than an aspiration, so it can only go up
- * deliberately — and so nobody has to trust a summary.
+ *   - **35** are nominated by a slice's own decision tree, with a reason drawn from the
+ *     owner's records. That number has not moved and is not supposed to.
+ *   - **112 of 113** are produced by the shared generator from one ordinary owner state,
+ *     because eligibility now reads what a pattern declares instead of consulting a list
+ *     of ids. The 113th declares a prerequisite and appears once that prerequisite is met.
+ *
+ * Nothing is intentionally unreachable, and — asserted below rather than claimed here —
+ * nothing is accidentally unreachable either.
  */
 
 /**
@@ -85,6 +97,73 @@ function runtimeReachable(): ReadonlySet<string> {
 
 /* -------------------------------------------------------------------------- */
 
+const NOW = new Date('2026-08-08T14:00:00.000Z');
+let seq = 0;
+
+function envelope(recordType: string) {
+  seq += 1;
+  return {
+    recordId: `00000000-0000-4000-b000-${String(seq).padStart(12, '0')}`,
+    recordType,
+    schemaVersion: 1,
+    occurredAt: '2026-08-08T09:00:00.000Z',
+    recordedAt: '2026-08-08T09:00:00.000Z',
+    localTime: { timeZone: 'Europe/London', offsetMinutes: 0 },
+    source: 'user-entry',
+    provenance: { method: 'direct-report' },
+  };
+}
+
+/**
+ * An owner for whom nothing is ruled out, and nothing is invented either.
+ *
+ * Every area on, a direction recorded, something open. This is an ordinary state a real
+ * person can be in on an ordinary evening — not a bypass, and not a test double. The
+ * production builder reads exactly these records.
+ */
+const PERMISSIVE_RECORDS = [
+  ...DOMAIN_IDS.map((domainId) => ({
+    ...envelope('domain-preference'),
+    domainId,
+    state: 'enabled',
+  })),
+  { ...envelope('north-star'), statement: 'Be steady, and present' },
+  {
+    ...envelope('commitment'),
+    statement: 'Something still open',
+    category: 'career-work-learning',
+    state: 'blocked',
+    nonNegotiable: false,
+  },
+] as unknown as readonly CanonicalRecord[];
+
+const PERMISSIVE_STATE = {
+  situation: {
+    setting: 'home',
+    engagement: 'free',
+    interruptibility: 'free',
+    privacy: 'private',
+  },
+} as unknown as StateAssessment;
+
+/** The same state as an eligibility context, with any declared prerequisite satisfied. */
+function permissiveContext(entry: MovePattern): EligibilityContext {
+  return {
+    now: NOW,
+    enabledDomains: new Set<DomainId>(DOMAIN_IDS),
+    situation: PERMISSIVE_STATE.situation,
+    suppressed: new Map(),
+    recentlyCompleted:
+      entry.after === undefined
+        ? []
+        : [{ patternId: entry.after, at: '2026-08-08T10:00:00.000Z' }],
+    hasNorthStar: true,
+    hasOpenCommitment: true,
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+
 describe('the counts, separately', () => {
   it('reports the total authored catalogue', () => {
     expect(MOVE_PATTERNS.length).toBeGreaterThanOrEqual(100);
@@ -95,37 +174,79 @@ describe('the counts, separately', () => {
     expect(recommendablePatterns().length).toBe(MOVE_PATTERNS.length);
   });
 
-  it('reports how many are reachable through real generation', () => {
-    const reachable = runtimeReachable();
-
+  it('still gives every slice its own hand-picked selection', () => {
     /*
-     * Thirty-five, across all seven slices and the shared generator. Asserted exactly so
-     * the number cannot drift in either direction without somebody meaning it: a slice
-     * that stopped offering a pattern would drop it, and a slice that started authoring
-     * its own would not raise it.
+     * Thirty-five, across all seven slices and the shared generator — unchanged, and no
+     * longer the whole story. These are the patterns a domain's own decision tree will
+     * nominate *with a reason*, which is a different and stronger thing than being
+     * possible. They keep their privileged route to Now.
      *
-     * It is a long way short of the catalogue, and that is the honest state. Each slice
-     * still selects the handful of patterns it always had; what changed is that those
-     * selections are now views over one authored source instead of eight. Widening the
-     * selections is the next piece of work and is a separate decision from the migration.
+     * What changed is that this is no longer the ceiling. See the block below.
      */
-    expect(reachable.size).toBe(35);
-    expect(reachable.size).toBeLessThan(MOVE_PATTERNS.length);
+    expect(runtimeReachable().size).toBe(35);
   });
 
-  it('names what is not yet reachable, and why', () => {
-    const reachable = runtimeReachable();
-    const unreachable = MOVE_PATTERNS.filter((entry) => !reachable.has(entry.patternId));
+  it('reaches the rest of the catalogue through eligibility, not through arrays', () => {
+    /*
+     * The number this pass existed to move (`V33-056`).
+     *
+     * Every pattern here is produced by `catalogueCandidates` — the same function the
+     * shared generator calls — from one permissive but entirely legitimate owner state:
+     * every area switched on, at home, free, alone, with a direction recorded and
+     * something open. No pattern id appears anywhere in that path.
+     *
+     * Asserted as "all but the prerequisite-gated one" rather than as a bare number, so
+     * that adding a pattern to the catalogue cannot quietly leave it stranded: a new
+     * unreachable move fails this immediately, and the failure names it.
+     */
+    const produced = new Set(
+      catalogueCandidates(PERMISSIVE_RECORDS, PERMISSIVE_STATE, NOW, new Set()).map(
+        (candidate) => candidate.id,
+      ),
+    );
+
+    const missing = MOVE_PATTERNS.filter(
+      (entry) => entry.lifecycle !== 'retired' && !produced.has(entry.patternId),
+    );
 
     /*
-     * Not "intentionally unreachable" — *not yet* reachable. Every one of these is
-     * authored, valid, and waiting on its domain's generator to be migrated. There are
-     * no patterns in this catalogue that are meant never to be offered.
+     * The single legitimate exception, named rather than counted. It declares a
+     * prerequisite and is held back until that prerequisite has actually been done —
+     * which is a move waiting its turn, not a move nobody can reach. The test below
+     * releases it.
      */
-    expect(unreachable.length).toBe(MOVE_PATTERNS.length - reachable.size);
-    for (const entry of unreachable) {
-      expect(entry.lifecycle, entry.patternId).not.toBe('retired');
+    expect(missing.map((entry) => entry.patternId)).toEqual([
+      'money-guard:move-toward-the-purpose',
+    ]);
+    for (const entry of missing) {
+      expect(entry.after, entry.patternId).toBeDefined();
     }
+  });
+
+  it('leaves no active pattern accidentally unreachable', () => {
+    /*
+     * The target, stated as a property: zero. A pattern counts as reachable when a
+     * realistic state makes the real generation path produce it — including, for the
+     * prerequisite-gated ones, a state in which the prerequisite has been done.
+     */
+    const stranded = MOVE_PATTERNS.filter((entry) => {
+      if (entry.lifecycle === 'retired') return false;
+      return !judge(entry, permissiveContext(entry)).eligible;
+    });
+
+    expect(stranded.map((entry) => entry.patternId)).toEqual([]);
+  });
+
+  it('lets a prerequisite-gated move through once its prerequisite is done', () => {
+    const gated = required(
+      MOVE_PATTERNS.find((entry) => entry.patternId === 'money-guard:move-toward-the-purpose'),
+      'the gated money move',
+    );
+
+    expect(judge(gated, { ...permissiveContext(gated), recentlyCompleted: [] }).eligible).toBe(
+      false,
+    );
+    expect(judge(gated, permissiveContext(gated)).eligible).toBe(true);
   });
 });
 

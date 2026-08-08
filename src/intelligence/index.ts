@@ -310,6 +310,7 @@ export function runEpisode(records: readonly CanonicalRecord[], now: Date): Epis
             previousCandidates,
             previousEffects,
             previousForecast,
+            now,
           );
           return { output: previousSelection.output, state: previousState };
         })();

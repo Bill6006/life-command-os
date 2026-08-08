@@ -1,6 +1,7 @@
 import { knownValue, type CanonicalRecord } from '../../domain/records';
 import { activeGoals, openCommitments } from '../support';
 import { pattern } from '../../domain/moves/registry';
+import { catalogueCandidates } from './catalogueCandidates';
 import type { CandidateAction, StateAssessment } from '../types';
 
 /**
@@ -165,6 +166,24 @@ export function generateCandidates(
       reason: `Capacity is ${capacity}`,
     });
   }
+
+  /*
+   * 4. Everything else in the catalogue the situation admits (`V33-056`).
+   *
+   * The three above are *situational*: they exist because a goal has stalled, a commitment
+   * is blocked, or capacity has run out, and each is built from records rather than from
+   * the library. They stay exactly as they were.
+   *
+   * What follows is the rest of the authored catalogue, admitted by declared metadata
+   * instead of by a hand-written array. Deduplicated against what the three already cover,
+   * so a slice's reasoned argument for a move is never shadowed by a generic copy of it.
+   */
+  const covered = new Set(
+    candidates.flatMap((candidate) =>
+      candidate.patternId === undefined ? [] : [candidate.patternId],
+    ),
+  );
+  candidates.push(...catalogueCandidates(records, state, now, covered));
 
   // Deterministic order, so the same records always produce the same comparison.
   return candidates.sort((a, b) => a.id.localeCompare(b.id));

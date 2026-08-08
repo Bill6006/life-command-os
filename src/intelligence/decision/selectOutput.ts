@@ -3,6 +3,8 @@ import { selectQuestion } from '../questioning/selectQuestion';
 import { fits } from '../../domain/domains/capacity';
 import { supportingWins } from './supportingWins';
 import { assessConfidence, northStar, openCommitments } from '../support';
+import { episodeContext, episodeFacts } from '../../command-core/arbitration/episodeFacts';
+import { opportunityCost, weigh } from '../../command-core/arbitration/weigh';
 import type {
   CandidateAction,
   DecisionOutput,
@@ -124,6 +126,7 @@ export function selectOutput(
   candidates: readonly CandidateAction[],
   predictions: readonly EffectPrediction[],
   forecast: UntreatedForecast,
+  now: Date,
 ): SelectionResult {
   const rejected: RejectedCandidate[] = [];
   const free = knownValue(state.availableMinutes);
@@ -303,25 +306,76 @@ export function selectOutput(
   }
 
   /* --- Compare survivors -------------------------------------------------- */
-  const scored = eligible
-    .map((candidate) => {
-      const prediction = predictions.find((entry) => entry.candidateId === candidate.id) ?? {
-        candidateId: candidate.id,
+  /*
+   * The contract decides the order (`V33-059`, section E).
+   *
+   * What replaced what: the integer total used to decide *both* which candidate won and
+   * whether any of them was worth an interruption. Those are different questions, and
+   * fusing them meant the answer to "why this one" was a number — unarguable, and blind
+   * to the one thing the owner had actually declared. North Star relevance was applied as
+   * a yes/no gate and then dropped, so two survivors ranked identically no matter what the
+   * direction said.
+   *
+   * Ranking is now the ordered comparison in `weigh`: feasibility, then North Star, then
+   * the week, then urgency, leverage, opportunity cost, upside, confidence. The first
+   * field that separates two candidates decides, and it can be named. The integer survives
+   * for the second question only — see the interruption threshold below — because "is
+   * anything here worth breaking into someone's evening for" genuinely is a magnitude
+   * question, and it is asked of the winner alone rather than used to find one.
+   */
+  const shared = episodeContext(records, now);
+  const feasible = new Map(
+    eligible.map((candidate) => [
+      candidate.id,
+      candidate.capacity === undefined
+        ? true
+        : fits(candidate.capacity, state.situation).eligible,
+    ]),
+  );
+
+  /*
+   * Contradictions are resolved before ranking, so every survivor here is uncontradicted
+   * by construction. Passing an empty set states that rather than leaving the field to a
+   * default nobody chose.
+   */
+  const inputs = { records, now, feasible, contradicted: new Set<string>() };
+
+  const withFacts = eligible.map((candidate) => ({
+    candidate,
+    id: candidate.id,
+    minutes: candidate.durationMinutes,
+    facts: episodeFacts(
+      candidate,
+      inputs,
+      shared.goalCategories,
+      shared.weeklyCategories,
+      shared.load,
+    ),
+  }));
+
+  /*
+   * Opportunity cost is relative, so it can only be filled once every alternative is
+   * known. A move is expensive because of what it displaces, never because it is long.
+   */
+  const weighed = withFacts.map((entry) => ({
+    ...entry,
+    facts: { ...entry.facts, opportunityCost: opportunityCost(entry, withFacts, free) },
+  }));
+
+  const ranking = weigh(weighed);
+  const order = new Map(ranking.ordered.map((entry, index) => [entry.id, index]));
+
+  const scored = [...weighed]
+    .sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0))
+    .map((entry) => {
+      const prediction = predictions.find((item) => item.candidateId === entry.id) ?? {
+        candidateId: entry.id,
         effects: [],
         confidence: state.confidence,
         reasonTrace: [],
       };
-      return scoreCandidate(candidate, prediction, free);
-    })
-    // Deterministic: score, then lower friction, then shorter, then id.
-    .sort(
-      (a, b) =>
-        b.score - a.score ||
-        (FRICTION_POINTS[b.candidate.friction] ?? 0) -
-          (FRICTION_POINTS[a.candidate.friction] ?? 0) ||
-        a.candidate.durationMinutes - b.candidate.durationMinutes ||
-        a.candidate.id.localeCompare(b.candidate.id),
-    );
+      return scoreCandidate(entry.candidate, prediction, free);
+    });
 
   const best = scored[0];
   if (best === undefined) {
@@ -332,17 +386,34 @@ export function selectOutput(
     rejected.push({
       candidateId: loser.candidate.id,
       stage: 'comparison',
-      reason: `Scored ${String(loser.score)} against ${String(best.score)}`,
+      reason: ranking.whyItWon.startsWith('Chosen because ')
+        ? `Beaten by ${best.candidate.id}: ${ranking.whyItWon.slice('Chosen because '.length)}`
+        : `Beaten by ${best.candidate.id}`,
     });
   }
 
   /* --- Interruption is not automatic ------------------------------------- */
-  if (best.score < INTERRUPTION_THRESHOLD) {
+  /*
+   * Asked of the whole set, not of the winner (`V33-060`).
+   *
+   * The threshold answers a different question from the ranking: not *which* of these is
+   * best, but whether **anything** here is worth breaking into someone's day for. While
+   * ranking was itself the score, the winner's score was the maximum and the distinction
+   * did not matter. It does now — the contract can rightly prefer a modest move that
+   * serves the owner's direction over a bigger one that does not, and thresholding on that
+   * winner alone would turn "we chose the quieter option" into "we have nothing for you".
+   *
+   * Four home scenarios did exactly that when this seam was first wired: a real repeated
+   * friction, correctly identified, silently dropped because the move chosen to address it
+   * scored two.
+   */
+  const strongest = scored.reduce((high, entry) => Math.max(high, entry.score), 0);
+  if (strongest < INTERRUPTION_THRESHOLD) {
     return {
       output: {
         kind: 'silence',
         statement: 'Nothing requires attention right now',
-        rationale: `The best available action scored ${String(best.score)}, below the threshold worth interrupting you for.`,
+        rationale: `The strongest available action scored ${String(strongest)}, below the threshold worth interrupting you for.`,
         confidence: state.confidence,
         reasonTrace: [
           ...best.workings,

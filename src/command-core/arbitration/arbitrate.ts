@@ -133,6 +133,7 @@ export function arbitrate(input: CommandCoreInput): ArbitrationResult {
     resolved.kept,
     input.predictions,
     input.forecast,
+    input.now,
   );
 
   /*
@@ -156,6 +157,7 @@ export function arbitrate(input: CommandCoreInput): ArbitrationResult {
           applyNorthStarGate(input.records, dedupeCandidates(all).merged).eligible,
           input.predictions,
           input.forecast,
+          input.now,
         )
       : undefined;
 
