@@ -6,9 +6,9 @@
 - Plan version: **3.3 UI Clarity and North Star Intelligence Amendment**, plus eleven owner
   clarifications that supersede it where they conflict
 - Current phase: **Phase 8 closed.** Phases 0–7 remain GREEN.
-- Current prompt: **PROMPT 9C v3.3 — partially delivered. YELLOW.** Sections **A, B, C, D,
-  E, F, G, H, I, J** and **K** are complete, as are all eleven owner clarifications. The
-  AT33 acceptance scenarios in section M are not started. See "Prompt 9C v3.3" below for the
+- Current prompt: **PROMPT 9C v3.3 — complete.** Sections **A, B, C, D,
+  E, F, G, H, I, J** and **K** are complete, as are all eleven owner clarifications and all
+  55 AT33 acceptance scenarios in section M. See "Prompt 9C v3.3" below for the
   exact line.
 
 ## Prompt 9C v3.3 status
@@ -217,8 +217,26 @@ declare, and both participate in planning, suppression, freshness expiry and the
 budget. Every triggered question names the decision it moves and goes stale; nothing was
 added to look thorough.
 
-Still untouched: the **AT33** acceptance scenarios in section M. Three of the fifty-five ids
-are referenced by existing tests; the remaining fifty-two are not written.
+**Section M is complete: 55 of 55 AT33 scenarios implemented**, tracked in
+[`docs/AT33_CHECKLIST.md`](docs/AT33_CHECKLIST.md) with the test file and behaviour for each.
+Fifty-two are discharged by behavioural assertions; three (`AT33-014`, `015`, `016`) are
+discharged as **superseded by owner clarification 1** and named rather than skipped — they
+govern the options of a guide-depth selector that was removed rather than relabelled, so the
+stronger property is proved instead: the control does not exist, and the one surviving
+question allows `Not sure` and can change eligibility.
+
+Where a scenario is a visual or interaction requirement (`AT33-003`, `004`, `012`, `013`,
+`020`, `022`, `023`, `024`, `054`), the proof is the Playwright suite and the unit entry is
+a traceability pointer. Asserting layout from Node would be theatre.
+
+**Section J's proof gap is closed.** The food and routine requirements are satisfied by the
+*shared* contextual-evidence, sequence, lifecycle and arbitration machinery rather than by a
+food-specific learning system — proved rather than assumed, in
+`tests/unit/v33FoodRoutineEvidence.test.ts`. One meal produces nothing; four comparable
+mornings produce a `consistent` reading that raises confidence in the live contract and
+changes which of two candidates `weigh` prefers; a morning finding never generalises to the
+evening; and a deliberate routine exception contributes no evidence at all, because only
+resolved outcomes count and a decline is not one.
 
 ## Gate status
 

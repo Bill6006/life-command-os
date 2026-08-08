@@ -85,6 +85,28 @@ export function supportingWins(
     if (candidate.risk !== 'none-identified') continue;
     if (candidate.reversibility !== 'reversible') continue;
 
+    /*
+     * The same sentence twice is one suggestion, however many candidates produced it
+     * (`V33-012`, `AT33-027`).
+     *
+     * Deduplication upstream is on candidate *identity*, which is the right thing for
+     * arbitration and the wrong thing here: two open commitments each generate their own
+     * `unblock:<id>` candidate, and both render as "Send the one message that unblocks
+     * it". Distinct moves internally, one line on screen — and the owner reading it twice
+     * has no way to tell which message, only that the app repeated itself.
+     *
+     * Matched against the primary's own sentence and the wins already chosen — a win
+     * echoing the decision is the same failure in a smaller font.
+     *
+     * Deliberately *not* matched against the primary's minimum version. Two catalogue
+     * moves legitimately share one ("One sentence"), and suppressing a genuinely different
+     * move because its smallest form is worded like another move's smallest form would
+     * remove a useful option to fix a cosmetic near-miss.
+     */
+    const shown = candidate.minimumVersion.trim().toLowerCase();
+    if (shown === primary.statement.trim().toLowerCase()) continue;
+    if (wins.some((win) => win.statement.trim().toLowerCase() === shown)) continue;
+
     wins.push({
       id: candidate.id,
       statement: candidate.minimumVersion,
