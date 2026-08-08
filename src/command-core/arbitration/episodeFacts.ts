@@ -158,8 +158,40 @@ export function episodeFacts(
    * only raise it where there is a reason on record, and never past `moderate` — nothing
    * here has been observed often enough for `high`.
    */
+  /*
+   * Lifecycle from evidence, falling back to what the catalogue authored (`G6`).
+   *
+   * The authored value is a claim about people in general; the derived one is a claim
+   * about this owner. Where both exist the second wins, because "supported by research"
+   * and "supported here" are different sentences and only one of them is about them.
+   */
+  const observed = inputs.lifecycle.find((entry) => entry.patternId === candidate.patternId);
+
   const raisedFromOwnEvidence =
     candidate.originDomainId !== undefined || candidate.goalId !== undefined;
+
+  /*
+   * Observed outcomes outrank both of the above (`G7`, `V33-022`).
+   *
+   * `raisedFromOwnEvidence` says a slice had a reason to mention this. A derived lifecycle
+   * says the move has actually been watched here and what happened. The second is a
+   * stronger claim and replaces the first when it exists.
+   *
+   * This is also the route by which context drift changes a decision. A material life
+   * change caps a facet at `emerging`, which stops the lifecycle reaching `supported`,
+   * which lowers confidence — and confidence is a field the ranking compares. Old evidence
+   * loses influence without a single observation being deleted or a weight being invented.
+   */
+  const fromObservation: Level | undefined =
+    observed === undefined
+      ? undefined
+      : observed.current === 'supported'
+        ? 'high'
+        : observed.current === 'context-specific'
+          ? 'moderate'
+          : observed.current === 'weakened' || observed.current === 'retired'
+            ? 'low'
+            : undefined;
 
   /*
    * Sustainability, where repetition has actually shown something (`G5`).
@@ -175,20 +207,11 @@ export function episodeFacts(
    */
   const sustainability = sustainabilityLevel(inputs.sustainability, candidate.patternId ?? '');
 
-  /*
-   * Lifecycle from evidence, falling back to what the catalogue authored (`G6`).
-   *
-   * The authored value is a claim about people in general; the derived one is a claim
-   * about this owner. Where both exist the second wins, because "supported by research"
-   * and "supported here" are different sentences and only one of them is about them.
-   */
-  const observed = inputs.lifecycle.find((entry) => entry.patternId === candidate.patternId);
-
   return {
     ...base,
     northStarRelevance,
     weeklyDirectionRelevance,
-    confidence: raisedFromOwnEvidence ? 'moderate' : base.confidence,
+    confidence: fromObservation ?? (raisedFromOwnEvidence ? 'moderate' : base.confidence),
     sustainability,
     lifecycle: observed?.current ?? base.lifecycle,
     reversibility: candidate.reversibility,

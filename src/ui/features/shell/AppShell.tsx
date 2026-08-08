@@ -20,6 +20,8 @@ import {
   pauseMove,
   restoreMove,
 } from '../../../application/commands/moveSovereignty';
+import { addCommitment, addGoal, setNorthStar } from '../../../application/commands/direction';
+import { northStarVersions } from '../../../intelligence/direction/northStarVersions';
 import { useLocalRecords } from '../../state/useLocalRecords';
 import type {
   BlockedContext,
@@ -1094,6 +1096,30 @@ export function AppShell(): React.JSX.Element {
               }}
               onRestoreMove={(move) => {
                 void run(() => restoreMove(move, new Date()));
+              }}
+              onSetNorthStar={(statement) => {
+                void run(() => setNorthStar({ statement }, new Date()));
+              }}
+              onAddGoal={(statement, category) => {
+                /*
+                 * Linked to whichever North Star is live now, so a later reader can tell
+                 * which objective this goal was set under (`G8`).
+                 */
+                const versions = northStarVersions(records);
+                const current = versions[versions.length - 1];
+                void run(() =>
+                  addGoal(
+                    {
+                      statement,
+                      category,
+                      ...(current === undefined ? {} : { northStarRecordId: current.recordId }),
+                    },
+                    new Date(),
+                  ),
+                );
+              }}
+              onAddCommitment={(statement, category) => {
+                void run(() => addCommitment({ statement, category }, new Date()));
               }}
             />
           ) : null}

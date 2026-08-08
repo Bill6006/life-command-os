@@ -51,3 +51,45 @@ body {
   left: var(--space-2);
   top: var(--space-2);
 }
+
+/*
+ * Setting a direction (section C).
+ *
+ * Scoped to the panel's own class names rather than to `form` or `button`, because a
+ * global rule here would restyle every other surface — the mistake that restyled the areas
+ * drawer earlier in this project.
+ */
+.direction-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.direction-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.direction-form label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.direction-form button[type='submit'] {
+  align-self: flex-start;
+}
+
+.direction-history {
+  margin-top: var(--space-3);
+}
+
+.direction-history summary {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}

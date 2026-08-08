@@ -105,6 +105,18 @@ const ORDER: readonly {
     compare: (a, b) => better(a.confidence, b.confidence),
     because: 'there is more behind the claim',
   },
+  {
+    /*
+     * Last, and deliberately so (`G5`). Sustainability breaks a tie between two moves the
+     * evidence cannot otherwise separate: offered the same thing twice, prefer the one the
+     * owner has actually kept doing. It sits below confidence because a well-supported move
+     * that is hard to repeat is still the better answer today — the point of keeping the two
+     * apart is that neither silently overwrites the other.
+     */
+    field: 'sustainability',
+    compare: (a, b) => better(a.sustainability, b.sustainability),
+    because: 'it is one you have been able to keep doing',
+  },
 ];
 
 export interface Ranking {

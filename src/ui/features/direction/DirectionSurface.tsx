@@ -9,6 +9,9 @@ import { cadenceSettings, type CoverageCadence } from '../../../domain/domains/c
 import { resolveDomains } from '../../../intelligence/domains/registry';
 import { ManageAreasView } from './ManageAreasView';
 import { ManualFocusView } from './ManualFocusView';
+import { SetDirectionView } from './SetDirectionView';
+import { northStarVersions } from '../../../intelligence/direction/northStarVersions';
+import type { LifeCategory } from '../../../domain/records/categories';
 import type { EpisodeResult } from '../../../intelligence';
 import type { CanonicalRecord } from '../../../domain/records';
 import { moveStances } from '../../../command-core/arbitration/stances';
@@ -95,6 +98,9 @@ export function DirectionSurface({
   onSetCadence,
   onSnooze,
   onRestoreMove,
+  onSetNorthStar,
+  onAddGoal,
+  onAddCommitment,
 }: {
   episode: EpisodeResult;
   records: readonly CanonicalRecord[];
@@ -117,12 +123,39 @@ export function DirectionSurface({
   onRestoreMove?:
     | ((move: { readonly engineCandidateId: string; readonly statement: string }) => void)
     | undefined;
+  /**
+   * Recording a direction (`V33-003`–`V33-005`, section C).
+   *
+   * Three separate handlers rather than one, because they write three different record
+   * families with three different lifecycles — a North Star adds a version, a goal and a
+   * commitment each start their own supersession chain.
+   */
+  onSetNorthStar?: ((statement: string) => void) | undefined;
+  onAddGoal?: ((statement: string, category: LifeCategory) => void) | undefined;
+  onAddCommitment?: ((statement: string, category: LifeCategory) => void) | undefined;
 }): React.JSX.Element {
   /* Which area's detail is showing. At most one, ever. */
   const [openDomain, setOpenDomain] = useState<DomainId | undefined>(undefined);
 
-  const star = records.find((record) => record.recordType === 'north-star');
-  const goals = records.filter((record) => record.recordType === 'goal');
+  /*
+   * The North Star currently in force, not the first one ever written.
+   *
+   * `records.find` returned whichever came first in the array, so the moment the owner
+   * revised their direction the surface went on showing the old one. Version history is
+   * only meaningful if the current value is actually current.
+   */
+  const versions = northStarVersions(records);
+  const star = versions[versions.length - 1];
+
+  /* Active goals only, following supersession — an achieved goal is not a live one. */
+  const superseded = new Set(
+    records.flatMap((record) =>
+      record.supersedesRecordId === undefined ? [] : [record.supersedesRecordId],
+    ),
+  );
+  const goals = records
+    .filter((record) => record.recordType === 'goal')
+    .filter((goal) => !superseded.has(goal.recordId) && goal.state === 'active');
 
   const areaStates = new Map<DomainId, DomainState>(
     resolveDomains(records).map((domain) => [domain.definition.id, domain.state]),
@@ -141,6 +174,18 @@ export function DirectionSurface({
 
   return (
     <div className="grid">
+      {onSetNorthStar === undefined ||
+      onAddGoal === undefined ||
+      onAddCommitment === undefined ? null : (
+        <SetDirectionView
+          versions={versions}
+          busy={busy}
+          onSetNorthStar={onSetNorthStar}
+          onAddGoal={onAddGoal}
+          onAddCommitment={onAddCommitment}
+        />
+      )}
+
       <Panel label="North Star" wide>
         {star === undefined ? (
           <p className="body">No North Star recorded yet.</p>

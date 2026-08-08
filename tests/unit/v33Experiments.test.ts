@@ -38,6 +38,8 @@ function evidence(over: Partial<ContextualEvidence> = {}): ContextualEvidence {
     unfavourable: 0,
     strength: 'insufficient',
     statement: 'Evidence is still limited',
+    discounted: 0,
+    discountedBecause: [],
     ...over,
   };
 }

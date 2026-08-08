@@ -6,10 +6,10 @@
 - Plan version: **3.3 UI Clarity and North Star Intelligence Amendment**, plus eleven owner
   clarifications that supersede it where they conflict
 - Current phase: **Phase 8 closed.** Phases 0–7 remain GREEN.
-- Current prompt: **PROMPT 9C v3.3 — partially delivered. YELLOW.** Sections **A, B, D, E,
-  F, H** and **I** are complete, as are all eleven owner clarifications. Section **G** is
-  delivered except G7 and G8. Sections **C, J, K** and the AT33 acceptance scenarios are not
-  started. See "Prompt 9C v3.3" below for the exact line.
+- Current prompt: **PROMPT 9C v3.3 — partially delivered. YELLOW.** Sections **A, B, C, D,
+  E, F, G, H** and **I** are complete, as are all eleven owner clarifications. Sections
+  **J** and **K** and the AT33 acceptance scenarios are not started. See "Prompt 9C v3.3"
+  below for the exact line.
 
 ## Prompt 9C v3.3 status
 
@@ -157,14 +157,42 @@ delivered and section **H** is delivered as an engine module:
 Sustainability and lifecycle are wired into the live arbitration contract via `episodeFacts`,
 so they are not modules sitting beside the engine — the lesson from the previous pass.
 
-**Not yet delivered in section G:** G7 life-context drift and G8 audit/rollback.
+- **G7** life-context drift. Evidence loses influence only when the owner records a
+  *material change* touching its categories — never because time passed. A six-month-old
+  observation from a still-comparable situation keeps full weight; four good observations
+  from before a new job still count, still appear, and can no longer carry a facet to
+  `consistent`. The discount caps the claim and names the change that caused it.
+- **G8** versioning and reversible learning. `EVIDENCE_RULES_VERSION` versions how an
+  observation becomes a belief, separately from `DECISION_RULES_VERSION`, which versions how
+  a candidate is chosen. Evidence interpreted under a different rule version is
+  `not-comparable` rather than averaged in. Missing version metadata is `unknown`, never
+  version zero. An interpretation is corrected by superseding or withdrawing a
+  `learned-belief`; the observation behind it is never touched, and `underlyingHistoryIntact`
+  asserts that rather than trusting it. Rollback is deterministic because beliefs are derived
+  on every episode rather than stored.
 
-Still untouched: section **C** (North Star / goal / commitment capture controls and version
-history), **G7** (life-context drift), **G8** (audit and learning rollback), **J**
-(qualitative food capture and routine/boundary learning), **K** (health and career
-contextual-capture metadata), and the **AT33** acceptance scenarios in section M. Three of
-the fifty-five AT33 ids are referenced by existing tests; the rest are not written. None of
-this is started, and nothing in the codebase pretends otherwise.
+**Section C** is complete. `setNorthStar`, `addGoal`, `setGoalState`, `addCommitment` and
+`setCommitmentState` are real commands, and `Your direction` on Direction is the compact
+control that reaches them — one collapsed disclosure, one sentence required, no wizard.
+Revising the North Star **appends a version rather than editing**, so `northStarVersions`
+derives effective dates from the chain and every earlier objective stays readable with the
+window it was in force. Goals and commitments supersede instead, because there should be
+exactly one current answer for a thing whose state changed.
+
+Two defects fixed on the way: Direction was reading `records.find(north-star)` — the *first*
+North Star ever written, so revising it changed nothing on screen — and it listed superseded
+and achieved goals as active.
+
+**Production wiring, end to end:** canonical records → `contextualEvidence` (with
+comparability) → `lifecycleStates` → `episodeFacts.confidence` → `weigh`. A material context
+change lowers confidence, and confidence is a field the ranking compares, so old evidence
+loses influence over a real decision without one observation being deleted or one weight
+being invented. `sustainability` also joined the comparison order, last, as a tie-break.
+
+Still untouched: **J** (qualitative food capture and routine/boundary learning), **K**
+(health and career contextual-capture metadata), and the **AT33** acceptance scenarios in
+section M. Three of the fifty-five AT33 ids are referenced by existing tests; the rest are
+not written. None of this is started, and nothing in the codebase pretends otherwise.
 
 ## Gate status
 

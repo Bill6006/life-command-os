@@ -1,6 +1,7 @@
 import type { CanonicalRecord, ExecutionRecord, OutcomeRecord } from '../../domain/records';
 import { canonicalPatternId } from '../../domain/moves/registry';
 import { outcomeWindows } from '../evaluation/outcomeWindows';
+import { applicabilityOf, type Applicability } from './comparability';
 
 /**
  * What a move has been followed by, and in which situations (`V33-063`, v3.3 section G1).
@@ -73,6 +74,14 @@ export interface ContextualEvidence {
   readonly strength: EvidenceStrength;
   /** Association language, drawn from a fixed vocabulary. Never causal. */
   readonly statement: string;
+  /**
+   * Observations here that predate a material life change (`G7`, `V33-022`).
+   *
+   * Counted, kept, and prevented from carrying the facet to `consistent` on their own.
+   */
+  readonly discounted: number;
+  /** Why they were discounted, in the owner's own words. Empty when none were. */
+  readonly discountedBecause: readonly string[];
 }
 
 /* -------------------------------------------------------------------------- */
@@ -188,6 +197,10 @@ export interface ResolvedExecution {
   readonly patternId: string;
   readonly facets: readonly Facet[];
   readonly favourable: boolean;
+  /** Whether the situation this came from still resembles the present (`G7`). */
+  readonly applicability: Applicability;
+  /** The category this evidence is about, so a change elsewhere cannot discount it. */
+  readonly category: string;
 }
 
 /**
@@ -203,6 +216,7 @@ export function resolvedExecutions(
 ): readonly ResolvedExecution[] {
   const patternByEpisode = new Map<string, string>();
   const contextByEpisode = new Map<string, readonly Facet[]>();
+  const categoryByEpisode = new Map<string, string>();
 
   for (const record of records) {
     if (record.recordType !== 'candidate-action') continue;
@@ -216,6 +230,7 @@ export function resolvedExecutions(
       record.decisionEpisodeId,
       facetsOf({ at: record.occurredAt, offsetMinutes: record.localTime.utcOffsetMinutes }),
     );
+    categoryByEpisode.set(record.decisionEpisodeId, record.category);
   }
 
   const executions = new Map(
@@ -240,11 +255,18 @@ export function resolvedExecutions(
     const patternId = patternByEpisode.get(execution.decisionEpisodeId);
     if (patternId === undefined) continue;
 
+    const category = categoryByEpisode.get(execution.decisionEpisodeId) ?? '';
+
     /* `mixed` and `unchanged` are real answers and count against, not as nothing. */
     out.push({
       patternId,
       facets: contextByEpisode.get(execution.decisionEpisodeId) ?? [],
       favourable: outcome.result.value.direction === 'improved',
+      category,
+      applicability: applicabilityOf(records, {
+        recordedAt: execution.occurredAt,
+        categories: category === '' ? [] : [category],
+      }),
     });
   }
 
@@ -263,7 +285,14 @@ export function contextualEvidence(
 ): readonly ContextualEvidence[] {
   const tally = new Map<
     string,
-    { patternId: string; facet: Facet; favourable: number; unfavourable: number }
+    {
+      patternId: string;
+      facet: Facet;
+      favourable: number;
+      unfavourable: number;
+      discounted: number;
+      because: Set<string>;
+    }
   >();
 
   for (const resolved of resolvedExecutions(records, now)) {
@@ -274,16 +303,49 @@ export function contextualEvidence(
         facet,
         favourable: 0,
         unfavourable: 0,
+        discounted: 0,
+        because: new Set<string>(),
       };
+
+      /*
+       * Evidence from a rule version that no longer applies is not weak evidence — it is a
+       * measurement of something else, and averaging it in would be the silent
+       * reinterpretation G8 forbids.
+       */
+      if (resolved.applicability.influence === 'not-comparable') continue;
+
       if (resolved.favourable) entry.favourable += 1;
       else entry.unfavourable += 1;
+
+      if (resolved.applicability.influence === 'reduced') {
+        entry.discounted += 1;
+        for (const reason of resolved.applicability.changedSince) entry.because.add(reason);
+      }
+
       tally.set(key, entry);
     }
   }
 
   return [...tally.values()]
     .map((entry) => {
-      const strength = strengthOf(entry.favourable, entry.unfavourable);
+      const raw = strengthOf(entry.favourable, entry.unfavourable);
+
+      /*
+       * A discount caps the claim rather than deleting the observations (`V33-022`).
+       *
+       * Where every agreeing observation predates a material change, the facet may reach
+       * `emerging` but not `consistent`: there is a pattern, and it is a pattern from a
+       * life that has since changed shape. Nothing is removed and the count is unchanged —
+       * only the strength of the claim moves, and the reason travels with it.
+       */
+      const allDiscounted =
+        entry.discounted > 0 && entry.discounted === entry.favourable + entry.unfavourable;
+      const strength: EvidenceStrength =
+        allDiscounted && raw === 'consistent' ? 'emerging' : raw;
+
+      const base = statementFor(strength, entry.favourable, entry.unfavourable, entry.facet);
+      const because = [...entry.because];
+
       return {
         patternId: entry.patternId,
         facet: entry.facet,
@@ -291,7 +353,10 @@ export function contextualEvidence(
         favourable: entry.favourable,
         unfavourable: entry.unfavourable,
         strength,
-        statement: statementFor(strength, entry.favourable, entry.unfavourable, entry.facet),
+        statement:
+          because.length === 0 ? base : `${base} — recorded before ${because.join('; ')}`,
+        discounted: entry.discounted,
+        discountedBecause: because,
       };
     })
     .sort(
