@@ -60,12 +60,35 @@ async function goTo(page: Page, destination: string): Promise<void> {
 const manageAreas = (page: Page) => page.getByRole('region', { name: 'Manage areas' });
 const panel = (page: Page) => page.getByRole('region', { name: AREA, exact: true });
 
+/**
+ * Opens the card's detail (`V33-015`, v3.3 B6).
+ *
+ * Direction shows a compact summary — condition, what is in the way, one move, two
+ * metrics — and keeps everything else behind `More`, one area open at a time. Tests about
+ * the full panel contract open it, as the owner does.
+ */
+async function expandPanel(page: Page): Promise<void> {
+  /*
+   * Wait for the card, then click if it is there. A bare `count()` returns 0 while the
+   * panel is still rendering — after a reload, for instance — and the guard then silently
+   * skipped the click, so the test read a collapsed card and blamed the content. The wait
+   * is tolerant rather than an assertion, because some callers reach here with the area
+   * deliberately switched off, where no panel is the correct state.
+   */
+  await panel(page)
+    .waitFor({ state: 'visible', timeout: 5000 })
+    .catch(() => undefined);
+  const more = panel(page).getByRole('button', { name: 'More detail', exact: true });
+  if ((await more.count()) > 0) await more.click();
+}
+
 async function switchOn(page: Page): Promise<void> {
   await openAreaDrawer(page);
   await manageAreas(page)
     .getByRole('button', { name: `Switch on ${AREA.toLowerCase()}` })
     .click();
   await expect(panel(page)).toBeVisible();
+  await expandPanel(page);
 }
 
 async function openArea(page: Page): Promise<void> {
@@ -99,11 +122,14 @@ test.describe('the whole area works without a figure, on the shipped build', () 
     await expect(page.getByRole('region', { name: 'What it is for' })).toContainText(PURPOSE);
 
     await page.getByRole('button', { name: 'Done' }).click();
+    await expandPanel(page);
     await expect(panel(page)).toContainText('Noticeable on your mind');
+    await expandPanel(page);
     await expect(panel(page)).toContainText('a month or two of cover');
 
     await page.reload();
     await goTo(page, 'Direction');
+    await expandPanel(page);
     await expect(panel(page)).toContainText('Noticeable on your mind');
   });
 
@@ -118,7 +144,10 @@ test.describe('the whole area works without a figure, on the shipped build', () 
 
     const text = ((await page.getByRole('main').textContent()) ?? '').toLowerCase();
     expect(text).not.toMatch(/\b\d{1,3}%/);
+    /* Returning to Direction is a fresh mount, so the card is collapsed (B6). */
+    await expandPanel(page);
     await expect(panel(page)).toContainText('How far along is the thing I named?');
+    await expandPanel(page);
     await expect(panel(page)).toContainText('everything else in this area works without them');
     await expect(page.getByRole('meter')).toHaveCount(0);
   });
@@ -132,9 +161,14 @@ test.describe('the whole area works without a figure, on the shipped build', () 
     await choose(page, 'Cover', 'Several months');
     await page.getByRole('button', { name: 'Done' }).click();
 
+    /* Returning to Direction is a fresh mount, so the card is collapsed (B6). */
+    await expandPanel(page);
     await expect(panel(page)).toContainText('How long could I cover things?');
+    await expandPanel(page);
     await expect(panel(page)).toContainText('Which matters more right now');
+    await expandPanel(page);
     await expect(panel(page)).toContainText('bars would claim the heights mean the same thing');
+    await expandPanel(page);
     await expect(panel(page)).toContainText('the cover is the more durable fact');
   });
 });
@@ -175,7 +209,10 @@ test.describe('amounts are a second decision, on the shipped build', () => {
     await expect(page.getByRole('region', { name: 'Amounts' })).toContainText('4200 of 7500');
 
     await page.getByRole('button', { name: 'Done' }).click();
+    /* Returning to Direction is a fresh mount, so the card is collapsed (B6). */
+    await expandPanel(page);
     await expect(panel(page)).toContainText('56%');
+    await expandPanel(page);
     await expect(panel(page)).toContainText('only percentage in this product');
   });
 
@@ -216,7 +253,9 @@ test.describe('it never moralises, on the shipped build', () => {
     await choose(page, 'Last looked', 'I have been putting it off');
     await page.getByRole('button', { name: 'Done' }).click();
 
+    await expandPanel(page);
     await expect(panel(page)).toContainText('Look at one number for two minutes');
+    await expandPanel(page);
     await expect(panel(page)).toContainText('Not looked at recently, by your own account');
 
     const text = ((await page.getByRole('main').textContent()) ?? '').toLowerCase();
@@ -247,6 +286,7 @@ test.describe('it never moralises, on the shipped build', () => {
 
     await expect(panel(page)).not.toContainText('Optional move in money');
     // The reading is still shown plainly. Withholding advice is not hiding facts.
+    await expandPanel(page);
     await expect(panel(page)).toContainText('under a week of cover');
   });
 
@@ -315,6 +355,7 @@ test.describe('the area stays in its place', () => {
     await expect(page.getByRole('button', { name: 'Update this area' })).toHaveCount(0);
 
     await switchOn(page);
+    await expandPanel(page);
     await expect(panel(page)).toContainText('Heavy on your mind');
   });
 

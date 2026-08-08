@@ -440,29 +440,42 @@ export function NowSurface({
     return (
       <div className="grid">
         <Panel label={`Weekly direction · ${weekly.weekOf}`} tone="decision" wide>
-          <p className="decision-statement">{weekly.proposal}</p>
-          <p className="fine">
-            Proposed by the system. Confirm, adjust, or choose a quiet week — you are not being
-            asked to invent a priority.
+          {/*
+            One focus for the week, or a deliberately quiet one (`V33-019`, v3.3 B4).
+
+            The kind is named before the proposal, because "a quiet week" read as a
+            proposal looks like the app having nothing to say. It is a choice, and a
+            deliberately quiet week is not a forgotten one.
+          */}
+          <p className="premise-line">
+            <span className="premise-label">
+              {weekly.kind === 'focus' ? 'One focus' : 'Deliberately quiet'}
+            </span>
+            {weekly.kind === 'focus'
+              ? 'for the coming week'
+              : 'chosen on its merits, not for lack of an idea'}
           </p>
-          <dl className="kv">
-            <div className="kv-row">
-              <dt>Based on</dt>
-              <dd>
-                <ReasonTrace reasons={weekly.basedOn} />
-              </dd>
-            </div>
-            <div className="kv-row">
-              <dt>Confidence</dt>
-              <dd>
-                {confidenceLabel(weekly.confidence)} — {weekly.confidence.why}
-              </dd>
-            </div>
-            <div className="kv-row">
-              <dt>Last week</dt>
-              <dd>{weekly.lastWeek}</dd>
-            </div>
-          </dl>
+
+          <p className="decision-statement">{weekly.proposal}</p>
+          <p className="fine">{weekly.basedOn[weekly.basedOn.length - 1] ?? ''}</p>
+
+          <p className="minimum-win">
+            <span className="minimum-win-label">Minimum win</span>
+            {weekly.minimumWin}
+          </p>
+          <p className="minimum-win">
+            <span className="minimum-win-label">Protect</span>
+            {weekly.protect}
+          </p>
+
+          {weekly.expectedLift === undefined ? null : (
+            <p className="fine">{weekly.expectedLift}</p>
+          )}
+
+          <p className="fine confidence-line">
+            {confidenceLabel(weekly.confidence)} · {weekly.confidence.why}
+          </p>
+
           <Actions
             primary={weekly.responses[0]}
             secondary={weekly.responses.slice(1)}
@@ -473,9 +486,24 @@ export function NowSurface({
             onSecondary={onWeeklyRespond}
           />
           <p className="fine">
-            Snoozing asks again later. Skipping records only that you skipped it. Neither is
-            counted against you anywhere.
+            {`Snooze asks again on ${weekly.window.end.slice(0, 10)}. Skip records only that you skipped it, and asks again next week. Neither is counted against you anywhere.`}
           </p>
+
+          <details className="why-this">
+            <summary>Why this</summary>
+            <ReasonTrace reasons={weekly.basedOn} />
+            <dl className="kv">
+              <div className="kv-row">
+                <dt>Last week</dt>
+                <dd>{weekly.lastWeek}</dd>
+              </div>
+              <div className="kv-row">
+                <dt>Week of</dt>
+                <dd>{`${weekly.window.start.slice(0, 10)} to ${weekly.window.end.slice(0, 10)}`}</dd>
+              </div>
+            </dl>
+          </details>
+
           <div className="actions">
             <button type="button" className="btn btn-link" onClick={onBack}>
               Back to Now
@@ -586,6 +614,25 @@ export function NowSurface({
             <span className="minimum-win-label">If that is too much</span>
             {output.candidate.minimumVersion}
           </p>
+
+          {/*
+            Zero to three, and never styled like the decision (`V33-020`, v3.3 B3). If
+            these ever read as a list to work through, the surface has become the planner
+            it exists not to be.
+          */}
+          {output.supportingWins.length === 0 ? null : (
+            <div className="supporting">
+              <p className="fine supporting-label">If there is room around it</p>
+              <ul className="supporting-list">
+                {output.supportingWins.map((win) => (
+                  <li key={win.id}>
+                    {win.statement}
+                    <span className="fine"> · {String(win.minutes)} min</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <ExpectedEffect effects={output.effects} />
 

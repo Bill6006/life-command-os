@@ -40,12 +40,35 @@ async function goTo(page: Page, destination: string): Promise<void> {
 
 const panel = (page: Page) => page.getByRole('region', { name: AREA, exact: true });
 
+/**
+ * Opens the card's detail (`V33-015`, v3.3 B6).
+ *
+ * Direction shows a compact summary — condition, what is in the way, one move, two
+ * metrics — and keeps everything else behind `More`, one area open at a time. Tests about
+ * the full panel contract open it, as the owner does.
+ */
+async function expandPanel(page: Page): Promise<void> {
+  /*
+   * Wait for the card, then click if it is there. A bare `count()` returns 0 while the
+   * panel is still rendering — after a reload, for instance — and the guard then silently
+   * skipped the click, so the test read a collapsed card and blamed the content. The wait
+   * is tolerant rather than an assertion, because some callers reach here with the area
+   * deliberately switched off, where no panel is the correct state.
+   */
+  await panel(page)
+    .waitFor({ state: 'visible', timeout: 5000 })
+    .catch(() => undefined);
+  const more = panel(page).getByRole('button', { name: 'More detail', exact: true });
+  if ((await more.count()) > 0) await more.click();
+}
+
 async function openArea(page: Page, scenario: string): Promise<void> {
   await page.goto('./');
   await expect(page.locator('.shell')).toBeVisible();
   await seed(page, scenario);
   await goTo(page, 'Direction');
   await expect(panel(page)).toBeVisible();
+  await expandPanel(page);
 }
 
 async function openPage(page: Page, scenario: string): Promise<void> {

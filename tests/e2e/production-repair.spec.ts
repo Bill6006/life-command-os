@@ -228,6 +228,8 @@ test.describe('Direction shows each reading once', () => {
 
     const panel = page.getByRole('region', { name: 'Money', exact: true });
     await expect(panel).toContainText('What is the pressure, and what would reduce it?');
+    /* Drivers live with the rest of the evidence, behind `More detail` (B6). */
+    await panel.getByRole('button', { name: 'More detail', exact: true }).click();
     await expect(panel).toContainText('Principal drivers');
     await expect(panel).toContainText('Update this area');
   });

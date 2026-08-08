@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { KeyValues, Panel } from '../../components/primitives';
 import { GraphFigure } from '../../components/GraphFigure';
 import { DomainPanelView } from './DomainPanelView';
@@ -117,6 +118,9 @@ export function DirectionSurface({
     | ((move: { readonly engineCandidateId: string; readonly statement: string }) => void)
     | undefined;
 }): React.JSX.Element {
+  /* Which area's detail is showing. At most one, ever. */
+  const [openDomain, setOpenDomain] = useState<DomainId | undefined>(undefined);
+
   const star = records.find((record) => record.recordType === 'north-star');
   const goals = records.filter((record) => record.recordType === 'goal');
 
@@ -197,8 +201,43 @@ export function DirectionSurface({
         </Panel>
       ) : null}
       <ManualFocusView panels={episode.domains} />
+
+      {/*
+        Compact jump controls (`V33-015`, v3.3 B6).
+        
+        Seven cards is a long page even collapsed. These name each area and open it in
+        place, so reaching one is a tap rather than a scroll — and because opening one
+        closes the others, the page never grows while you use it.
+      */}
+      {episode.domains.length > 1 ? (
+        <nav className="domain-jump" aria-label="Jump to an area">
+          {episode.domains.map((panel) => (
+            <button
+              type="button"
+              key={panel.domainId}
+              className={`domain-jump-item${openDomain === panel.domainId ? ' domain-jump-on' : ''}`}
+              aria-pressed={openDomain === panel.domainId}
+              onClick={() => {
+                setOpenDomain(openDomain === panel.domainId ? undefined : panel.domainId);
+              }}
+            >
+              {panel.label}
+            </button>
+          ))}
+        </nav>
+      ) : null}
+
       {episode.domains.map((panel) => (
-        <DomainPanelView panel={panel} key={panel.domainId} onUpdate={onUpdateArea} />
+        <DomainPanelView
+          panel={panel}
+          key={panel.domainId}
+          onUpdate={onUpdateArea}
+          expanded={openDomain === panel.domainId}
+          onToggle={() => {
+            /* One at a time: opening any card closes whichever was open. */
+            setOpenDomain(openDomain === panel.domainId ? undefined : panel.domainId);
+          }}
+        />
       ))}
 
       {/*

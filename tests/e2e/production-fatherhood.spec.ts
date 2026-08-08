@@ -56,12 +56,35 @@ async function goTo(page: Page, destination: string): Promise<void> {
 const manageAreas = (page: Page) => page.getByRole('region', { name: 'Manage areas' });
 const panel = (page: Page) => page.getByRole('region', { name: AREA });
 
+/**
+ * Opens the card's detail (`V33-015`, v3.3 B6).
+ *
+ * Direction shows a compact summary — condition, what is in the way, one move, two
+ * metrics — and keeps everything else behind `More`, one area open at a time. Tests about
+ * the full panel contract open it, as the owner does.
+ */
+async function expandPanel(page: Page): Promise<void> {
+  /*
+   * Wait for the card, then click if it is there. A bare `count()` returns 0 while the
+   * panel is still rendering — after a reload, for instance — and the guard then silently
+   * skipped the click, so the test read a collapsed card and blamed the content. The wait
+   * is tolerant rather than an assertion, because some callers reach here with the area
+   * deliberately switched off, where no panel is the correct state.
+   */
+  await panel(page)
+    .waitFor({ state: 'visible', timeout: 5000 })
+    .catch(() => undefined);
+  const more = panel(page).getByRole('button', { name: 'More detail', exact: true });
+  if ((await more.count()) > 0) await more.click();
+}
+
 async function switchOn(page: Page): Promise<void> {
   await openAreaDrawer(page);
   await manageAreas(page)
     .getByRole('button', { name: `Switch on ${AREA.toLowerCase()}` })
     .click();
   await expect(panel(page)).toBeVisible();
+  await expandPanel(page);
 }
 
 async function openCapture(page: Page): Promise<void> {
@@ -91,6 +114,8 @@ test.describe('the area works end to end on a fresh profile', () => {
     await goTo(page, 'Direction');
     await switchOn(page);
 
+    /* Returning to Direction is a fresh mount, so the card is collapsed (B6). */
+    await expandPanel(page);
     await expect(panel(page)).toContainText('What did I practise, and what did I notice?');
 
     /* --- its own questions, including the milestone one --------------------- */
@@ -127,12 +152,17 @@ test.describe('the area works end to end on a fresh profile', () => {
      * does.
      */
     await expect(panel(page)).not.toContainText('Nothing recorded here yet');
+    await expandPanel(page);
     await expect(panel(page)).toContainText('being practised');
+    await expandPanel(page);
     await expect(panel(page)).toContainText('General guidance (built in)');
 
     /* --- reload ------------------------------------------------------------- */
     await page.reload();
     await goTo(page, 'Direction');
+
+    /* A reload is a fresh mount, so the card is collapsed again (B6). */
+    await expandPanel(page);
     await expect(panel(page)).toBeVisible();
     expect(await recordCount(page)).toBe(after);
   });
@@ -156,6 +186,7 @@ test.describe('the area works end to end on a fresh profile', () => {
     ).toHaveCount(1);
 
     await goTo(page, 'Direction');
+    await expandPanel(page);
     await expect(panel(page)).toContainText('Moments kept');
   });
 
@@ -183,9 +214,14 @@ test.describe('the area works end to end on a fresh profile', () => {
 
     await page.reload();
     await goTo(page, 'Direction');
+
+    /* A reload is a fresh mount, so the card is collapsed again (B6). */
+
+    await expandPanel(page);
     await expect(panel(page)).toHaveCount(0);
 
     await switchOn(page);
+    await expandPanel(page);
     await expect(panel(page)).toContainText('Moments kept');
     await goTo(page, 'Timeline');
     await expect(page.getByRole('main')).toContainText('Built a tower of four bricks');
@@ -220,6 +256,7 @@ test.describe('nothing about a child is graded, on the shipped build', () => {
 
     await expect(page.getByRole('meter')).toHaveCount(0);
     await expect(page.getByRole('progressbar')).toHaveCount(0);
+    await expandPanel(page);
     await expect(panel(page)).toContainText('No percentage is shown here');
   });
 

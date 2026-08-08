@@ -1,6 +1,7 @@
 import { knownValue, type CanonicalRecord } from '../../domain/records';
 import { selectQuestion } from '../questioning/selectQuestion';
 import { fits } from '../../domain/domains/capacity';
+import { supportingWins } from './supportingWins';
 import { assessConfidence, northStar, openCommitments } from '../support';
 import type {
   CandidateAction,
@@ -390,6 +391,12 @@ export function selectOutput(
       // state are first-class responses, and neither becomes evidence about whether
       // the recommendation was any good.
       secondaryActions: ['Can’t now', 'Update state', 'Why this'],
+      /*
+       * Whatever small things fit around the answer, capped at three and usually empty
+       * (`V33-020`). Drawn from the survivors of every filter above, so a supporting win
+       * has already passed safety, protected context, time, capacity and shape.
+       */
+      supportingWins: supportingWins(best.candidate, eligible, state),
     },
     rejected,
   };

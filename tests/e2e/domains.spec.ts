@@ -102,7 +102,8 @@ test.describe('one area switched on', () => {
 
     await expect(panel).toContainText('What is the exact next step, and what is blocking it?');
     await expect(panel).toContainText('Trajectory:');
-    await expect(panel).toContainText('Active bottleneck');
+    /* Renamed with the compact card: the summary says what is in the way (B6). */
+    await expect(panel).toContainText('In the way');
     // Every panel on screen has a working way to update its area. That is a guarantee
     // now rather than a flag: a panel exists only for an area the owner could switch
     // on, and switching on requires the questions to exist.

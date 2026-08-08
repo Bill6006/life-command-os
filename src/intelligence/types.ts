@@ -1,5 +1,6 @@
 import type { CapacityProfile, SituationalCapacity } from '../domain/domains/capacity';
 import type { SituationPrior } from './state/recurringContext';
+import type { SupportingWin } from './decision/supportingWins';
 import type {
   CanonicalRecord,
   ConfidenceLabel,
@@ -228,6 +229,12 @@ export interface RecommendedAction {
   readonly reasonTrace: readonly string[];
   readonly primaryAction: string;
   readonly secondaryActions: readonly string[];
+  /**
+   * Zero to three small things that fit around the primary move (`V33-020`, v3.3 B3).
+   *
+   * Never a ranked list and never emphasised like the decision. Empty is the normal case.
+   */
+  readonly supportingWins: readonly SupportingWin[];
 }
 
 export interface HighValueQuestion {
@@ -300,6 +307,24 @@ export interface WeeklyDirection {
   readonly window: { readonly start: string; readonly end: string };
   readonly kind: 'focus' | 'deliberately-quiet';
   readonly proposal: string;
+  /**
+   * The smallest thing that would still count as having done it (`V33-019`, v3.3 B4).
+   *
+   * A week's focus with no floor is a week that either goes perfectly or is a failure.
+   * This is the version that survives a bad week, and it is stated up front rather than
+   * offered as consolation afterwards.
+   */
+  readonly minimumWin: string;
+  /** What has to stay untouched for the week to be possible at all. */
+  readonly protect: string;
+  /**
+   * Expected lift, when it is honestly supported.
+   *
+   * Deliberately optional and currently never set. A number here would need a defined
+   * metric and enough comparable weeks to estimate from, and neither exists — so the card
+   * says nothing rather than inventing a range (`V33-014`).
+   */
+  readonly expectedLift?: string | undefined;
   readonly basedOn: readonly string[];
   readonly confidence: ConfidenceAssessment;
   readonly lastWeek: string;

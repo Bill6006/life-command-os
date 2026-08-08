@@ -46,6 +46,16 @@ async function goTo(page: Page, destination: string): Promise<void> {
 const healthPanel = (page: Page) =>
   page.getByRole('region', { name: 'Health, recovery, and energy' });
 
+/**
+ * Opens the card's detail (`V33-015`, v3.3 B6).
+ *
+ * Direction shows a compact summary and keeps the rest behind `More`, one area at a time.
+ */
+async function expandHealth(page: Page): Promise<void> {
+  const more = healthPanel(page).getByRole('button', { name: 'More detail', exact: true });
+  if ((await more.count()) > 0) await more.click();
+}
+
 test.describe('the health panel', () => {
   test('shows the shared contract and a recovery chart, with no score anywhere', async ({
     page,
@@ -55,9 +65,10 @@ test.describe('the health panel', () => {
 
     const panel = healthPanel(page);
     await expect(panel).toBeVisible();
+    await expandHealth(page);
     await expect(panel).toContainText('What is my capacity today, and what protects it?');
     await expect(panel).toContainText('Trajectory:');
-    await expect(panel).toContainText('Active bottleneck');
+    await expect(panel).toContainText('In the way');
     await expect(panel).toContainText('Physical energy');
     await expect(panel).toContainText('Mental energy');
 
@@ -76,6 +87,8 @@ test.describe('the health panel', () => {
   test('records why a meter was refused rather than just omitting one', async ({ page }) => {
     await open(page, 'health-enabled');
     await goTo(page, 'Direction');
+    /* The refusal lives with the rest of the evidence, behind `More` (B6). */
+    await expandHealth(page);
 
     await expect(healthPanel(page)).toContainText('No meter is shown here');
     await expect(healthPanel(page)).toContainText('invented precision');

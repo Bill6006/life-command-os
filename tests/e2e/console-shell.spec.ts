@@ -260,7 +260,12 @@ test.describe('the engine, not the interface, produces the content', () => {
     await page.getByRole('button', { name: 'This week’s direction' }).click();
 
     await expect(page.getByRole('main')).toContainText(/Weekly direction/i);
-    await expect(page.getByRole('main')).toContainText(/not being asked to invent a priority/i);
+    /*
+     * The card now names the kind before the proposal (v3.3 B4), so a quiet week reads as
+     * a choice rather than as the app having nothing to say.
+     */
+    await expect(page.getByRole('main')).toContainText(/One focus|Deliberately quiet/);
+    await expect(page.getByRole('main')).toContainText('Minimum win');
     await expect(page.getByRole('button', { name: 'Confirm', exact: true })).toBeVisible();
   });
 

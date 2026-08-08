@@ -49,6 +49,14 @@ async function openCareer(page: Page, scenario: string): Promise<void> {
   await open(page, scenario);
   await goTo(page, 'Direction');
   await expect(careerPanel(page)).toBeVisible();
+
+  /*
+   * Open the card's detail (`V33-015`, v3.3 B6). Direction now shows a compact summary —
+   * condition, what is in the way, one move, two metrics — and everything else lives
+   * behind `More`, one area open at a time. These tests are about the full contract, so
+   * they open it, as the owner does.
+   */
+  await careerPanel(page).getByRole('button', { name: 'More detail', exact: true }).click();
 }
 
 test.describe('the career panel', () => {
@@ -58,7 +66,7 @@ test.describe('the career panel', () => {
     const panel = careerPanel(page);
     await expect(panel).toContainText('What is the exact next step, and what is blocking it?');
     await expect(panel).toContainText('Trajectory:');
-    await expect(panel).toContainText('Active bottleneck');
+    await expect(panel).toContainText('In the way');
     // The owner's own words, unedited.
     await expect(panel).toContainText('Finish the identity module walkthrough');
   });
@@ -298,6 +306,8 @@ test.describe('a Work Win is one event', () => {
     );
 
     await goTo(page, 'Direction');
+    /* Navigating back is a fresh mount, so the card starts collapsed again (B6). */
+    await careerPanel(page).getByRole('button', { name: 'More detail', exact: true }).click();
     await expect(careerPanel(page)).toContainText('Used it for real');
   });
 });

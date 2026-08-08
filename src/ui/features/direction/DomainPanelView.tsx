@@ -63,11 +63,33 @@ function DomainVisual({
 export function DomainPanelView({
   panel,
   onUpdate,
+  expanded = true,
+  onToggle,
 }: {
   readonly panel: DomainPanel;
   readonly onUpdate?: ((domainId: DomainPanel['domainId']) => void) | undefined;
+  /**
+   * Whether the detail below the summary is showing (`V33-015`, v3.3 B6).
+   *
+   * Owned by the surface rather than each card, because only the surface can enforce one
+   * open at a time — seven cards each holding their own boolean is seven cards that can
+   * all be open, which is the wall of detail this section exists to remove.
+   */
+  readonly expanded?: boolean;
+  readonly onToggle?: (() => void) | undefined;
 }): React.JSX.Element {
   const quiet = panel.state === 'deprioritised';
+
+  /*
+   * Trajectory is printed only when it says something. `insufficient-evidence` alongside
+   * `no dated evidence` is two labels agreeing that nothing is known, and repeating that
+   * on seven cards is the n/a row B6 asks to hide.
+   */
+  const trajectoryWorthShowing =
+    panel.trajectory !== 'insufficient-evidence' || panel.freshness !== 'none';
+
+  /* At most two, because a third is a table and a table of these is a score wall. */
+  const headlineMetrics = panel.metrics.slice(0, 2);
 
   return (
     <Panel label={panel.label} tone={quiet ? 'quiet' : 'default'}>
@@ -81,78 +103,18 @@ export function DomainPanelView({
       ) : null}
 
       <p className="lead">{panel.condition}</p>
-      <p className="fine">
-        Trajectory: <strong>{trajectoryLabel(panel.trajectory)}</strong> ·{' '}
-        {confidenceLabel(panel.confidence)} · {freshnessLabel(panel.freshness)}
-      </p>
-
-      <p className="fine why">{panel.northStarContribution}</p>
-
-      {panel.drivers.length > 0 ? (
-        <>
-          <p className="panel-label">Principal drivers</p>
-          <ul className="changes">
-            {panel.drivers.map((driver) => (
-              <li key={driver}>
-                <span className="fine">{driver}</span>
-              </li>
-            ))}
-          </ul>
-        </>
+      {trajectoryWorthShowing ? (
+        <p className="fine">
+          Trajectory: <strong>{trajectoryLabel(panel.trajectory)}</strong> ·{' '}
+          {confidenceLabel(panel.confidence)} · {freshnessLabel(panel.freshness)}
+        </p>
       ) : null}
 
-      <p className="panel-label">Active bottleneck</p>
+      <p className="panel-label">In the way</p>
       <p className="body">
         {panel.bottleneck ??
           'Nothing identifiable is in the way right now — which is different from everything being fine.'}
       </p>
-
-      {panel.whatChanged.length > 0 ? (
-        <>
-          <p className="panel-label">What changed</p>
-          <ul className="changes">
-            {panel.whatChanged.map((change) => (
-              <li key={`${change.change}-${change.when}`}>
-                <span className="change-main">{change.change}</span>
-                <span className="fine">
-                  {change.when} · altered the {change.altered}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
-
-      {panel.metrics.length > 0 ? (
-        <>
-          <p className="panel-label">Metrics</p>
-          <KeyValues entries={panel.metrics} />
-        </>
-      ) : null}
-
-      {panel.capabilityEffects.length > 0 ? (
-        <>
-          <p className="panel-label">Capability effects</p>
-          <ul className="changes">
-            {panel.capabilityEffects.map((effect) => (
-              <li key={`${effect.channel}-${effect.effect}`}>
-                <span className="change-main">
-                  {CAPABILITY_LABELS[effect.channel]} —{' '}
-                  {CAPABILITY_EFFECT_LABELS[effect.effect]}
-                </span>
-                <span className="fine">
-                  {effect.magnitude} · {effect.basis.replace(/-/g, ' ')}
-                  {effect.crossDomain ? ' · reaches outside this area' : ''}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <p className="fine">
-            Words, not numbers, and never combined into one. Calibrated estimates need evidence
-            this has not got.
-          </p>
-        </>
-      ) : null}
 
       {panel.move === undefined ? (
         <p className="fine why">
@@ -166,7 +128,98 @@ export function DomainPanelView({
         </>
       )}
 
-      {/*
+      {headlineMetrics.length > 0 ? <KeyValues entries={headlineMetrics} /> : null}
+
+      {onUpdate !== undefined && !quiet ? (
+        <div className="actions domain-actions">
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => {
+              onUpdate(panel.domainId);
+            }}
+          >
+            Update this area
+          </button>
+          {onToggle === undefined ? null : (
+            <button type="button" className="btn btn-link" onClick={onToggle}>
+              {expanded ? 'Less detail' : 'More detail'}
+            </button>
+          )}
+        </div>
+      ) : onToggle === undefined ? null : (
+        <div className="actions domain-actions">
+          <button type="button" className="btn btn-link" onClick={onToggle}>
+            {expanded ? 'Less detail' : 'More detail'}
+          </button>
+        </div>
+      )}
+
+      {!expanded ? null : (
+        <div className="domain-detail">
+          <p className="fine why">{panel.northStarContribution}</p>
+
+          {panel.drivers.length > 0 ? (
+            <>
+              <p className="panel-label">Principal drivers</p>
+              <ul className="changes">
+                {panel.drivers.map((driver) => (
+                  <li key={driver}>
+                    <span className="fine">{driver}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+
+          {panel.whatChanged.length > 0 ? (
+            <>
+              <p className="panel-label">What changed</p>
+              <ul className="changes">
+                {panel.whatChanged.map((change) => (
+                  <li key={`${change.change}-${change.when}`}>
+                    <span className="change-main">{change.change}</span>
+                    <span className="fine">
+                      {change.when} · altered the {change.altered}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+
+          {panel.metrics.length > headlineMetrics.length ? (
+            <>
+              <p className="panel-label">Metrics</p>
+              <KeyValues entries={panel.metrics} />
+            </>
+          ) : null}
+
+          {panel.capabilityEffects.length > 0 ? (
+            <>
+              <p className="panel-label">Capability effects</p>
+              <ul className="changes">
+                {panel.capabilityEffects.map((effect) => (
+                  <li key={`${effect.channel}-${effect.effect}`}>
+                    <span className="change-main">
+                      {CAPABILITY_LABELS[effect.channel]} —{' '}
+                      {CAPABILITY_EFFECT_LABELS[effect.effect]}
+                    </span>
+                    <span className="fine">
+                      {effect.magnitude} · {effect.basis.replace(/-/g, ' ')}
+                      {effect.crossDomain ? ' · reaches outside this area' : ''}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="fine">
+                Words, not numbers, and never combined into one. Calibrated estimates need
+                evidence this has not got.
+              </p>
+            </>
+          ) : null}
+
+          {/*
         Every declared visual, in the form it earned, not just the first as a summary.
 
         A spec with no `data` is a declaration only. First position is the domain's
@@ -174,42 +227,31 @@ export function DomainPanelView({
         and refused**, shown with its reason so that the absence of a percentage is a
         decision on the page and not only in the record.
       */}
-      {panel.visuals.map((spec, index) => (
-        <DomainVisual
-          key={spec.decisionQuestion}
-          spec={spec}
-          label={index === 0 ? 'Strongest evidence' : 'Not shown here'}
-          points={index === 0 ? panel.strongestEvidence : []}
-        />
-      ))}
+          {panel.visuals.map((spec, index) => (
+            <DomainVisual
+              key={spec.decisionQuestion}
+              spec={spec}
+              label={index === 0 ? 'Strongest evidence' : 'Not shown here'}
+              points={index === 0 ? panel.strongestEvidence : []}
+            />
+          ))}
 
-      {panel.graphs.map((graph) => (
-        <GraphFigure graph={graph} key={graph.id} />
-      ))}
+          {panel.graphs.map((graph) => (
+            <GraphFigure graph={graph} key={graph.id} />
+          ))}
 
-      {onUpdate !== undefined && !quiet ? (
-        <>
-          <div className="actions">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => {
-                onUpdate(panel.domainId);
-              }}
-            >
-              Update this area
-            </button>
-          </div>
-          <p className="fine">
-            One place owns updating this area, and it is this button. Nothing else asks you
-            these questions — switching an area on never makes your morning longer.
-          </p>
-        </>
-      ) : (
-        <p className="fine">
-          This area is deliberately silent while it is deprioritised. It stays readable and asks
-          nothing.
-        </p>
+          {onUpdate !== undefined && !quiet ? (
+            <p className="fine">
+              One place owns updating this area, and it is that button. Nothing else asks you
+              these questions — switching an area on never makes your morning longer.
+            </p>
+          ) : (
+            <p className="fine">
+              This area is deliberately silent while it is deprioritised. It stays readable and
+              asks nothing.
+            </p>
+          )}
+        </div>
       )}
     </Panel>
   );

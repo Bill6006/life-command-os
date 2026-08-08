@@ -6,9 +6,9 @@
 - Plan version: **3.3 UI Clarity and North Star Intelligence Amendment**, plus eleven owner
   clarifications that supersede it where they conflict
 - Current phase: **Phase 8 closed.** Phases 0–7 remain GREEN.
-- Current prompt: **PROMPT 9C v3.3 — partially delivered. YELLOW.** Section A, B1, B5 and
-  clarifications 1–8, 10 and 11 are done and verified; clarification 9, sections C–K and most
-  of B are not started. See "Prompt 9C v3.3" below for the exact line.
+- Current prompt: **PROMPT 9C v3.3 — partially delivered. YELLOW.** Sections **A, B and I**
+  are complete, as are all eleven owner clarifications. Sections **C–H, J, K** and the AT33
+  acceptance scenarios are not started. See "Prompt 9C v3.3" below for the exact line.
 
 ## Prompt 9C v3.3 status
 
@@ -32,6 +32,11 @@ the app behaves differently but incompletely.
 | **B2** command hierarchy (`V33-013`, `V33-014`) | Now leads with the premise — where you are, what is in the way — then the decision, then the minimum version as an offer rather than a caveat. Expected effect and `Why this` are collapsed. No numeric effect is rendered anywhere, because nothing in the product produces one backed by a defined metric. The panel is `Do now`, not `Best move`. |
 | **B7** Manage areas (`V33-016`) | Leads with `Areas enabled: n of 7`; every toggle, cadence control and snooze button moved behind a drawer. Direction was spending most of its height on a settings screen. |
 | **Section I UI** (`V33-032`) | The lifecycle is reachable. `Can't now` keeps its short reason list and gains a disclosure worded about the *move* rather than the moment: pause with a visible return date, block scoped to the situation it names, reword, and a two-press `Never suggest this`. `Restore` lives on Direction under `Moves you have set aside` — the one surface a forbidden move has not vanished from. 7 browser tests. |
+| **B3** supporting wins (`V33-020`) | Zero to three, and empty is the normal case. A win must be small (≤10 min minimum), from a different area than the primary, low-friction, no identified risk and reversible — anything else is a second recommendation wearing a smaller label. None at all when capacity is low or depleted. |
+| **B4** weekly direction (`V33-019`) | The card names the kind first — one focus, or deliberately quiet "chosen on its merits, not for lack of an idea" — then the proposal, the **minimum win**, what to **protect**, confidence, and `Why this` collapsed. Snooze states its return date; Skip states its semantics. All four controls are worded identically on every branch (`Adjust` and `Set a direction instead` were the same control under two names). Expected lift is optional and never set: a number would need a defined metric and comparable weeks, and neither exists. |
+| **B6** Direction (`V33-015`) | Compact cards showing condition, trajectory (hidden when it would only say "unknown" twice), what is in the way, one move or an explicit no-move, at most two metrics, and Update. Everything else behind `More`. Exactly one card open at a time, owned by the surface, with compact jump controls. |
+| **B8** Review (`V33-017`) | Freshness and quiet are badges — word plus border style, never colour alone — instead of a grey run-together sentence. Rows stack on a phone and split into text/controls when there is room. |
+| **B9** Learning (`V33-018`) | Leads with what has been learned, how confident, and what changed. Findings are one sentence with the chart one tap away, and a finding whose graph has no evidence renders **nothing at all** — a chart of nothing implies a finding was looked for and found. |
 | **Section I** owner sovereignty (`V33-032`) | A 28th record family, `move-preference`, carrying the owner's standing say over a move: `paused` (must name an end — a pause without one is a prohibition in softer wording), `blocked-here` (must name the context, and never matches an unknown one), `modified` (changes the words, never the eligibility), `forbidden`, `restored`. Resolved in `stances.ts`, applied in `arbitrate`, written only by explicit commands in `moveSovereignty.ts`. |
 
 ### The eleven clarifications
@@ -51,8 +56,8 @@ the app behaves differently but incompletely.
 
 ### Not started
 
-Sections **C, D, E, F, G, H, J, K**, the **AT33 acceptance scenarios (M)**, and **B3, B4,
-B6, B8, B9**. Section **I** is complete —
+Sections **C, D, E, F, G, H, J, K** and the **AT33 acceptance scenarios (M)**. Section **B**
+is complete. Section **I** is complete —
 three-way distinction, prerequisite actions, the full owner-control lifecycle, and the
 interface to reach all of it.
 
@@ -342,12 +347,6 @@ edits is the one that matters.
 - **The recovery pause is deliberately shapeless and must stay that way.** It is the move of
   last resort; if `you cannot step away` could remove it, the app would fall silent in exactly
   the situation most needing an answer. There is a test that fails if it gains a shape.
-- **One high-severity advisory, dev-only.** `nanoid <3.3.17` reaches the tree through
-  `vite → postcss`. The flaw is an infinite loop when a *custom generator* is called with
-  size zero; nothing in this project calls nanoid at all, and postcss runs at build time and
-  ships nothing to the browser. A fix is available and it is a lockfile bump — deliberately
-  not taken at the end of a pass whose verification had already completed, because changing
-  the dependency tree after the last full run would make the run describe a different tree.
 - **A situation report expires after three hours.** Where the owner was this morning is not
   where they are now. That window is a judgement, not a measurement, and it is the number to
   revisit first if the app starts asking where you are too often.
@@ -398,6 +397,15 @@ fresh-profile path needs its own tests** — no amount of seeded coverage will e
 `production-faith` created two practices whose names share a prefix and matched them with a
 substring locator, so which one got clicked was a coin toss. It had been passing for weeks.
 Reach for `exact: true` before reaching for a retry.
+
+**Two Playwright processes at once looks exactly like flake.** Running a second suite while
+one was going killed a preview server and produced 48 `ERR_CONNECTION_REFUSED` failures that
+varied run to run. I diagnosed a scenario as non-deterministic on that evidence and was
+wrong. Rule out competing servers before the word "flaky" is used at all.
+
+**An uncontrolled `<details>` loses its state on every re-render.** The areas drawer slammed
+shut each time the owner toggled an area, because React re-renders the panel on the write.
+Any disclosure on a surface that writes has to hold its open state in React.
 
 **Measure before redesigning.** The B1 card was "oversized with tiny words". Rendering it at
 three time blocks and reading the boxes turned that into 94/116/135px at 12.48px, which named

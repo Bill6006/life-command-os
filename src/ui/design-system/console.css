@@ -1417,3 +1417,150 @@
   font-size: var(--text-support);
   color: var(--text-secondary);
 }
+
+/* Direction: compact jump controls and one expanded card at a time (`V33-015`, B6). */
+.domain-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.domain-jump-item {
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--text-fine);
+  cursor: pointer;
+}
+
+.domain-jump-on {
+  border-color: var(--border-accent);
+  background: var(--surface-panel-raised);
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.domain-actions {
+  margin-top: var(--space-3);
+}
+
+.domain-detail {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/*
+ * Scan badges (`V33-017`, v3.3 B8).
+ *
+ * Word plus border style, never colour alone — these have to survive greyscale and a
+ * screen reader. They exist so freshness and quiet are spottable down a column of seven
+ * areas instead of being buried in a grey sentence with everything else.
+ */
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: var(--space-1) 0;
+}
+
+.badge {
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.badge-fresh {
+  border: 1px solid var(--evidence-observed);
+  color: var(--evidence-observed);
+}
+
+.badge-aging {
+  border: 1px dashed var(--text-secondary);
+  color: var(--text-secondary);
+}
+
+.badge-stale {
+  border: 1px dashed var(--signal-cost);
+  color: var(--signal-cost);
+}
+
+.badge-quiet {
+  border: 1px dotted var(--text-secondary);
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/*
+ * Scan rows only. Text and controls were running together on a phone.
+ *
+ * Scoped under the scan list rather than styling `.area` globally — that class is also
+ * ManageAreasView's, and redefining it here silently restyled the areas drawer too.
+ */
+.scan .area {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+}
+
+.scan .area-main {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.scan .area .actions {
+  gap: var(--space-2);
+}
+
+@media (min-width: 34rem) {
+  .scan .area {
+    grid-template-columns: 1fr auto;
+    align-items: start;
+  }
+}
+
+/* Learning: a finding leads with its sentence, the chart is one tap away (`V33-018`, B9). */
+.finding-detail {
+  margin-top: var(--space-2);
+}
+
+.finding-detail > summary {
+  cursor: pointer;
+  min-height: var(--tap-min);
+  display: flex;
+  align-items: center;
+  font-size: var(--text-support);
+  color: var(--text-secondary);
+}
+
+/*
+ * Supporting minimum wins (`V33-020`, v3.3 B3).
+ *
+ * Deliberately quiet. These sit below the decision and above the effect, at supporting
+ * size — if they ever read as a list to work through, Now has become a task list.
+ */
+.supporting {
+  margin-top: var(--space-3);
+}
+
+.supporting-label {
+  margin: 0 0 var(--space-1);
+}
+
+.supporting-list {
+  margin: 0;
+  padding-left: var(--space-4);
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--text-support);
+  color: var(--text-secondary);
+  line-height: 1.45;
+}

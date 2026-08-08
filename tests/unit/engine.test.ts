@@ -262,8 +262,34 @@ describe('weekly direction', () => {
 
     expect(episode.weeklyDirection.kind).toBe('focus');
     expect(episode.weeklyDirection.basedOn.length).toBeGreaterThan(0);
-    expect(episode.weeklyDirection.responses).toContain('Confirm');
-    expect(episode.weeklyDirection.responses).toContain('Adjust');
+    /*
+     * The four controls v3.3 B4 names, worded identically on every branch. `Adjust` and
+     * `Set a direction instead` used to be the same control under two names depending on
+     * whether the week was a focus or a quiet one.
+     */
+    expect(episode.weeklyDirection.responses).toEqual([
+      'Confirm',
+      'Set a direction instead',
+      'Snooze',
+      'Skip',
+    ]);
+
+    /* And the week says what the floor is and what has to survive it. */
+    expect(episode.weeklyDirection.minimumWin.length).toBeGreaterThan(0);
+    expect(episode.weeklyDirection.protect.length).toBeGreaterThan(0);
+
+    /* No invented lift. A number here would need a metric and comparable weeks. */
+    expect(episode.weeklyDirection.expectedLift).toBeUndefined();
+  });
+
+  it('offers the same four controls for a quiet week as for a focus', () => {
+    /* A deliberately quiet week is a decision, so it gets the same say over it. */
+    const quiet = run('quiet-week');
+    expect(quiet.weeklyDirection.kind).toBe('deliberately-quiet');
+    expect(quiet.weeklyDirection.responses).toEqual(
+      run('weekly-direction').weeklyDirection.responses,
+    );
+    expect(quiet.weeklyDirection.minimumWin.length).toBeGreaterThan(0);
   });
 
   it('proposes a quiet week on its merits when capacity is depleted', () => {

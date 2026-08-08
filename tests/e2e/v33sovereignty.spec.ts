@@ -118,12 +118,22 @@ test.describe('pausing a move', () => {
     await pause.getByRole('button', { name: /A week/ }).click();
     await expect(page.locator('.grid, .standalone')).toBeVisible();
 
-    const best = page.getByRole('region', { name: 'Do now' });
-    if ((await best.count()) > 0) {
-      expect((await best.locator('.decision-statement').textContent()) ?? '').not.toContain(
-        statement,
-      );
-    }
+    /*
+     * An auto-retrying assertion, not `count()` then `textContent()`. Those are two round
+     * trips with a React re-render in between, so the element could detach after the
+     * count and the read would hang for the full timeout — which reads as flake and is
+     * really a race the locator API already solves.
+     */
+    /*
+     * The property that matters is that the move is no longer being *recommended*, which
+     * includes the case where the panel is gone entirely — as it is when the paused move
+     * was the only candidate. Scoped to the decision panel rather than the whole surface,
+     * because "What changed" correctly still names it: the answer moved from that move to
+     * deliberate silence, and saying so is the honest record, not a leak.
+     */
+    await expect(
+      page.getByRole('region', { name: 'Do now' }).filter({ hasText: statement }),
+    ).toHaveCount(0);
   });
 });
 
@@ -182,12 +192,22 @@ test.describe('forbidding and putting back', () => {
     await expect(page.locator('.grid, .standalone')).toBeVisible();
 
     /* Gone from Now. */
-    const best = page.getByRole('region', { name: 'Do now' });
-    if ((await best.count()) > 0) {
-      expect((await best.locator('.decision-statement').textContent()) ?? '').not.toContain(
-        statement,
-      );
-    }
+    /*
+     * An auto-retrying assertion, not `count()` then `textContent()`. Those are two round
+     * trips with a React re-render in between, so the element could detach after the
+     * count and the read would hang for the full timeout — which reads as flake and is
+     * really a race the locator API already solves.
+     */
+    /*
+     * The property that matters is that the move is no longer being *recommended*, which
+     * includes the case where the panel is gone entirely — as it is when the paused move
+     * was the only candidate. Scoped to the decision panel rather than the whole surface,
+     * because "What changed" correctly still names it: the answer moved from that move to
+     * deliberate silence, and saying so is the honest record, not a leak.
+     */
+    await expect(
+      page.getByRole('region', { name: 'Do now' }).filter({ hasText: statement }),
+    ).toHaveCount(0);
 
     /* And findable again, on the surface it did not disappear from. */
     await goTo(page, 'Direction');

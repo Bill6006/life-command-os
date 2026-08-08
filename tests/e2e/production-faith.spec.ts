@@ -61,12 +61,35 @@ async function goTo(page: Page, destination: string): Promise<void> {
 const manageAreas = (page: Page) => page.getByRole('region', { name: 'Manage areas' });
 const panel = (page: Page) => page.getByRole('region', { name: AREA, exact: true });
 
+/**
+ * Opens the card's detail (`V33-015`, v3.3 B6).
+ *
+ * Direction shows a compact summary — condition, what is in the way, one move, two
+ * metrics — and keeps everything else behind `More`, one area open at a time. Tests about
+ * the full panel contract open it, as the owner does.
+ */
+async function expandPanel(page: Page): Promise<void> {
+  /*
+   * Wait for the card, then click if it is there. A bare `count()` returns 0 while the
+   * panel is still rendering — after a reload, for instance — and the guard then silently
+   * skipped the click, so the test read a collapsed card and blamed the content. The wait
+   * is tolerant rather than an assertion, because some callers reach here with the area
+   * deliberately switched off, where no panel is the correct state.
+   */
+  await panel(page)
+    .waitFor({ state: 'visible', timeout: 5000 })
+    .catch(() => undefined);
+  const more = panel(page).getByRole('button', { name: 'More detail', exact: true });
+  if ((await more.count()) > 0) await more.click();
+}
+
 async function switchOn(page: Page): Promise<void> {
   await openAreaDrawer(page);
   await manageAreas(page)
     .getByRole('button', { name: `Switch on ${AREA.toLowerCase()}` })
     .click();
   await expect(panel(page)).toBeVisible();
+  await expandPanel(page);
 }
 
 async function openArea(page: Page): Promise<void> {
@@ -93,6 +116,8 @@ test.describe('the whole journey, on the shipped build', () => {
     await switchOn(page);
 
     // Nothing has been named, and nothing is proposed.
+    /* Returning to Direction is a fresh mount, so the card is collapsed (B6). */
+    await expandPanel(page);
     await expect(panel(page)).toContainText('Nothing has been recorded here yet');
     await openArea(page);
     await expect(page.getByRole('region', { name: 'What matters' })).toContainText(
@@ -120,10 +145,15 @@ test.describe('the whole journey, on the shipped build', () => {
     );
 
     await page.getByRole('button', { name: 'Done' }).click();
+    await expandPanel(page);
     await expect(panel(page)).toContainText(VALUE);
 
     await page.reload();
     await goTo(page, 'Direction');
+
+    /* A reload is a fresh mount, so the card is collapsed again (B6). */
+
+    await expandPanel(page);
     await expect(panel(page)).toContainText(VALUE);
   });
 
@@ -144,6 +174,7 @@ test.describe('the whole journey, on the shipped build', () => {
     await expect(panel(page)).toHaveCount(0);
 
     await switchOn(page);
+    await expandPanel(page);
     await expect(panel(page)).toContainText(VALUE);
   });
 
@@ -158,6 +189,7 @@ test.describe('the whole journey, on the shipped build', () => {
     );
 
     await page.getByRole('button', { name: 'Done' }).click();
+    await expandPanel(page);
     await expect(panel(page)).toContainText('Do the thing you decided to put right');
 
     /*
@@ -211,9 +243,14 @@ test.describe('the refusals hold on the shipped build', () => {
       .click();
     await page.getByRole('button', { name: 'Done' }).click();
 
+    /* Returning to Direction is a fresh mount, so the card is collapsed (B6). */
+    await expandPanel(page);
     await expect(panel(page)).toContainText('How am I doing at this?');
+    await expandPanel(page);
     await expect(panel(page)).toContainText('how you are doing at your faith');
+    await expandPanel(page);
     await expect(panel(page)).toContainText('Which of these am I best at?');
+    await expandPanel(page);
     await expect(panel(page)).toContainText('would read as the one you are failing at');
   });
 

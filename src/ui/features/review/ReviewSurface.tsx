@@ -26,6 +26,24 @@ import type { DomainId } from '../../../domain/domains/definitions';
  * nothing.
  */
 
+/**
+ * How current an area's evidence is, as something you can see rather than read.
+ *
+ * Never colour alone (`UX-002`): each badge carries its own word and its own border
+ * style, so it survives being greyscale and being read aloud.
+ */
+function FreshnessBadge({
+  freshness,
+}: {
+  readonly freshness: Parameters<typeof freshnessLabel>[0];
+}): React.JSX.Element | null {
+  if (freshness === 'fresh') return <span className="badge badge-fresh">Fresh</span>;
+  if (freshness === 'aging') return <span className="badge badge-aging">Ageing</span>;
+  if (freshness === 'stale') return <span className="badge badge-stale">Stale</span>;
+  /* `none` means no dated evidence at all, which the standing line already says. */
+  return null;
+}
+
 export function ReviewSurface({
   episode,
   busy,
@@ -54,15 +72,24 @@ export function ReviewSurface({
             None yet. Switch an area on under Direction and it will appear here.
           </p>
         ) : (
-          <ul className="areas" aria-label="Weekly domain scan">
+          <ul className="areas scan" aria-label="Weekly domain scan">
             {weeklyScan.rows.map((row) => (
               <li className="area" key={row.domainId}>
                 <div className="area-main">
                   <span className="change-main">{row.label}</span>
-                  <span className="fine">
-                    {row.standing} · {freshnessLabel(row.freshness)}
-                    {row.quiet ? ' · nothing for a while' : ''}
+                  {/*
+                    Badges rather than a run-together sentence (`V33-017`, v3.3 B8).
+
+                    This was `standing · freshness · nothing for a while` as one grey line,
+                    which is three separate facts wearing the same weight and reading as
+                    one. Freshness and quiet are states worth spotting at a glance down a
+                    column of seven areas; the standing is the sentence.
+                  */}
+                  <span className="badges">
+                    <FreshnessBadge freshness={row.freshness} />
+                    {row.quiet ? <span className="badge badge-quiet">Quiet</span> : null}
                   </span>
+                  <span className="fine">{row.standing}</span>
                   {row.openItem === undefined ? null : (
                     <span className="fine why">Open: {row.openItem}</span>
                   )}

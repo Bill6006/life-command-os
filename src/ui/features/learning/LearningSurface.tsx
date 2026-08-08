@@ -1,5 +1,6 @@
 import { KeyValues, Panel, ReasonTrace } from '../../components/primitives';
 import { GraphFigure } from '../../components/GraphFigure';
+import type { Graph } from '../../../intelligence/learning/insights';
 import type { EpisodeResult } from '../../../intelligence';
 import { confidenceLabel } from '../../view-models/present';
 
@@ -21,15 +22,53 @@ import { confidenceLabel } from '../../view-models/present';
  * Module level, not defined inside the surface: a component created during render
  * gets a new identity every pass, which throws away its subtree on each update.
  */
-function Figure({
+/**
+ * Whether a graph is worth drawing (`V33-018`, v3.3 B9).
+ *
+ * A chart of nothing is worse than no chart: it takes up the space of a finding, implies
+ * one was looked for and found, and teaches the owner to skim past the place real findings
+ * will eventually appear.
+ *
+ * A trend with no non-null point has no evidence — gaps are `null` by design, never zero,
+ * so this cannot be fooled by a series of honest blanks. A comparison whose bars are all
+ * zero has nothing to compare.
+ */
+function hasEvidence(graph: Graph): boolean {
+  if (graph.kind === 'trend') {
+    return graph.points.some((point) => point.value !== null);
+  }
+  return graph.bars.length > 0 && graph.bars.some((bar) => bar.value !== 0);
+}
+
+/**
+ * One finding, collapsed (`V33-018`, v3.3 B9).
+ *
+ * Renders nothing at all when its graph has no evidence, so the page length tracks what
+ * has actually been learned rather than how many questions the app knows how to ask.
+ */
+function Finding({
   graphs,
   id,
+  label,
+  what,
 }: {
-  graphs: EpisodeResult['learning']['graphs'];
-  id: string;
+  readonly graphs: readonly Graph[];
+  readonly id: string;
+  readonly label: string;
+  readonly what: string;
 }): React.JSX.Element | null {
   const found = graphs.find((entry) => entry.id === id);
-  return found === undefined ? null : <GraphFigure graph={found} />;
+  if (found === undefined || !hasEvidence(found)) return null;
+
+  return (
+    <Panel label={label} wide>
+      <p className="lead">{found.textSummary}</p>
+      <details className="finding-detail">
+        <summary>{what}</summary>
+        <GraphFigure graph={found} />
+      </details>
+    </Panel>
+  );
 }
 
 export function LearningSurface({ episode }: { episode: EpisodeResult }): React.JSX.Element {
@@ -40,6 +79,46 @@ export function LearningSurface({ episode }: { episode: EpisodeResult }): React.
 
   return (
     <div className="grid">
+      {/*
+        What was learned, how sure, and what changed because of it (`V33-018`, v3.3 B9).
+
+        The page used to open with a `Beliefs` panel and six charts, several of them empty.
+        Leading with the summary means the first thing read is the answer to "has this
+        thing learned anything about me", which is the only question this surface exists
+        to answer.
+      */}
+      <Panel label="What has been learned" tone="decision" wide>
+        {beliefs.length === 0 ? (
+          <p className="lead">Nothing yet</p>
+        ) : (
+          <>
+            <p className="lead">
+              {`${String(beliefs.length)} thing${beliefs.length === 1 ? '' : 's'}, from ${String(resolvedEffect.length)} observed outcome${resolvedEffect.length === 1 ? '' : 's'}`}
+            </p>
+            <ul className="changes">
+              {beliefs.slice(0, 3).map((belief) => (
+                <li key={belief.id}>
+                  <span className="change-main">{belief.statement}</span>
+                  <span className="fine">
+                    {belief.status} · {confidenceLabel(belief.confidence)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        <p className="fine">
+          {resolvedForecast.length === 0
+            ? 'No forecast has been through a full window yet, so nothing here rests on a checked prediction.'
+            : `${String(resolvedForecast.length)} forecast${resolvedForecast.length === 1 ? '' : 's'} checked against what actually happened.`}
+        </p>
+        <p className="fine why">
+          {continuity.whyItChanged.length > 0
+            ? continuity.whyItChanged
+            : 'Nothing has changed what the app does yet.'}
+        </p>
+      </Panel>
+
       {beliefs.length === 0 ? (
         <Panel label="Beliefs" wide>
           <p className="lead">Nothing has been learned yet</p>
@@ -107,33 +186,40 @@ export function LearningSurface({ episode }: { episode: EpisodeResult }): React.
         ))
       )}
 
-      <Panel label="Forecast accuracy" wide>
-        <p className="fine">
-          Was the system right about what would happen? This is a separate question from whether
-          any advice helped, and is never combined with it.
-        </p>
-        <Figure graphs={graphs} id="forecast-accuracy" />
-      </Panel>
+      <Finding
+        graphs={graphs}
+        id="forecast-accuracy"
+        label="Forecast accuracy"
+        what="Was the system right about what would happen? A separate question from whether any advice helped, and never combined with it."
+      />
 
-      <Panel label="Recommendation effectiveness" wide>
-        <p className="fine">
-          Did following the advice help? Only recommendations that were actually carried out and
-          observed can answer this.
-        </p>
-        <Figure graphs={graphs} id="actions-and-outcomes" />
-      </Panel>
+      <Finding
+        graphs={graphs}
+        id="actions-and-outcomes"
+        label="Recommendation effectiveness"
+        what="Did following the advice help? Only recommendations carried out and then observed can answer this."
+      />
 
-      <Panel label="Follow-through" wide>
-        <Figure graphs={graphs} id="follow-through" />
-      </Panel>
+      <Finding
+        graphs={graphs}
+        id="follow-through"
+        label="Follow-through"
+        what="How often a started thing was finished. A signal about whether the moves being offered fit the life, and about nothing else."
+      />
 
-      <Panel label="Expected versus actual" wide>
-        <Figure graphs={graphs} id="expected-vs-actual" />
-      </Panel>
+      <Finding
+        graphs={graphs}
+        id="expected-vs-actual"
+        label="Expected versus actual"
+        what="Where the prediction and the observation parted company."
+      />
 
-      <Panel label="Confidence" wide>
-        <Figure graphs={graphs} id="confidence" />
-      </Panel>
+      <Finding
+        graphs={graphs}
+        id="confidence"
+        label="Confidence"
+        what="Whether confidence has been earned or merely asserted."
+      />
 
       <Panel label="Weekly direction, week over week" wide>
         <p className="lead lead-term">{continuity.decision.replace(/-/g, ' ')}</p>

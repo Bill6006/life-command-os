@@ -308,7 +308,12 @@ test.describe('the weekly direction', () => {
     await page.getByRole('button', { name: 'This week’s direction' }).click();
 
     const main = page.getByRole('main');
-    await expect(main).toContainText(/not being asked to invent a priority/i);
+    /*
+     * The card names the kind before the proposal now (v3.3 B4), so a quiet week reads as
+     * a choice rather than as the app having nothing to say.
+     */
+    await expect(main).toContainText(/One focus|Deliberately quiet/);
+    await expect(main).toContainText('Minimum win');
     await expect(page.getByRole('button', { name: 'Confirm', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Snooze', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Skip', exact: true })).toBeVisible();

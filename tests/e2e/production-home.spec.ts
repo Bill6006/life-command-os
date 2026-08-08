@@ -61,12 +61,35 @@ async function goTo(page: Page, destination: string): Promise<void> {
 const manageAreas = (page: Page) => page.getByRole('region', { name: 'Manage areas' });
 const panel = (page: Page) => page.getByRole('region', { name: AREA, exact: true });
 
+/**
+ * Opens the card's detail (`V33-015`, v3.3 B6).
+ *
+ * Direction shows a compact summary — condition, what is in the way, one move, two
+ * metrics — and keeps everything else behind `More`, one area open at a time. Tests about
+ * the full panel contract open it, as the owner does.
+ */
+async function expandPanel(page: Page): Promise<void> {
+  /*
+   * Wait for the card, then click if it is there. A bare `count()` returns 0 while the
+   * panel is still rendering — after a reload, for instance — and the guard then silently
+   * skipped the click, so the test read a collapsed card and blamed the content. The wait
+   * is tolerant rather than an assertion, because some callers reach here with the area
+   * deliberately switched off, where no panel is the correct state.
+   */
+  await panel(page)
+    .waitFor({ state: 'visible', timeout: 5000 })
+    .catch(() => undefined);
+  const more = panel(page).getByRole('button', { name: 'More detail', exact: true });
+  if ((await more.count()) > 0) await more.click();
+}
+
 async function switchOn(page: Page): Promise<void> {
   await openAreaDrawer(page);
   await manageAreas(page)
     .getByRole('button', { name: `Switch on ${AREA.toLowerCase()}` })
     .click();
   await expect(panel(page)).toBeVisible();
+  await expandPanel(page);
 }
 
 async function openArea(page: Page): Promise<void> {
@@ -103,6 +126,7 @@ test.describe('once is an event, twice is a pattern — on the shipped build', (
     );
 
     await page.getByRole('button', { name: 'Done' }).click();
+    await expandPanel(page);
     await expect(panel(page)).toContainText('1 thing recorded, and not a second time');
     await expect(panel(page)).not.toContainText('Optional move in home and environment');
 
@@ -111,7 +135,9 @@ test.describe('once is an event, twice is a pattern — on the shipped build', (
     await recordFriction(page, 'Study');
     await page.getByRole('button', { name: 'Done' }).click();
 
+    await expandPanel(page);
     await expect(panel(page)).toContainText('has got in the way 2 times');
+    await expandPanel(page);
     await expect(panel(page)).toContainText('Decide on one thing to change about the setup');
   });
 
@@ -129,10 +155,16 @@ test.describe('once is an event, twice is a pattern — on the shipped build', (
     await expect(page.getByRole('region', { name: 'The one change' })).toContainText(CHANGE);
 
     await page.getByRole('button', { name: 'Done' }).click();
+    /* Returning to Direction is a fresh mount, so the card is collapsed (B6). */
+    await expandPanel(page);
     await expect(panel(page)).toContainText('One change decided, and not made yet');
 
     await page.reload();
     await goTo(page, 'Direction');
+
+    /* A reload is a fresh mount, so the card is collapsed again (B6). */
+
+    await expandPanel(page);
     await expect(panel(page)).toContainText(CHANGE);
   });
 
@@ -179,7 +211,10 @@ test.describe('once is an event, twice is a pattern — on the shipped build', (
     await since.getByRole('button', { name: 'Still happening' }).click();
 
     await page.getByRole('button', { name: 'Done' }).click();
+    /* Returning to Direction is a fresh mount, so the card is collapsed (B6). */
+    await expandPanel(page);
     await expect(panel(page)).toContainText('Try a different change');
+    await expandPanel(page);
     await expect(panel(page)).toContainText('still happening');
   });
 
@@ -199,6 +234,7 @@ test.describe('once is an event, twice is a pattern — on the shipped build', (
     await expect(panel(page)).toHaveCount(0);
 
     await switchOn(page);
+    await expandPanel(page);
     await expect(panel(page)).toContainText('has got in the way 2 times');
   });
 });
@@ -238,7 +274,9 @@ test.describe('it describes no room, on the shipped build', () => {
     await goTo(page, 'Direction');
     await switchOn(page);
 
+    await expandPanel(page);
     await expect(panel(page)).toContainText('How sorted is my house?');
+    await expandPanel(page);
     await expect(panel(page)).toContainText("readiness score for somebody's home");
   });
 });
