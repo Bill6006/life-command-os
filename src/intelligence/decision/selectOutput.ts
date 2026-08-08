@@ -338,7 +338,14 @@ export function selectOutput(
    * by construction. Passing an empty set states that rather than leaving the field to a
    * default nobody chose.
    */
-  const inputs = { records, now, feasible, contradicted: new Set<string>() };
+  const inputs = {
+    records,
+    now,
+    feasible,
+    contradicted: new Set<string>(),
+    sustainability: shared.sustainability,
+    lifecycle: shared.lifecycle,
+  };
 
   const withFacts = eligible.map((candidate) => ({
     candidate,

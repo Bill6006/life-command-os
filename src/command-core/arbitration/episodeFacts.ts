@@ -1,6 +1,13 @@
 import type { CanonicalRecord, GoalRecord } from '../../domain/records';
 import type { CandidateAction } from '../../intelligence/types';
 import { type ArbitrationFacts, type Level, deriveFacts } from './facts';
+import {
+  lifecycleStates,
+  sustainabilityLevel,
+  sustainabilityOf,
+  type LifecycleVerdict,
+  type SustainabilityVerdict,
+} from '../../intelligence/learning/lifecycle';
 
 /**
  * The arbitration contract, filled from a real episode (`V33-058`, v3.3 section E).
@@ -84,6 +91,10 @@ export interface EpisodeFactInputs {
   readonly feasible: ReadonlyMap<string, boolean>;
   /** Candidate ids something already done or chosen rules out. */
   readonly contradicted: ReadonlySet<string>;
+  /** What repetition has shown about each move, where it has shown anything. */
+  readonly sustainability: readonly SustainabilityVerdict[];
+  /** What observed outcomes say about each move's standing, where anything is observed. */
+  readonly lifecycle: readonly LifecycleVerdict[];
 }
 
 /**
@@ -150,11 +161,36 @@ export function episodeFacts(
   const raisedFromOwnEvidence =
     candidate.originDomainId !== undefined || candidate.goalId !== undefined;
 
+  /*
+   * Sustainability, where repetition has actually shown something (`G5`).
+   *
+   * Still `unknown` for almost everything, and that is the correct answer rather than a
+   * gap: it takes several offers of the same move before declining one says anything about
+   * the move rather than about the evening. What changed is that it is no longer
+   * *structurally* unknown — the field now has a route to a value, and the route runs
+   * through observed behaviour rather than through a guess.
+   *
+   * Kept separate from effectiveness throughout. A move can be well-supported and strained,
+   * and the arbiter is meant to see both.
+   */
+  const sustainability = sustainabilityLevel(inputs.sustainability, candidate.patternId ?? '');
+
+  /*
+   * Lifecycle from evidence, falling back to what the catalogue authored (`G6`).
+   *
+   * The authored value is a claim about people in general; the derived one is a claim
+   * about this owner. Where both exist the second wins, because "supported by research"
+   * and "supported here" are different sentences and only one of them is about them.
+   */
+  const observed = inputs.lifecycle.find((entry) => entry.patternId === candidate.patternId);
+
   return {
     ...base,
     northStarRelevance,
     weeklyDirectionRelevance,
     confidence: raisedFromOwnEvidence ? 'moderate' : base.confidence,
+    sustainability,
+    lifecycle: observed?.current ?? base.lifecycle,
     reversibility: candidate.reversibility,
   };
 }
@@ -167,5 +203,7 @@ export function episodeContext(records: readonly CanonicalRecord[], now: Date) {
     goalCategories: hasNorthStar ? activeGoalCategories(records) : new Set<string>(),
     weeklyCategories: weeklyFocusCategories(records),
     load: actionsToday(records, now),
+    sustainability: sustainabilityOf(records),
+    lifecycle: lifecycleStates(records, now),
   };
 }

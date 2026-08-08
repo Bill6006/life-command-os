@@ -1,5 +1,6 @@
 import type { CanonicalRecord, ExecutionRecord, OutcomeRecord } from '../../domain/records';
 import { currentOfType } from '../support';
+import { horizonFor } from '../../domain/moves/horizons';
 
 /**
  * Outcome windows and what closes them (Prompt 6 task 2).
@@ -15,7 +16,12 @@ import { currentOfType } from '../support';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** How long after an execution its effect is considered observable. */
+/**
+ * The horizon for a move with no declared observation window.
+ *
+ * Retained as the fallback rather than removed: an execution recorded before per-move
+ * horizons existed must not have its window move because the code changed.
+ */
 export const OUTCOME_WINDOW_MS = 7 * DAY_MS;
 
 /** Beyond this, a window that never received an outcome is expired rather than open. */
@@ -42,10 +48,34 @@ export function outcomeWindows(
   const executions = currentOfType<ExecutionRecord>(records, 'execution');
   const outcomes = currentOfType<OutcomeRecord>(records, 'outcome');
 
+  /*
+   * Which move each execution was of, so its own declared horizon can be used
+   * (`V33-062`, G3). Indexed once — the join would otherwise be quadratic in a record
+   * set that only grows.
+   */
+  const patternByEpisode = new Map<string, string>();
+  for (const record of records) {
+    if (record.recordType !== 'candidate-action') continue;
+    if (record.decisionEpisodeId === undefined) continue;
+    if (record.engineCandidateId === undefined) continue;
+    patternByEpisode.set(record.decisionEpisodeId, record.engineCandidateId);
+  }
+
   return executions
     .map((execution) => {
       const opens = Date.parse(execution.occurredAt);
-      const closes = opens + OUTCOME_WINDOW_MS;
+
+      /*
+       * The move's own window, not one constant for everything. A glass of water and a
+       * change of routine are not answerable on the same clock, and judging both at seven
+       * days got each of them wrong in opposite directions.
+       */
+      const horizon = horizonFor(
+        execution.decisionEpisodeId === undefined
+          ? undefined
+          : patternByEpisode.get(execution.decisionEpisodeId),
+      );
+      const closes = opens + horizon.closesAfterMs;
       const outcome = outcomes.find(
         (candidate) => candidate.executionRecordId === execution.recordId,
       );
@@ -53,15 +83,19 @@ export function outcomeWindows(
       const state: WindowState =
         now.getTime() < closes
           ? 'open'
-          : outcome === undefined && now.getTime() > opens + OUTCOME_EXPIRY_MS
+          : outcome === undefined && now.getTime() > opens + horizon.expiresAfterMs
             ? 'expired'
             : 'closed';
 
+      /*
+       * Confounding is judged on this move's own window too: something that happened two
+       * days later cannot have confounded a thirty-minute effect.
+       */
       const overlapping = executions
         .filter(
           (other) =>
             other.recordId !== execution.recordId &&
-            Math.abs(Date.parse(other.occurredAt) - opens) < OUTCOME_WINDOW_MS,
+            Math.abs(Date.parse(other.occurredAt) - opens) < horizon.closesAfterMs,
         )
         .map((other) => other.recordId);
 

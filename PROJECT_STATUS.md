@@ -7,9 +7,9 @@
   clarifications that supersede it where they conflict
 - Current phase: **Phase 8 closed.** Phases 0–7 remain GREEN.
 - Current prompt: **PROMPT 9C v3.3 — partially delivered. YELLOW.** Sections **A, B, D, E,
-  F and I** are complete, as are all eleven owner clarifications. Sections **C, G, H, J, K**
-  and the AT33 acceptance scenarios are not started. See "Prompt 9C v3.3" below for the
-  exact line.
+  F, H** and **I** are complete, as are all eleven owner clarifications. Section **G** is
+  delivered except G7 and G8. Sections **C, J, K** and the AT33 acceptance scenarios are not
+  started. See "Prompt 9C v3.3" below for the exact line.
 
 ## Prompt 9C v3.3 status
 
@@ -120,12 +120,51 @@ direction appears as the named separating reason in real scenario traces.
 often enough to say, and a plausible default would be an unearned judgement inside a
 ranking.
 
-Sections **A, B, D** and **I** are complete.
+Sections **A, B, D, E, F** and **I** are complete. Section **G** is substantially
+delivered and section **H** is delivered as an engine module:
 
-Still untouched, and the bulk of what remains: sequence and combination learning,
-bounded experiments, evidence-driven lifecycle transitions and evidence versioning
-(sections C, G, H, J, K), and the AT33 acceptance scenarios in section M. None of it is
-started, and nothing in the codebase pretends otherwise.
+- **G1** context-specific effectiveness. Evidence is held per *facet* — the pattern plus one
+  named aspect of the situation (time of day, setting, interruptibility, privacy, capacity,
+  free-time band, bedtime proximity, weekly direction). There is deliberately no combined
+  figure to ask for: a move can read `consistent` in the morning and `emerging`-against at
+  night, and both are kept. An unrecorded situation field contributes no facet at all rather
+  than an `unknown` bucket that would quietly become the largest one.
+- **G2** sequence learning, from observed pairs only. Nothing reads the catalogue's authored
+  `after` — that decides eligibility and is an assumption, not evidence. A pair says nothing
+  without a solo baseline for the second move, because "went well four times, always after A"
+  is equally consistent with A mattering and with A being irrelevant. Pairwise and staying
+  pairwise: a three-step plan is a task list.
+- **G3** observation windows, now operational. `observationWindow` had been declared on all
+  113 patterns since D1 and read by nothing; every execution opened the same seven-day
+  window, so a glass of water stayed unresolved for a week and a change of routine was scored
+  before it could have mattered. Five horizons now drive when an outcome may be read, with
+  the old seven days retained as the fallback so no existing record changes meaning.
+- **G4** association language, enforced by construction. Statements come from a fixed
+  vocabulary with no branch that can emit a causal claim, and a test scans the source for
+  causal wording in emitted strings.
+- **G5** sustainability, separate from effectiveness and now populated from evidence. Read
+  from what became of the *attempt* — declined, abandoned, carried through — not from
+  outcomes. A single rejection says nothing; three offers is the floor. `effectiveButUnsustainable`
+  exists to surface the case the two answers disagree, rather than resolving it.
+- **G6** lifecycle from evidence. A single poor result cannot retire a move and a single good
+  one cannot support it. Disagreement across contexts yields `context-specific` rather than an
+  average. Derived, never stored, and the authored value is reported alongside rather than
+  overwritten.
+- **H** the experiment gate. Conjunctive and ordered most-protective first, so information
+  value is the last test and can never buy past a safety condition. One unresolved experiment
+  at a time. A prior poor result needs a *named* material change before a retest.
+
+Sustainability and lifecycle are wired into the live arbitration contract via `episodeFacts`,
+so they are not modules sitting beside the engine — the lesson from the previous pass.
+
+**Not yet delivered in section G:** G7 life-context drift and G8 audit/rollback.
+
+Still untouched: section **C** (North Star / goal / commitment capture controls and version
+history), **G7** (life-context drift), **G8** (audit and learning rollback), **J**
+(qualitative food capture and routine/boundary learning), **K** (health and career
+contextual-capture metadata), and the **AT33** acceptance scenarios in section M. Three of
+the fifty-five AT33 ids are referenced by existing tests; the rest are not written. None of
+this is started, and nothing in the codebase pretends otherwise.
 
 ## Gate status
 

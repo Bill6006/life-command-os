@@ -182,6 +182,8 @@ describe('11. the North Star changes which move wins', () => {
       now: new Date(AT),
       feasible: new Map<string, boolean>(),
       contradicted: new Set<string>(),
+      sustainability: [],
+      lifecycle: [],
     };
 
     return weigh(
@@ -232,6 +234,8 @@ describe('11. the North Star changes which move wins', () => {
         now: new Date(AT),
         feasible: new Map(),
         contradicted: new Set(),
+        sustainability: [],
+        lifecycle: [],
       },
       new Set(),
       new Set(),
@@ -252,7 +256,14 @@ describe('12. the weekly direction changes arbitration where it applies', () => 
     const base = required(episode('domain-enabled').internal.candidates[0], 'a candidate');
     const unanswered = episodeFacts(
       base,
-      { records: [], now: new Date(), feasible: new Map(), contradicted: new Set() },
+      {
+        records: [],
+        now: new Date(),
+        feasible: new Map(),
+        contradicted: new Set(),
+        sustainability: [],
+        lifecycle: [],
+      },
       new Set(),
       new Set(),
       0,
@@ -261,7 +272,14 @@ describe('12. the weekly direction changes arbitration where it applies', () => 
 
     const confirmed = episodeFacts(
       base,
-      { records: [], now: new Date(), feasible: new Map(), contradicted: new Set() },
+      {
+        records: [],
+        now: new Date(),
+        feasible: new Map(),
+        contradicted: new Set(),
+        sustainability: [],
+        lifecycle: [],
+      },
       new Set(),
       new Set([base.category]),
       0,
@@ -289,6 +307,8 @@ describe('14. sustainability is not fabricated', () => {
           now: new Date(),
           feasible: new Map(),
           contradicted: new Set(),
+          sustainability: [],
+          lifecycle: [],
         },
         new Set(),
         new Set(),
@@ -315,6 +335,8 @@ describe('15. action load is visible to the arbiter', () => {
       now: new Date(),
       feasible: new Map<string, boolean>(),
       contradicted: new Set<string>(),
+      sustainability: [],
+      lifecycle: [],
     };
 
     const fresh = episodeFacts(base, inputs, new Set(), new Set(), 0);
