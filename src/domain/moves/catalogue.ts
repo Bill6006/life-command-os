@@ -170,6 +170,13 @@ export const MOVE_FAMILIES: readonly MoveFamily[] = [
     decisionJob: 'Protect something that keeps getting eroded by something else.',
   },
   {
+    familyId: 'defer-to-a-person',
+    label: 'Raise it with someone',
+    purpose: 'learn',
+    domains: ['health-recovery-energy', 'emotional-and-relationships', 'fatherhood'],
+    decisionJob: 'Hand something to a person qualified to judge it, when this app should not.',
+  },
+  {
     familyId: 'routine-anchor',
     label: 'Anchor a routine',
     purpose: 'prepare',
@@ -200,10 +207,15 @@ const costs = (
   magnitude: Effect['magnitude'] = 'small',
 ): Effect => ({ channel, effect: 'costs', magnitude });
 
+/*
+ * Preventing a loss reads as `improves-later` in the canonical vocabulary: stopping now
+ * is not a gain tonight, it is a better tomorrow. There is no `protects` term, and adding
+ * one to suit the catalogue would have given the product two vocabularies.
+ */
 const guards = (
   channel: Effect['channel'],
   magnitude: Effect['magnitude'] = 'small',
-): Effect => ({ channel, effect: 'protects', magnitude });
+): Effect => ({ channel, effect: 'improves-later', magnitude });
 
 /** Every pattern is authored at version 1 until its meaning changes. */
 const V = 1;
@@ -457,19 +469,20 @@ export const MOVE_PATTERNS: readonly MovePattern[] = [
     lifecycle: 'supported',
     capacity: { shape: 'protected-focus', interruptionCost: 'total' },
     contradicts: ['protect-a-block:deep-block', 'protect-a-block:short-block'],
-    effects: [later('energy-and-recovery', 'large'), guards('focus-and-clarity')],
+    effects: [later('energy-and-recovery', 'meaningful'), guards('focus-and-clarity')],
     version: V,
   },
   {
     patternId: 'wind-down:phone-down',
     familyId: 'wind-down',
     statement: 'Put the phone somewhere else for the rest of the evening',
-    distinctBecause: 'One specific change rather than a routine, and it needs no time at all.',
+    distinctBecause: 'One specific change rather than a routine, and it needs almost no time.',
     intendedOutcome: 'The gap between deciding to sleep and sleeping gets shorter',
     followUp: { promptId: 'sleep:onset-minutes', windowHours: 16 },
     observationWindow: 'next-morning',
-    durationMinutes: 1,
-    minimumMinutes: 1,
+    /* Getting up and walking to another room. Stopping for the night takes no time at all. */
+    durationMinutes: 2,
+    minimumMinutes: 2,
     minimumVersion: 'Out of the bedroom is most of it',
     fallback: 'Put it face down and out of reach',
     stoppingPoint: 'Once it is out of the room',
@@ -501,7 +514,7 @@ export const MOVE_PATTERNS: readonly MovePattern[] = [
       'protect-a-block:short-block',
       'move-body:longer-walk',
     ],
-    effects: [guards('energy-and-recovery', 'large')],
+    effects: [guards('energy-and-recovery', 'meaningful')],
     version: V,
   },
   {
@@ -2326,6 +2339,56 @@ export const MOVE_PATTERNS: readonly MovePattern[] = [
     safety: 'routine',
     lifecycle: 'experimental',
     effects: [guards('energy-and-recovery'), later('focus-and-clarity')],
+    version: V,
+  },
+  /* ------------------------------------------------------------------------ */
+  /* Deferring to a person                                                      */
+  /*                                                                            */
+  /* Found by the migration, not authored speculatively. Health and emotional   */
+  /* both had an action for "this is beyond what an app should have a view on"  */
+  /* and the catalogue had no equivalent — which would have meant the one move  */
+  /* that matters most in the worst case had nowhere to live.                   */
+  /* ------------------------------------------------------------------------ */
+
+  {
+    patternId: 'defer-to-a-person:raise-it',
+    familyId: 'defer-to-a-person',
+    statement: 'Worth raising with someone qualified',
+    distinctBecause:
+      'The domain declining to have an opinion. Not advice about the thing — a handover.',
+    intendedOutcome: 'A person who can actually assess this has heard about it',
+    followUp: { promptId: 'outcome:interaction-happened', windowHours: 168 },
+    observationWindow: 'multi-week',
+    durationMinutes: 15,
+    minimumMinutes: 5,
+    minimumVersion: 'Write down what you would say',
+    fallback: 'Note who the right person would be',
+    stoppingPoint: 'Once it has been raised. There is nothing to keep up.',
+    friction: 'high',
+    safety: 'sensitive',
+    lifecycle: 'supported',
+    capacity: { shape: 'protected-focus' },
+    effects: [lift('emotional-regulation'), lift('learning-and-capability')],
+    version: V,
+  },
+  {
+    patternId: 'defer-to-a-person:mention-at-the-next-appointment',
+    familyId: 'defer-to-a-person',
+    statement: 'Worth mentioning at the next appointment you already have',
+    distinctBecause:
+      'Costs no new arrangement, for something worth raising but not worth booking for.',
+    intendedOutcome: 'It is raised with someone qualified without a new appointment',
+    followUp: { promptId: 'outcome:interaction-happened', windowHours: 336 },
+    observationWindow: 'multi-week',
+    durationMinutes: 5,
+    minimumMinutes: 2,
+    minimumVersion: 'Write it down so it is not forgotten on the day',
+    fallback: 'Note when the next appointment is',
+    stoppingPoint: 'Once it is written down or said',
+    friction: 'moderate',
+    safety: 'sensitive',
+    lifecycle: 'supported',
+    effects: [lift('emotional-regulation')],
     version: V,
   },
 ];

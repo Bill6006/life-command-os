@@ -1,4 +1,8 @@
-import type { CapabilityChannel } from '../capabilities';
+import type {
+  CapabilityChannel,
+  CapabilityEffectKind,
+  CapabilityMagnitude,
+} from '../capabilities';
 import type { CapacityProfile } from '../domains/capacity';
 import type { DomainId } from '../domains/definitions';
 
@@ -166,11 +170,18 @@ export interface MovePattern {
   readonly friction: 'low' | 'moderate' | 'high';
   readonly safety: MoveSafety;
   readonly lifecycle: MoveLifecycle;
-  /** Qualitative, never netted, structurally unable to become a score. */
+  /**
+   * Qualitative, never netted, structurally unable to become a score.
+   *
+   * Typed against the canonical capability vocabulary rather than a local one. The first
+   * draft of this file invented `protects` and `large`, neither of which exists in
+   * `capabilities.ts` — a second effect vocabulary, which is precisely the divergence the
+   * catalogue was built to end. Borrowing the types makes that a compile error.
+   */
   readonly effects: readonly {
     readonly channel: CapabilityChannel;
-    readonly effect: 'improves' | 'improves-later' | 'costs' | 'protects';
-    readonly magnitude: 'small' | 'meaningful' | 'large' | 'unknown';
+    readonly effect: CapabilityEffectKind;
+    readonly magnitude: CapabilityMagnitude;
   }[];
   /** Declared only where the situation genuinely decides eligibility. */
   readonly capacity?: CapacityProfile | undefined;

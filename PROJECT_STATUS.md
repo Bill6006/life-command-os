@@ -60,12 +60,18 @@ the app behaves differently but incompletely.
 
 Sections **C, E, F, G, H, J, K** and the **AT33 acceptance scenarios (M)**. Section **D** is
 partly done: D1 (the family model) and D2 (breadth, 102 patterns) are complete, D3, D4 and D5 are
-complete. **The generator migration itself is not**: the seven domain slices still build
-candidates from their own authored lists rather than selecting catalogue patterns, so the
-102 patterns remain reachable in principle — via the registry, with aliases and
-contradictions live — rather than in practice. `moveReachability.test.ts` states that
-boundary rather than hiding it, and fails the build if a legacy list ever leaks into
-shared decision code. Sections **A, B** and **I** are complete. Section **I** is complete —
+complete, and the generator migration has **started**: health is done and is the template.
+
+`HEALTH_ACTIONS` is now a view over the catalogue — seven `adapt()` calls, no move
+literals, with duration, minimum, friction and shape taken from the pattern and only the
+wording overridable. `HealthAction` is `DomainMoveView<HealthActionId>`, so the local id
+health has always used travels alongside the canonical `patternId` and evidence recorded
+against either resolves to one move.
+
+**Six domains and the shared core generator are not migrated.** Runtime-reachable is
+therefore **7 of 104**, asserted exactly in `moveRuntimeReachability.test.ts` so it cannot
+drift upward without someone meaning it. Nothing in the catalogue is intentionally
+unreachable — the other 97 are authored, valid, and waiting on their generator. Sections **A, B** and **I** are complete. Section **I** is complete —
 three-way distinction, prerequisite actions, the full owner-control lifecycle, and the
 interface to reach all of it.
 
@@ -355,15 +361,25 @@ edits is the one that matters.
 - **The recovery pause is deliberately shapeless and must stay that way.** It is the move of
   last resort; if `you cannot step away` could remove it, the app would fall silent in exactly
   the situation most needing an answer. There is a test that fails if it gains a shape.
-- **The e2e preview server drops one navigation per full run, on this machine.** Two
-  consecutive 703-test runs each failed exactly one test with `net::ERR_ABORTED` on
-  `page.goto` against `localhost:4173` — a different test each time, never an assertion,
-  and each passing on its own immediately afterwards. Ruled out: competing servers (node
-  killed before each run, one Playwright process), ambiguous locators (the failure is
-  before any locator), stale artifacts (fresh build per run), shared state (fresh context
-  per test), and product regression (isolation passes). It is `vite preview` dropping a
-  connection under sustained load. Not masked with a retry, because a retry would also
-  hide a real navigation failure; recorded here so the next reader knows the signature.
+- **An intermittent `net::ERR_ABORTED` on `page.goto`, roughly one test per full run.**
+  Seen on three runs, a different test each time, never an assertion, always passing in
+  isolation. A fourth run of the same tree was completely clean, so it is genuinely
+  intermittent rather than a property of any one spec.
+
+  Investigated rather than retried. Ruled out: competing servers and stray processes
+  (node killed and ports checked before each run, one Playwright process), ambiguous
+  locators (the failure precedes any locator), stale artifacts (fresh build per run),
+  shared state (fresh context per test), output collision between the two preview
+  servers (`dist` and `dist-e2e` are separate), and product regression.
+
+  One concrete hypothesis was tested and **disproved**: the app registers a service
+  worker with `registerType: 'autoUpdate'`, and a worker claiming a client mid-navigation
+  is a known source of this exact error. Blocking service workers in the test contexts did
+  not stop the aborts, and it broke the privacy audit — the blocked registration writes a
+  console warning, which that test correctly refuses to allow. Reverted.
+
+  Left unmasked. A retry would hide a real navigation failure as readily as this one, and
+  the suite passes clean often enough that the signature stays visible.
 - **A situation report expires after three hours.** Where the owner was this morning is not
   where they are now. That window is a judgement, not a measurement, and it is the number to
   revisit first if the app starts asking where you are too often.
