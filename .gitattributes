@@ -1,0 +1,26 @@
+# Line endings, fixed rather than inherited.
+#
+# Prettier is configured with `endOfLine: "lf"` and CI runs `format:check` on ubuntu, where
+# git checks out LF and the gate passes. On Windows `core.autocrlf` defaults to true, so a
+# clean checkout of this same commit arrives with CRLF and `format:check` fails on every
+# text file in the repository.
+#
+# That made the clean-checkout verification meaningless: it was passing because of a local
+# git setting rather than because of anything in the tree. Declaring the intent here makes
+# the working copy identical on every platform, so the gate tests the commit instead of the
+# machine.
+#
+# `text=auto` still lets git detect binaries; `eol=lf` fixes the checkout for everything it
+# decides is text.
+* text=auto eol=lf
+
+# Binaries, named explicitly so nothing depends on heuristics getting them right.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
