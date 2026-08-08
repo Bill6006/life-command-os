@@ -1,4 +1,4 @@
-import type { CapabilityEffect } from '../capabilities';
+import { adaptFlat, type FlatDomainMoveView } from '../moves/adapt';
 
 /**
  * The closed set of emotional and social actions (Prompt 8E).
@@ -34,139 +34,94 @@ export const EMOTIONAL_ACTION_IDS = [
 ] as const;
 export type EmotionalActionId = (typeof EMOTIONAL_ACTION_IDS)[number];
 
-export interface EmotionalAction {
-  readonly id: EmotionalActionId;
-  readonly statement: string;
-  /** What it is for, observably. Never "feel better". */
-  readonly intendedOutcome: string;
-  readonly minimumVersion: string;
-  readonly stoppingPoint: string;
-  readonly durationMinutes: number;
-  readonly minimumMinutes: number;
-  readonly followUpPromptId: string;
-  readonly capabilityEffects: readonly CapabilityEffect[];
-}
+/**
+ * A emotional action, as a view over a canonical catalogue pattern ().
+ *
+ * The shape every existing reader expects, with the canonical  carried
+ * alongside this slice's own local id so evidence recorded against either resolves to
+ * one move.
+ */
+export type EmotionalAction = FlatDomainMoveView<EmotionalActionId>;
 
-const REGULATION: CapabilityEffect = {
-  channel: 'emotional-regulation',
-  effect: 'improves',
-  magnitude: 'meaningful',
-  basis: 'external-research',
-  crossDomain: false,
-};
-
-const CONNECTION: CapabilityEffect = {
-  channel: 'connection-and-relationships',
-  effect: 'improves',
-  magnitude: 'meaningful',
-  basis: 'external-research',
-  crossDomain: false,
-};
-
-const COURAGE: CapabilityEffect = {
-  channel: 'confidence-and-courage',
-  effect: 'improves',
-  magnitude: 'small',
-  basis: 'app-inference',
-  crossDomain: true,
-};
-
+/**
+ * Every emotional and social action, as a view over the canonical catalogue (`V33-047`).
+ *
+ * No move is authored here any more. Each entry names the catalogue pattern it offers and
+ * keeps this domain's own wording where that wording says more than the generic line.
+ *
+ * What the catalogue supplies is the half that ranking reads: duration, minimum, friction,
+ * capacity shape, safety class, lifecycle, observation window, and identity. A domain
+ * cannot disagree with it about those, which is the point of having one.
+ */
 export const EMOTIONAL_ACTIONS: Record<EmotionalActionId, EmotionalAction> = {
-  'step-outside': {
-    id: 'step-outside',
+  'step-outside': adaptFlat('step-outside', 'pause:step-outside', {
     statement: 'Step outside for ten minutes, without your phone',
     intendedOutcome: 'You left the room and came back',
     minimumVersion: 'To the door and back',
     stoppingPoint: 'Ten minutes. Longer is fine; it is not required',
-    durationMinutes: 10,
-    minimumMinutes: 2,
     followUpPromptId: 'outcome:completed',
-    capabilityEffects: [REGULATION],
-  },
-  'name-it-and-park-it': {
-    id: 'name-it-and-park-it',
+  }),
+  'name-it-and-park-it': adaptFlat('name-it-and-park-it', 'settle-attention:name-the-loop', {
     statement: 'Write down the thing that is taking up room, and close the notebook',
     intendedOutcome: 'It is written down somewhere other than your head',
     minimumVersion: 'One line',
     stoppingPoint: 'Do not solve it now. Writing it down is the whole task',
-    durationMinutes: 5,
-    minimumMinutes: 1,
     followUpPromptId: 'outcome:completed',
-    capabilityEffects: [REGULATION],
-  },
-  'move-the-body': {
-    id: 'move-the-body',
+  }),
+  'move-the-body': adaptFlat('move-the-body', 'move-body:gentle-ten', {
     statement: 'Move for fifteen minutes — walk, stairs, anything',
     intendedOutcome: 'You moved for a while',
     minimumVersion: 'Five minutes of walking',
     stoppingPoint: 'Stop when you want to',
-    durationMinutes: 15,
-    minimumMinutes: 5,
     followUpPromptId: 'outcome:duration',
-    capabilityEffects: [REGULATION],
-  },
-  'reach-out-to-one-person': {
-    id: 'reach-out-to-one-person',
+  }),
+  'reach-out-to-one-person': adaptFlat('reach-out-to-one-person', 'reach-out:message-someone', {
     statement: 'Message one person you have not spoken to in a while',
     intendedOutcome: 'The message was sent',
     minimumVersion: 'One line to one person',
     stoppingPoint: 'Sending it is the task. A reply is not part of it',
-    durationMinutes: 5,
-    minimumMinutes: 1,
     followUpPromptId: 'emotional:reached-out',
-    capabilityEffects: [CONNECTION, COURAGE],
-  },
-  'send-the-message-you-drafted': {
-    id: 'send-the-message-you-drafted',
-    statement: 'Send the message you already decided to send',
-    intendedOutcome: 'The message was sent',
-    minimumVersion: 'Send it as it is',
-    stoppingPoint: 'No rewriting. It was already good enough when you wrote it',
-    durationMinutes: 3,
-    minimumMinutes: 1,
-    followUpPromptId: 'emotional:reached-out',
-    capabilityEffects: [COURAGE],
-  },
-  'repair-after-a-conflict': {
-    id: 'repair-after-a-conflict',
+  }),
+  'send-the-message-you-drafted': adaptFlat(
+    'send-the-message-you-drafted',
+    'unblock-by-asking:send-the-message',
+    {
+      statement: 'Send the message you already decided to send',
+      intendedOutcome: 'The message was sent',
+      minimumVersion: 'Send it as it is',
+      stoppingPoint: 'No rewriting. It was already good enough when you wrote it',
+      followUpPromptId: 'emotional:reached-out',
+    },
+  ),
+  'repair-after-a-conflict': adaptFlat('repair-after-a-conflict', 'repair:name-it-to-them', {
     statement: 'Go back to the person once things are calm',
     intendedOutcome: 'You made contact after it had settled',
     minimumVersion: 'One sentence, in person or in writing',
     stoppingPoint: 'One attempt. What they do next is theirs',
-    durationMinutes: 15,
-    minimumMinutes: 2,
     followUpPromptId: 'emotional:repair-happened',
-    capabilityEffects: [CONNECTION],
-  },
-  'hold-the-boundary-you-decided': {
-    id: 'hold-the-boundary-you-decided',
-    statement: 'Hold the boundary you already decided on',
-    intendedOutcome: 'The thing you decided to do, or not do, is what happened',
-    minimumVersion: 'Say the shortest true version of it',
-    stoppingPoint: 'Say it once. Repeating it is a different decision',
-    durationMinutes: 5,
-    minimumMinutes: 1,
-    followUpPromptId: 'emotional:boundary-held',
-    capabilityEffects: [COURAGE],
-  },
-  'speak-to-someone-qualified': {
-    /*
-     * The action this domain reaches for when it should stop having a view.
-     *
-     * Not advice, and not an interpretation of anything the owner recorded. It is the
-     * app declining to have an opinion about a person's inner life and naming who might
-     * — the same branch health and fatherhood both have, for the same reason.
-     */
-    id: 'speak-to-someone-qualified',
-    statement: 'Worth talking to your GP or a counsellor about',
-    intendedOutcome: 'You raised it with someone qualified',
-    minimumVersion: 'Book the appointment; the conversation is later',
-    stoppingPoint: 'Nothing else is being asked of you here',
-    durationMinutes: 15,
-    minimumMinutes: 5,
-    followUpPromptId: 'outcome:completed',
-    capabilityEffects: [REGULATION],
-  },
+  }),
+  'hold-the-boundary-you-decided': adaptFlat(
+    'hold-the-boundary-you-decided',
+    'boundary:say-no-once',
+    {
+      statement: 'Hold the boundary you already decided on',
+      intendedOutcome: 'The thing you decided to do, or not do, is what happened',
+      minimumVersion: 'Say the shortest true version of it',
+      stoppingPoint: 'Say it once. Repeating it is a different decision',
+      followUpPromptId: 'emotional:boundary-held',
+    },
+  ),
+  'speak-to-someone-qualified': adaptFlat(
+    'speak-to-someone-qualified',
+    'defer-to-a-person:raise-it',
+    {
+      statement: 'Worth talking to your GP or a counsellor about',
+      intendedOutcome: 'You raised it with someone qualified',
+      minimumVersion: 'Book the appointment; the conversation is later',
+      stoppingPoint: 'Nothing else is being asked of you here',
+      followUpPromptId: 'outcome:completed',
+    },
+  ),
 };
 
 /**

@@ -1,3 +1,4 @@
+import { adapt, type DomainMoveView } from '../moves/adapt';
 /**
  * The evidence ladder, the barrier taxonomy, and the closed career action set
  * (Prompt 8C, LEG-061, LEG-065, Blueprint §9.3).
@@ -126,68 +127,53 @@ export const CAREER_ACTION_IDS = [
 ] as const;
 export type CareerActionId = (typeof CAREER_ACTION_IDS)[number];
 
-export interface CareerAction {
-  readonly id: CareerActionId;
-  readonly statement: string;
-  readonly intendedOutcome: string;
-  readonly followUp: { readonly promptId: string; readonly windowHours: number };
-  readonly durationMinutes: number;
-  readonly minimumMinutes: number;
-  readonly minimumVersion: string;
-  readonly fallback: string;
-  readonly stoppingPoint: string;
-  readonly friction: 'low' | 'moderate' | 'high';
-}
+/**
+ * A career action, as a view over a canonical catalogue pattern ().
+ *
+ * The shape every existing reader expects, with the canonical  carried
+ * alongside this slice's own local id so evidence recorded against either resolves to
+ * one move.
+ */
+export type CareerAction = DomainMoveView<CareerActionId>;
 
+/**
+ * Every career action, as a view over the canonical catalogue (`V33-047`).
+ *
+ * No move is authored here any more. Each entry names the catalogue pattern it offers and
+ * keeps this domain's own wording where that wording says more than the generic line.
+ *
+ * What the catalogue supplies is the half that ranking reads: duration, minimum, friction,
+ * capacity shape, safety class, lifecycle, observation window, and identity. A domain
+ * cannot disagree with it about those, which is the point of having one.
+ */
 export const CAREER_ACTIONS: Record<CareerActionId, CareerAction> = {
-  'name-the-next-step': {
-    id: 'name-the-next-step',
+  'name-the-next-step': adapt('name-the-next-step', 'smallest-next-step:name-it', {
     statement: 'Write down the exact next step, in one sentence',
     intendedOutcome: 'The next study session starts without deciding what to do first',
-    followUp: { promptId: 'career:next-step', windowHours: 24 },
-    durationMinutes: 5,
-    minimumMinutes: 2,
     minimumVersion: 'One line. It does not have to be the right one.',
-    fallback: 'Write down the question you would need answered to know the next step',
     stoppingPoint: 'One sentence. This is not planning.',
-    friction: 'low',
-  },
-  'return-to-it': {
-    id: 'return-to-it',
+    followUp: { promptId: 'career:next-step', windowHours: 24 },
+  }),
+  'return-to-it': adapt('return-to-it', 'protect-a-block:short-block', {
     statement: 'Pick up where you stopped',
     intendedOutcome: 'The interrupted session is resumed rather than restarted',
-    followUp: { promptId: 'career:re-entry', windowHours: 24 },
-    durationMinutes: 20,
-    minimumMinutes: 5,
     minimumVersion: 'Five minutes re-reading what you had open',
-    fallback: 'Write down where you got to, so the next attempt starts there',
     stoppingPoint: 'Stop after twenty minutes regardless of progress',
-    friction: 'moderate',
-  },
-  'prove-a-claim': {
-    id: 'prove-a-claim',
+    followUp: { promptId: 'career:re-entry', windowHours: 24 },
+  }),
+  'prove-a-claim': adapt('prove-a-claim', 'find-out:try-it-small', {
     statement: 'Do the smallest thing that would prove it',
     intendedOutcome: 'A claim with nothing behind it gains its first piece of evidence',
-    followUp: { promptId: 'career:lab-independence', windowHours: 48 },
-    durationMinutes: 30,
-    minimumMinutes: 10,
     minimumVersion: 'Ten minutes: get as far as the first thing that actually runs',
-    fallback: 'Write down what proof would look like, so it can be done later',
     stoppingPoint: 'Stop when something works, or after thirty minutes',
-    friction: 'moderate',
-  },
-  'practise-retrieval': {
-    id: 'practise-retrieval',
-    statement: 'Try to recall it before looking anything up',
+    followUp: { promptId: 'career:lab-independence', windowHours: 48 },
+  }),
+  'practise-retrieval': adapt('practise-retrieval', 'find-out:recall-before-looking', {
     intendedOutcome: 'What comes back without notes is observed rather than assumed',
-    followUp: { promptId: 'career:retrieval', windowHours: 24 },
-    durationMinutes: 15,
-    minimumMinutes: 5,
     minimumVersion: 'Five minutes, notes closed',
-    fallback: 'Write down the three things you would need to remember',
     stoppingPoint: 'Fifteen minutes. Checking afterwards is part of it.',
-    friction: 'low',
-  },
+    followUp: { promptId: 'career:retrieval', windowHours: 24 },
+  }),
 };
 
 /**

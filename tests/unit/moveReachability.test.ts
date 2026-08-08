@@ -155,6 +155,36 @@ describe('no second move library survives the migration', () => {
     }
   });
 
+  it('lets no domain author a move of its own any more', () => {
+    /*
+     * The structural guard (`V33-047`). Every slice's action list is now a set of
+     * `adapt` / `adaptFlat` calls over the catalogue. A future move written directly into
+     * one of these files would need the fields the catalogue owns — a duration, a set of
+     * capability effects — and declaring either here is what a second authored library
+     * looks like on its first day.
+     */
+    const lists = [
+      'src/domain/health/actions.ts',
+      'src/domain/fatherhood/actions.ts',
+      'src/domain/home/environment.ts',
+      'src/domain/money/strategy.ts',
+      'src/domain/faith/meaning.ts',
+      'src/domain/career/ladder.ts',
+      'src/domain/emotional/regulation.ts',
+    ];
+
+    for (const file of lists) {
+      const text = readFileSync(file, 'utf8');
+      const inActions = text.slice(text.indexOf('_ACTIONS: Record'));
+
+      expect(inActions, file).not.toMatch(/^\s+durationMinutes:\s*\d/m);
+      expect(inActions, file).not.toMatch(/^\s+minimumMinutes:\s*\d/m);
+      expect(inActions, file).not.toMatch(/^\s+capabilityEffects:/m);
+      /* And every entry comes through the adapter. */
+      expect(inActions, file).toMatch(/adapt(Flat)?\(/);
+    }
+  });
+
   it('never lets shared decision code import a per-domain action list', () => {
     const shared = sourceFiles('src').filter(
       (file) =>

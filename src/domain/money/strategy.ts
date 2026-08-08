@@ -1,5 +1,5 @@
-import type { CapabilityEffect } from '../capabilities';
 import { scaleAttribute } from '../records/scales';
+import { adaptFlat, type FlatDomainMoveView } from '../moves/adapt';
 
 /**
  * Money: the strategic scope, and the machinery deliberately left out (Prompt 8H).
@@ -78,97 +78,51 @@ export const MONEY_ACTION_IDS = [
 ] as const;
 export type MoneyActionId = (typeof MONEY_ACTION_IDS)[number];
 
-export interface MoneyAction {
-  readonly id: MoneyActionId;
-  readonly statement: string;
-  readonly intendedOutcome: string;
-  readonly minimumVersion: string;
-  readonly stoppingPoint: string;
-  readonly durationMinutes: number;
-  readonly minimumMinutes: number;
-  readonly followUpPromptId: string;
-  readonly capabilityEffects: readonly CapabilityEffect[];
-}
-
-const RESILIENCE: CapabilityEffect = {
-  channel: 'financial-freedom-and-resilience',
-  effect: 'improves',
-  magnitude: 'meaningful',
-  basis: 'app-inference',
-  crossDomain: false,
-};
-
-const STEADINESS: CapabilityEffect = {
-  channel: 'emotional-regulation',
-  effect: 'improves',
-  magnitude: 'small',
-  basis: 'app-inference',
-  crossDomain: true,
-};
+export type MoneyAction = FlatDomainMoveView<MoneyActionId>;
 
 /**
- * Four actions, and none of them tells anyone what to do with their money.
+ * Every money action, as a view over the canonical catalogue (`V33-047`).
  *
- * Three are about a decision he already named or a goal he already set. The fourth —
- * looking at one number for two minutes — is the only one the app raises on its own, and
- * it is deliberately the smallest possible act. Somebody who has not opened their banking
- * app for a month does not need a plan; they need the first two minutes, and an
- * application that responds to avoidance with a budgeting exercise guarantees another
- * month.
+ * No move is authored here any more. Each entry names the catalogue pattern it offers and
+ * keeps this domain's own wording where that wording says more than the generic line —
+ * which, for this slice, is nearly everywhere: these sentences were written in the owner's
+ * voice and losing them to a migration would be a real loss.
  *
- * There is no action for saving, spending, investing, consolidating, or switching
- * anything. Those are financial advice, and this product is not licensed to give it.
+ * What the catalogue supplies is the half that ranking reads: duration, minimum, friction,
+ * capacity shape, safety class, lifecycle, observation window, and identity. A domain
+ * cannot disagree with it about those, which is the point.
  */
 export const MONEY_ACTIONS: Record<MoneyActionId, MoneyAction> = {
-  'make-the-call': {
-    id: 'make-the-call',
+  'make-the-call': adaptFlat('make-the-call', 'decide-and-close:make-the-call', {
     statement: 'Make the call you were weighing',
     intendedOutcome: 'It is decided, either way',
     minimumVersion: 'Decide it. Deciding against it is deciding it',
     stoppingPoint: 'One decision. Nothing else needs looking at today',
-    durationMinutes: 20,
-    minimumMinutes: 5,
     followUpPromptId: 'money:decision-made',
-    capabilityEffects: [RESILIENCE, STEADINESS],
-  },
-  'look-at-one-number': {
-    /*
-     * The smallest possible re-entry, and the only action raised without him naming
-     * something first. Two minutes and one number, because the alternative to a small
-     * ask here is not a big one — it is another month of not looking.
-     */
-    id: 'look-at-one-number',
+  }),
+  'look-at-one-number': adaptFlat('look-at-one-number', 'money-clarity:look-at-it', {
     statement: 'Look at one number for two minutes',
     intendedOutcome: 'You looked. That is the whole of it',
     minimumVersion: 'Open it. Read one figure. Close it',
     stoppingPoint: 'Two minutes. Nothing has to be decided or fixed today',
-    durationMinutes: 5,
-    minimumMinutes: 2,
     followUpPromptId: 'update-area:money',
-    capabilityEffects: [STEADINESS],
-  },
-  'name-what-it-is-for': {
-    id: 'name-what-it-is-for',
-    statement: 'Write down what the money is actually for',
+  }),
+  'name-what-it-is-for': adaptFlat('name-what-it-is-for', 'money-clarity:name-what-it-is-for', {
     intendedOutcome: 'There is one sentence on record, in your words',
     minimumVersion: 'One line. It can be wrong and changed later',
     stoppingPoint: 'One thing. A plan can wait',
-    durationMinutes: 10,
-    minimumMinutes: 2,
     followUpPromptId: 'outcome:completed',
-    capabilityEffects: [RESILIENCE],
-  },
-  'one-thing-that-moves-it': {
-    id: 'one-thing-that-moves-it',
-    statement: 'Do the one thing that moves what you named',
-    intendedOutcome: 'The thing you said it was for is closer than it was',
-    minimumVersion: 'The first step of it',
-    stoppingPoint: 'One step. This is not an afternoon of admin',
-    durationMinutes: 30,
-    minimumMinutes: 10,
-    followUpPromptId: 'money:pressure-since',
-    capabilityEffects: [RESILIENCE, STEADINESS],
-  },
+  }),
+  'one-thing-that-moves-it': adaptFlat(
+    'one-thing-that-moves-it',
+    'money-guard:move-toward-the-purpose',
+    {
+      intendedOutcome: 'The thing you said it was for is closer than it was',
+      minimumVersion: 'The first step of it',
+      stoppingPoint: 'One step. This is not an afternoon of admin',
+      followUpPromptId: 'money:pressure-since',
+    },
+  ),
 };
 
 export const MONEY_ATTRIBUTES = {

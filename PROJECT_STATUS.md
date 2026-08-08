@@ -60,18 +60,23 @@ the app behaves differently but incompletely.
 
 Sections **C, E, F, G, H, J, K** and the **AT33 acceptance scenarios (M)**. Section **D** is
 partly done: D1 (the family model) and D2 (breadth, 102 patterns) are complete, D3, D4 and D5 are
-complete, and the generator migration has **started**: health is done and is the template.
+complete, and the generator migration is **done across all seven slices and the shared
+core generator**.
 
-`HEALTH_ACTIONS` is now a view over the catalogue — seven `adapt()` calls, no move
-literals, with duration, minimum, friction and shape taken from the pattern and only the
-wording overridable. `HealthAction` is `DomainMoveView<HealthActionId>`, so the local id
-health has always used travels alongside the canonical `patternId` and evidence recorded
-against either resolves to one move.
+Every domain action list is now a set of `adapt()` / `adaptFlat()` calls over the
+catalogue, and every action *type* is `DomainMoveView<LocalId>` or its flat equivalent —
+so the canonical `patternId` travels alongside the local id a slice has always used, and
+evidence recorded against either resolves to one move. Duration, minimum, friction,
+capacity shape, safety, lifecycle and observation window come from the pattern; a slice may
+override only wording, and only where its own sentence said more.
 
-**Six domains and the shared core generator are not migrated.** Runtime-reachable is
-therefore **7 of 104**, asserted exactly in `moveRuntimeReachability.test.ts` so it cannot
-drift upward without someone meaning it. Nothing in the catalogue is intentionally
-unreachable — the other 97 are authored, valid, and waiting on their generator. Sections **A, B** and **I** are complete. Section **I** is complete —
+**Runtime-reachable: 35 of 113**, asserted exactly. That is short of the catalogue and
+honestly so — each slice still selects the handful of patterns it always offered. What
+changed is that those selections are views over one authored source instead of eight.
+Widening them is a separate decision from the migration and has not been taken.
+
+Nothing is intentionally unreachable. The other 78 are authored, valid, and waiting to be
+selected. Sections **A, B** and **I** are complete. Section **I** is complete —
 three-way distinction, prerequisite actions, the full owner-control lifecycle, and the
 interface to reach all of it.
 

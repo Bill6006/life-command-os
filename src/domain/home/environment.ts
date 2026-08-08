@@ -1,4 +1,4 @@
-import type { CapabilityEffect } from '../capabilities';
+import { adaptFlat, type FlatDomainMoveView } from '../moves/adapt';
 
 /**
  * Home and environment: what the app may notice, and what it must never become
@@ -113,103 +113,61 @@ export const ENVIRONMENT_ACTION_IDS = [
 ] as const;
 export type EnvironmentActionId = (typeof ENVIRONMENT_ACTION_IDS)[number];
 
-export interface EnvironmentAction {
-  readonly id: EnvironmentActionId;
-  readonly statement: string;
-  readonly intendedOutcome: string;
-  readonly minimumVersion: string;
-  readonly stoppingPoint: string;
-  readonly durationMinutes: number;
-  readonly minimumMinutes: number;
-  readonly followUpPromptId: string;
-  readonly capabilityEffects: readonly CapabilityEffect[];
-}
-
-const EASE: CapabilityEffect = {
-  channel: 'environmental-ease',
-  effect: 'improves',
-  magnitude: 'meaningful',
-  basis: 'app-inference',
-  crossDomain: false,
-};
-
-const CLARITY: CapabilityEffect = {
-  channel: 'focus-and-clarity',
-  effect: 'improves',
-  magnitude: 'small',
-  basis: 'app-inference',
-  crossDomain: true,
-};
+/**
+ * A environment action, as a view over a canonical catalogue pattern ().
+ *
+ * The shape every existing reader expects, with the canonical  carried
+ * alongside this slice's own local id so evidence recorded against either resolves to
+ * one move.
+ */
+export type EnvironmentAction = FlatDomainMoveView<EnvironmentActionId>;
 
 /**
- * Four actions, and not one of them says what to change.
+ * Every home action, as a view over the canonical catalogue (`V33-047`).
  *
- * The app knows *that* something keeps getting in the way, because he recorded it. It
- * does not know what to do about his house, and a suggestion invented from a friction
- * label would be a guess wearing the clothes of advice. So three of these ask for his
- * change, and the fourth is about **when** rather than what — setting up before you need
- * the space is the one piece of environment design that holds regardless of what the
- * space contains.
+ * No move is authored here any more. Each entry names the catalogue pattern it offers and
+ * keeps this domain's own wording where that wording says more than the generic line.
  *
- * There is deliberately no action for maintaining anything, no action that recurs, and
- * no action a passing week can trigger.
+ * What the catalogue supplies is the half that ranking reads: duration, minimum, friction,
+ * capacity shape, safety class, lifecycle, observation window, and identity. A domain
+ * cannot disagree with it about those, which is the point of having one.
  */
 export const ENVIRONMENT_ACTIONS: Record<EnvironmentActionId, EnvironmentAction> = {
-  'name-one-change': {
-    id: 'name-one-change',
+  'name-one-change': adaptFlat('name-one-change', 'decide-and-close:make-the-call', {
     statement: 'Decide on one thing to change about the setup',
     intendedOutcome: 'One change is written down, in your words',
     minimumVersion: 'One line. It can be small, and it can be wrong',
     stoppingPoint: 'One thing. A list of jobs is a different app',
-    durationMinutes: 5,
-    minimumMinutes: 1,
     followUpPromptId: 'home:change-named',
-    capabilityEffects: [EASE],
-  },
-  'make-the-change': {
-    id: 'make-the-change',
-    statement: 'Make the change you decided on',
-    intendedOutcome: 'The setup is different from how it was',
-    minimumVersion: 'The first part of it',
-    stoppingPoint: 'Stop when the change is made. Nothing else needs doing while you are there',
-    durationMinutes: 20,
-    minimumMinutes: 5,
-    followUpPromptId: 'home:change-made',
-    capabilityEffects: [EASE, CLARITY],
-  },
-  'try-a-different-change': {
-    id: 'try-a-different-change',
-    statement: 'Try a different change — the first one did not hold',
-    intendedOutcome: 'A second thing is different from how it was',
-    minimumVersion: 'Decide what it is. Doing it can wait',
-    stoppingPoint: 'One attempt. If this one does not hold either, that is worth knowing too',
-    durationMinutes: 20,
-    minimumMinutes: 5,
-    followUpPromptId: 'home:change-made',
-    capabilityEffects: [EASE],
-  },
-  'set-it-up-before': {
-    /*
-     * The only action that names its own content, and it names a *time* rather than a
-     * thing: set the space up before you need it. That holds whatever the space is, so
-     * it prescribes nothing about his house.
-     */
-    id: 'set-it-up-before',
+  }),
+  'make-the-change': adaptFlat(
+    'make-the-change',
+    'reduce-friction-at-home:fix-the-repeat-offender',
+    {
+      statement: 'Make the change you decided on',
+      intendedOutcome: 'The setup is different from how it was',
+      minimumVersion: 'The first part of it',
+      stoppingPoint:
+        'Stop when the change is made. Nothing else needs doing while you are there',
+      followUpPromptId: 'home:change-made',
+    },
+  ),
+  'try-a-different-change': adaptFlat(
+    'try-a-different-change',
+    'reduce-friction-at-home:try-a-different-change',
+    {
+      intendedOutcome: 'A second thing is different from how it was',
+      minimumVersion: 'Decide what it is. Doing it can wait',
+      stoppingPoint: 'One attempt. If this one does not hold either, that is worth knowing too',
+      followUpPromptId: 'home:change-made',
+    },
+  ),
+  'set-it-up-before': adaptFlat('set-it-up-before', 'prepare-the-ground:lay-it-out-tonight', {
     statement: 'Set the space up before you need it, not when you get there',
     intendedOutcome: 'It was ready when you sat down',
     minimumVersion: 'The one thing that takes longest to get out',
-    /*
-     * Worded without the word. Saying "not tidy" would put the cleaning app's vocabulary
-     * into the shipped copy in order to disown it, and a disavowal is still a mention —
-     * the same trap the career slice hit with "study more".
-     */
-    stoppingPoint:
-      'Ready is the stopping point — not finished, and nothing else while you are there',
-    durationMinutes: 10,
-    minimumMinutes: 2,
     followUpPromptId: 'home:friction-again',
-    capabilityEffects: [EASE, CLARITY],
-  },
+  }),
 };
 
 export const HOME_ATTRIBUTES = {

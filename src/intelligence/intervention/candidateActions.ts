@@ -1,5 +1,6 @@
 import { knownValue, type CanonicalRecord } from '../../domain/records';
 import { activeGoals, openCommitments } from '../support';
+import { pattern } from '../../domain/moves/registry';
 import type { CandidateAction, StateAssessment } from '../types';
 
 /**
@@ -39,6 +40,12 @@ export function generateCandidates(
     const dose = free === undefined ? 25 : Math.max(10, Math.min(50, free - 15));
     candidates.push({
       id: `focus:${goal.recordId}`,
+      /*
+       * Canonical identity (`V33-047`). The candidate id stays per-goal because evidence
+       * is about *this* goal, but the move behind it is one catalogue pattern, so
+       * everything learned about protecting a block accrues to one identity.
+       */
+      patternId: pattern('protect-a-block:deep-block').patternId,
       statement: goal.statement,
       category: goal.category,
       intendedOutcome: 'The block is started and the goal moves',
@@ -89,6 +96,7 @@ export function generateCandidates(
     if (commitment.state !== 'blocked' && commitment.state !== 'waiting') continue;
     candidates.push({
       id: `unblock:${commitment.recordId}`,
+      patternId: pattern('unblock-by-asking:send-the-message').patternId,
       statement: `Unblock: ${commitment.statement}`,
       category: commitment.category,
       intendedOutcome: 'The commitment is no longer waiting on this step',
@@ -125,6 +133,7 @@ export function generateCandidates(
   if (capacity === 'low' || capacity === 'depleted') {
     candidates.push({
       id: 'recover:pause',
+      patternId: pattern('pause:screen-break').patternId,
       statement: 'Take a deliberate pause',
       category: 'time-attention-capacity',
       intendedOutcome: 'The interference eases enough to do something else',

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { HEALTH_ACTIONS, HEALTH_ACTION_IDS } from '../../src/domain/health/actions';
+import { CAREER_ACTIONS, CAREER_ACTION_IDS } from '../../src/domain/career/ladder';
+import { EMOTIONAL_ACTIONS, EMOTIONAL_ACTION_IDS } from '../../src/domain/emotional/regulation';
+import { FAITH_ACTIONS, FAITH_ACTION_IDS } from '../../src/domain/faith/meaning';
+import { FATHERHOOD_ACTIONS, FATHERHOOD_ACTION_IDS } from '../../src/domain/fatherhood/actions';
+import { ENVIRONMENT_ACTIONS, ENVIRONMENT_ACTION_IDS } from '../../src/domain/home/environment';
+import { MONEY_ACTIONS, MONEY_ACTION_IDS } from '../../src/domain/money/strategy';
 import { MOVE_PATTERNS } from '../../src/domain/moves/catalogue';
 import { findPattern, recommendablePatterns } from '../../src/domain/moves/registry';
 
@@ -25,12 +31,51 @@ import { findPattern, recommendablePatterns } from '../../src/domain/moves/regis
  * deliberately — and so nobody has to trust a summary.
  */
 
-/** Patterns a migrated domain can actually produce today. */
+/**
+ * Every domain's authored list, now that all seven are views over the catalogue.
+ *
+ * Read through the same objects the generators read, so this cannot drift from what the
+ * product can actually produce — if a slice went back to authoring its own move, its
+ * entries would stop having a `patternId` and this would stop compiling.
+ */
 const MIGRATED_DOMAINS: readonly { readonly domain: string; readonly patternIds: string[] }[] =
   [
     {
       domain: 'health-recovery-energy',
       patternIds: HEALTH_ACTION_IDS.map((id) => HEALTH_ACTIONS[id].patternId),
+    },
+    {
+      domain: 'career-and-learning',
+      patternIds: CAREER_ACTION_IDS.map((id) => CAREER_ACTIONS[id].patternId),
+    },
+    {
+      domain: 'emotional-and-relationships',
+      patternIds: EMOTIONAL_ACTION_IDS.map((id) => EMOTIONAL_ACTIONS[id].patternId),
+    },
+    {
+      domain: 'faith-and-meaning',
+      patternIds: FAITH_ACTION_IDS.map((id) => FAITH_ACTIONS[id].patternId),
+    },
+    {
+      domain: 'fatherhood',
+      patternIds: FATHERHOOD_ACTION_IDS.map((id) => FATHERHOOD_ACTIONS[id].patternId),
+    },
+    {
+      domain: 'home-and-environment',
+      patternIds: ENVIRONMENT_ACTION_IDS.map((id) => ENVIRONMENT_ACTIONS[id].patternId),
+    },
+    {
+      domain: 'money',
+      patternIds: MONEY_ACTION_IDS.map((id) => MONEY_ACTIONS[id].patternId),
+    },
+    {
+      /* The shared generator, which builds three candidates from canonical patterns. */
+      domain: 'shared-core',
+      patternIds: [
+        'protect-a-block:deep-block',
+        'unblock-by-asking:send-the-message',
+        'pause:screen-break',
+      ],
     },
   ];
 
@@ -50,15 +95,21 @@ describe('the counts, separately', () => {
     expect(recommendablePatterns().length).toBe(MOVE_PATTERNS.length);
   });
 
-  it('reports how many are reachable through real generation, and it is not all of them', () => {
+  it('reports how many are reachable through real generation', () => {
     const reachable = runtimeReachable();
 
     /*
-     * Seven, from health. Asserted exactly, so migrating another domain has to update
-     * this number and cannot happen silently — and so this file cannot quietly drift
-     * into claiming more than the product does.
+     * Thirty-five, across all seven slices and the shared generator. Asserted exactly so
+     * the number cannot drift in either direction without somebody meaning it: a slice
+     * that stopped offering a pattern would drop it, and a slice that started authoring
+     * its own would not raise it.
+     *
+     * It is a long way short of the catalogue, and that is the honest state. Each slice
+     * still selects the handful of patterns it always had; what changed is that those
+     * selections are now views over one authored source instead of eight. Widening the
+     * selections is the next piece of work and is a separate decision from the migration.
      */
-    expect(reachable.size).toBe(7);
+    expect(reachable.size).toBe(35);
     expect(reachable.size).toBeLessThan(MOVE_PATTERNS.length);
   });
 

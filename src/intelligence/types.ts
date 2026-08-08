@@ -144,6 +144,15 @@ export interface UntreatedForecast {
 
 export interface CandidateAction {
   readonly id: string;
+  /**
+   * The canonical catalogue pattern behind this candidate (`V33-047`).
+   *
+   * Optional only while the migration finishes. `id` is per-occurrence — `focus:<goalId>`
+   * differs for every goal — and evidence about *this goal* belongs on it. `patternId` is
+   * per-move, and evidence about *protecting a block in general* belongs there. Collapsing
+   * the two would lose one of those questions.
+   */
+  readonly patternId?: string | undefined;
   readonly statement: string;
   readonly category: LifeCategory;
   /**

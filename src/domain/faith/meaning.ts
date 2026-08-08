@@ -1,4 +1,4 @@
-import type { CapabilityEffect } from '../capabilities';
+import { adaptFlat, type FlatDomainMoveView } from '../moves/adapt';
 
 /**
  * Faith and meaning: what the app may hold, and what it may never say (Prompt 8F).
@@ -35,94 +35,76 @@ export const FAITH_ACTION_IDS = [
 ] as const;
 export type FaithActionId = (typeof FAITH_ACTION_IDS)[number];
 
-export interface FaithAction {
-  readonly id: FaithActionId;
-  readonly statement: string;
-  readonly intendedOutcome: string;
-  readonly minimumVersion: string;
-  readonly stoppingPoint: string;
-  readonly durationMinutes: number;
-  readonly minimumMinutes: number;
-  readonly followUpPromptId: string;
-  readonly capabilityEffects: readonly CapabilityEffect[];
-}
+/**
+ * A faith action, as a view over a canonical catalogue pattern ().
+ *
+ * The shape every existing reader expects, with the canonical  carried
+ * alongside this slice's own local id so evidence recorded against either resolves to
+ * one move.
+ */
+export type FaithAction = FlatDomainMoveView<FaithActionId>;
 
-const ALIGNMENT: CapabilityEffect = {
-  channel: 'purpose-and-values-alignment',
-  effect: 'improves',
-  magnitude: 'meaningful',
-  basis: 'app-inference',
-  crossDomain: false,
-};
-
-const STEADINESS: CapabilityEffect = {
-  channel: 'emotional-regulation',
-  effect: 'improves',
-  magnitude: 'small',
-  basis: 'app-inference',
-  crossDomain: true,
-};
-
+/**
+ * Every faith action, as a view over the canonical catalogue (`V33-047`).
+ *
+ * No move is authored here any more. Each entry names the catalogue pattern it offers and
+ * keeps this domain's own wording where that wording says more than the generic line —
+ * which, for this slice, is nearly everywhere: these sentences were written in the owner's
+ * voice and losing them to a migration would be a real loss.
+ *
+ * What the catalogue supplies is the half that ranking reads: duration, minimum, friction,
+ * capacity shape, safety class, lifecycle, observation window, and identity. A domain
+ * cannot disagree with it about those, which is the point.
+ */
 export const FAITH_ACTIONS: Record<FaithActionId, FaithAction> = {
-  'return-to-a-practice': {
-    id: 'return-to-a-practice',
-    statement: 'Pick up something you said you wanted to do',
-    intendedOutcome: 'You did it, in whatever version you had time for',
-    minimumVersion: 'The shortest version that still counts as having done it',
-    stoppingPoint: 'Stop when you want to. Length is not the point',
-    durationMinutes: 15,
-    minimumMinutes: 2,
-    followUpPromptId: 'faith:practice-happened',
-    capabilityEffects: [ALIGNMENT, STEADINESS],
-  },
-  'do-the-smallest-version': {
-    id: 'do-the-smallest-version',
-    statement: 'Do the two-minute version rather than skipping it',
-    intendedOutcome: 'It happened at all',
-    minimumVersion: 'Two minutes',
-    stoppingPoint: 'Two minutes is a complete version, not a failed long one',
-    durationMinutes: 5,
-    minimumMinutes: 2,
-    followUpPromptId: 'faith:practice-happened',
-    capabilityEffects: [ALIGNMENT],
-  },
-  'make-the-repair': {
-    id: 'make-the-repair',
-    statement: 'Do the thing you decided to put right',
+  'return-to-a-practice': adaptFlat(
+    'return-to-a-practice',
+    'live-the-value:do-the-small-version',
+    {
+      statement: 'Pick up something you said you wanted to do',
+      intendedOutcome: 'You did it, in whatever version you had time for',
+      minimumVersion: 'The shortest version that still counts as having done it',
+      stoppingPoint: 'Stop when you want to. Length is not the point',
+      followUpPromptId: 'faith:practice-happened',
+    },
+  ),
+  'do-the-smallest-version': adaptFlat(
+    'do-the-smallest-version',
+    'live-the-value:two-minute-version',
+    {
+      intendedOutcome: 'It happened at all',
+      minimumVersion: 'Two minutes',
+      stoppingPoint: 'Two minutes is a complete version, not a failed long one',
+      followUpPromptId: 'faith:practice-happened',
+    },
+  ),
+  'make-the-repair': adaptFlat('make-the-repair', 'live-the-value:put-it-right', {
     intendedOutcome: 'You did what you said you would',
     minimumVersion: 'The first step of it',
     stoppingPoint: 'One attempt. What happens next is not yours to control',
-    durationMinutes: 20,
-    minimumMinutes: 5,
     followUpPromptId: 'faith:repair-happened',
-    capabilityEffects: [ALIGNMENT],
-  },
-  'do-the-thing-for-someone-else': {
-    id: 'do-the-thing-for-someone-else',
-    statement: 'Do the thing for someone else you had in mind',
-    intendedOutcome: 'It was done',
-    minimumVersion: 'The smallest useful part of it',
-    stoppingPoint: 'Stop when it is done. Nobody needs to know about it',
-    durationMinutes: 30,
-    minimumMinutes: 5,
-    followUpPromptId: 'faith:service-happened',
-    capabilityEffects: [ALIGNMENT],
-  },
-  'write-down-what-matters': {
-    /*
-     * The only action offered when nothing has been named yet, and it asks for his words
-     * rather than offering him any.
-     */
-    id: 'write-down-what-matters',
-    statement: 'Write down one thing that actually matters to you',
-    intendedOutcome: 'There is one sentence on record, in your words',
-    minimumVersion: 'One line. It can be wrong and changed later',
-    stoppingPoint: 'One thing. A list can wait',
-    durationMinutes: 5,
-    minimumMinutes: 1,
-    followUpPromptId: 'outcome:completed',
-    capabilityEffects: [ALIGNMENT],
-  },
+  }),
+  'do-the-thing-for-someone-else': adaptFlat(
+    'do-the-thing-for-someone-else',
+    'live-the-value:for-someone-else',
+    {
+      intendedOutcome: 'It was done',
+      minimumVersion: 'The smallest useful part of it',
+      stoppingPoint: 'Stop when it is done. Nobody needs to know about it',
+      followUpPromptId: 'faith:service-happened',
+    },
+  ),
+  'write-down-what-matters': adaptFlat(
+    'write-down-what-matters',
+    'live-the-value:notice-the-gap',
+    {
+      statement: 'Write down one thing that actually matters to you',
+      intendedOutcome: 'There is one sentence on record, in your words',
+      minimumVersion: 'One line. It can be wrong and changed later',
+      stoppingPoint: 'One thing. A list can wait',
+      followUpPromptId: 'outcome:completed',
+    },
+  ),
 };
 
 /* -------------------------------------------------------------------------- */

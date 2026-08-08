@@ -1,5 +1,5 @@
-import type { CapabilityEffect } from '../capabilities';
 import { SKILL_LABELS, type TrackedSkillId } from './development';
+import { adaptFlat, type FlatDomainMoveView } from '../moves/adapt';
 
 /**
  * The closed set of fatherhood actions, and the Tiny Lessons they can carry.
@@ -35,110 +35,86 @@ export const FATHERHOOD_ACTION_IDS = [
 ] as const;
 export type FatherhoodActionId = (typeof FATHERHOOD_ACTION_IDS)[number];
 
-export interface FatherhoodAction {
-  readonly id: FatherhoodActionId;
-  readonly statement: string;
-  /** Why it is worth doing, in one sentence the owner can disagree with. */
+/**
+ * A fatherhood action: a catalogue pattern plus this slice's own reasoning.
+ *
+ * `whyItMatters` is not part of the move. It is the domain explaining itself to the owner
+ * so a decline can be a reason rather than a shrug, and no other slice has an equivalent.
+ */
+export type FatherhoodAction = FlatDomainMoveView<FatherhoodActionId> & {
   readonly whyItMatters: string;
-  /** What would be observable afterwards. Never "did it work". */
-  readonly intendedOutcome: string;
-  readonly minimumVersion: string;
-  readonly stoppingPoint: string;
-  readonly durationMinutes: number;
-  readonly minimumMinutes: number;
-  readonly followUpPromptId: string;
-  readonly capabilityEffects: readonly CapabilityEffect[];
-}
-
-const CONNECTION: CapabilityEffect = {
-  channel: 'connection-and-relationships',
-  effect: 'improves',
-  magnitude: 'meaningful',
-  basis: 'external-research',
-  crossDomain: false,
 };
 
-const PURPOSE: CapabilityEffect = {
-  channel: 'purpose-and-values-alignment',
-  effect: 'improves',
-  magnitude: 'small',
-  basis: 'app-inference',
-  crossDomain: true,
-};
-
+/**
+ * Every fatherhood action, as a view over the canonical catalogue (`V33-047`).
+ *
+ * No move is authored here any more. Each entry names the catalogue pattern it offers and
+ * keeps this domain's own wording, which is nearly all of it — these sentences are about a
+ * specific child and a specific evening, and the generic catalogue line cannot be.
+ *
+ * `whyItMatters` stays local. It is not part of the move; it is this slice explaining its
+ * own reasoning to the owner, and no other domain has an equivalent.
+ */
 export const FATHERHOOD_ACTIONS: Record<FatherhoodActionId, FatherhoodAction> = {
   'tiny-lesson': {
-    id: 'tiny-lesson',
-    statement: 'Do one tiny lesson together',
+    ...adaptFlat('tiny-lesson', 'attend-to-child:one-tiny-lesson', {
+      statement: 'Do one tiny lesson together',
+      intendedOutcome: 'The activity happened and you saw how much help she needed',
+      minimumVersion: 'Two minutes, one attempt, whatever she gives you',
+      stoppingPoint:
+        'Stop the moment she loses interest — a stopped lesson is not a failed one',
+      followUpPromptId: 'father:lesson-happened',
+    }),
     whyItMatters:
       'One small thing practised on purpose gives her a chance to try it, and gives you something you actually watched rather than something you assume.',
-    intendedOutcome: 'The activity happened and you saw how much help she needed',
-    minimumVersion: 'Two minutes, one attempt, whatever she gives you',
-    stoppingPoint: 'Stop the moment she loses interest — a stopped lesson is not a failed one',
-    durationMinutes: 10,
-    minimumMinutes: 2,
-    followUpPromptId: 'father:lesson-happened',
-    capabilityEffects: [CONNECTION, PURPOSE],
   },
   'follow-her-lead': {
-    id: 'follow-her-lead',
-    statement: 'Join whatever she is already doing, without redirecting it',
+    ...adaptFlat('follow-her-lead', 'attend-to-child:follow-their-lead', {
+      statement: 'Join whatever she is already doing, without redirecting it',
+      intendedOutcome: 'You spent time in her activity rather than starting your own',
+      minimumVersion: 'Sit down next to her for five minutes',
+      stoppingPoint: 'Stop when you need to — leaving early does not undo it',
+      followUpPromptId: 'father:together-happened',
+    }),
     whyItMatters:
       'Joining what already has her attention costs nothing to set up and needs no cooperation from her, which is why it survives a bad evening when a planned activity does not.',
-    intendedOutcome: 'You spent time in her activity rather than starting your own',
-    minimumVersion: 'Sit down next to her for five minutes',
-    stoppingPoint: 'Stop when you need to — leaving early does not undo it',
-    durationMinutes: 15,
-    minimumMinutes: 5,
-    followUpPromptId: 'father:together-happened',
-    capabilityEffects: [CONNECTION],
   },
   'protect-the-wind-down': {
-    id: 'protect-the-wind-down',
-    statement: 'Protect the wind-down: same order, no new demands',
+    ...adaptFlat('protect-the-wind-down', 'attend-to-child:protect-the-wind-down', {
+      intendedOutcome: 'The wind-down ran in its usual order',
+      minimumVersion: 'Keep the last step the same even if the rest slipped',
+      stoppingPoint:
+        'If it has already gone sideways, let it go — tomorrow is a separate evening',
+      followUpPromptId: 'father:wind-down-happened',
+    }),
     whyItMatters:
       'The last half hour is the part of the day most easily lost to everything else, and it is the part she can most predict.',
-    intendedOutcome: 'The wind-down ran in its usual order',
-    minimumVersion: 'Keep the last step the same even if the rest slipped',
-    stoppingPoint:
-      'If it has already gone sideways, let it go — tomorrow is a separate evening',
-    durationMinutes: 30,
-    minimumMinutes: 10,
-    followUpPromptId: 'father:wind-down-happened',
-    capabilityEffects: [CONNECTION],
   },
   'repair-after-a-hard-moment': {
-    id: 'repair-after-a-hard-moment',
-    statement: 'Go back to her once things are calm',
+    ...adaptFlat('repair-after-a-hard-moment', 'repair:ask-what-they-need', {
+      statement: 'Go back to her once things are calm',
+      intendedOutcome: 'You went back to her after it had settled',
+      minimumVersion: 'Sit near her for a minute without raising it',
+      stoppingPoint: 'One attempt. If she is not ready, that is information, not a rejection',
+      followUpPromptId: 'father:together-happened',
+    }),
     whyItMatters:
       'Coming back afterwards is a separate act from what happened, and it is the one that is still available to you.',
-    intendedOutcome: 'You went back to her after it had settled',
-    minimumVersion: 'Sit near her for a minute without raising it',
-    stoppingPoint: 'One attempt. If she is not ready, that is information, not a rejection',
-    durationMinutes: 5,
-    minimumMinutes: 1,
-    followUpPromptId: 'father:together-happened',
-    capabilityEffects: [CONNECTION],
   },
   'raise-it-with-someone-qualified': {
-    id: 'raise-it-with-someone-qualified',
-    /*
-     * The action this domain reaches for when it should stop having a view.
-     *
-     * A concern that has stayed put for weeks, or a skill she had and lost, is not
-     * something a decision-support app should interpret. This is not advice about
-     * development — it is the app declining to have an opinion and saying who might.
-     */
-    statement: 'Worth mentioning to your health visitor or GP at the next opportunity',
+    ...adaptFlat(
+      'raise-it-with-someone-qualified',
+      'defer-to-a-person:mention-at-the-next-appointment',
+      {
+        statement: 'Worth mentioning to your health visitor or GP at the next opportunity',
+        intendedOutcome: 'You raised it with someone qualified',
+        minimumVersion: 'Write it down somewhere you will have it with you',
+        stoppingPoint: 'Nothing else is being asked of you here',
+        followUpPromptId: 'father:concern-still-present',
+      },
+    ),
     whyItMatters:
       'You have recorded this more than once over several weeks. That is exactly the kind of thing a person who examines children for a living should hear about, and exactly the kind this app should not interpret.',
-    intendedOutcome: 'You raised it with someone qualified',
-    minimumVersion: 'Write it down somewhere you will have it with you',
-    stoppingPoint: 'Nothing else is being asked of you here',
-    durationMinutes: 10,
-    minimumMinutes: 2,
-    followUpPromptId: 'father:concern-still-present',
-    capabilityEffects: [PURPOSE],
   },
 };
 

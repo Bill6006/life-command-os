@@ -111,3 +111,54 @@ export function adapt<LocalId extends string>(
     ...(source.capacity === undefined ? {} : { capacity: source.capacity }),
   };
 }
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The flat shape five of the domain slices use.
+ *
+ * They predate health's and carry `followUpPromptId` as a bare string, no `fallback`, and
+ * no `friction`. Rather than rewrite six generators and their tests to health's shape —
+ * which would be a large, risky change unrelated to the actual goal — the adapter produces
+ * what each domain already consumes.
+ *
+ * The point of the migration is that the *authored move* lives in one place, not that
+ * every slice reads it through an identical interface. What matters is that nothing here
+ * can invent a move: `patternId` still comes from the catalogue and there is still no way
+ * to set it.
+ */
+export interface FlatDomainMoveView<LocalId extends string = string> {
+  readonly patternId: string;
+  readonly id: LocalId;
+  readonly statement: string;
+  readonly intendedOutcome: string;
+  readonly minimumVersion: string;
+  readonly stoppingPoint: string;
+  readonly durationMinutes: number;
+  readonly minimumMinutes: number;
+  readonly followUpPromptId: string;
+  readonly capabilityEffects: readonly CapabilityEffect[];
+  readonly capacity?: CapacityProfile | undefined;
+}
+
+export function adaptFlat<LocalId extends string>(
+  localId: LocalId,
+  patternId: string,
+  override: WordingOverride & { readonly followUpPromptId?: string | undefined } = {},
+): FlatDomainMoveView<LocalId> {
+  const full = adapt(localId, patternId, override);
+
+  return {
+    patternId: full.patternId,
+    id: full.id,
+    statement: full.statement,
+    intendedOutcome: full.intendedOutcome,
+    minimumVersion: full.minimumVersion,
+    stoppingPoint: full.stoppingPoint,
+    durationMinutes: full.durationMinutes,
+    minimumMinutes: full.minimumMinutes,
+    followUpPromptId: override.followUpPromptId ?? full.followUp.promptId,
+    capabilityEffects: full.capabilityEffects,
+    ...(full.capacity === undefined ? {} : { capacity: full.capacity }),
+  };
+}
