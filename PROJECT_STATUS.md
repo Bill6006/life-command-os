@@ -37,6 +37,7 @@ the app behaves differently but incompletely.
 | **B6** Direction (`V33-015`) | Compact cards showing condition, trajectory (hidden when it would only say "unknown" twice), what is in the way, one move or an explicit no-move, at most two metrics, and Update. Everything else behind `More`. Exactly one card open at a time, owned by the surface, with compact jump controls. |
 | **B8** Review (`V33-017`) | Freshness and quiet are badges — word plus border style, never colour alone — instead of a grey run-together sentence. Rows stack on a phone and split into text/controls when there is room. |
 | **B9** Learning (`V33-018`) | Leads with what has been learned, how confident, and what changed. Findings are one sentence with the chart one tap away, and a finding whose graph has no evidence renders **nothing at all** — a chart of nothing implies a finding was looked for and found. |
+| **D1/D2** move families and catalogue (`V33-040`–`V33-042`) | A family model — stable `patternId` independent of wording, `familyId`, purpose, safety class, lifecycle state, observation window, capacity shape, one-hop prerequisites, declared contradictions and a rule version — and **102 authored patterns across 20 families**, up from 40. Every pattern declares `distinctBecause`, and `moveCatalogue.test.ts` (22 tests) fails the build on a reused statement, a duplicated reason within a family, two siblings sharing shape/size/effect, a family holding more than a third of the catalogue, a family of one, a dangling contradiction, a two-hop prerequisite, or any calorie, macro, dose or treatment word. |
 | **Section I** owner sovereignty (`V33-032`) | A 28th record family, `move-preference`, carrying the owner's standing say over a move: `paused` (must name an end — a pause without one is a prohibition in softer wording), `blocked-here` (must name the context, and never matches an unknown one), `modified` (changes the words, never the eligibility), `forbidden`, `restored`. Resolved in `stances.ts`, applied in `arbitrate`, written only by explicit commands in `moveSovereignty.ts`. |
 
 ### The eleven clarifications
@@ -56,8 +57,13 @@ the app behaves differently but incompletely.
 
 ### Not started
 
-Sections **C, D, E, F, G, H, J, K** and the **AT33 acceptance scenarios (M)**. Section **B**
-is complete. Section **I** is complete —
+Sections **C, E, F, G, H, J, K** and the **AT33 acceptance scenarios (M)**. Section **D** is
+partly done: D1 (the family model) and D2 (breadth, 102 patterns) are complete, D3 semantic
+dedupe is enforced at build time, and **D4 contradictions and D5 local personalisation are
+not wired into generation yet** — the catalogue exists and is validated, but the domain
+generators still emit their own smaller action sets rather than reading from it. That
+wiring is the next step and is what makes the 102 patterns reachable by the owner rather
+than only present in the repository. Sections **A, B** and **I** are complete. Section **I** is complete —
 three-way distinction, prerequisite actions, the full owner-control lifecycle, and the
 interface to reach all of it.
 
