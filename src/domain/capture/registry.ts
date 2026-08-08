@@ -5,6 +5,8 @@ import { FAITH_CAPTURES } from '../faith/capture';
 import { HOME_CAPTURES } from '../home/capture';
 import { MONEY_CAPTURES } from '../money/capture';
 import { FATHERHOOD_CAPTURES } from '../fatherhood/capture';
+import { HEALTH_CAPTURES } from '../health/capture';
+import { CAREER_CAPTURES } from '../career/capture';
 import type { ContextualCapture } from './contextualCapture';
 
 /**
@@ -19,6 +21,8 @@ import type { ContextualCapture } from './contextualCapture';
  * Nothing here decides anything.
  */
 export const ALL_CONTEXTUAL_CAPTURES: readonly ContextualCapture[] = [
+  ...HEALTH_CAPTURES,
+  ...CAREER_CAPTURES,
   ...FATHERHOOD_CAPTURES,
   ...EMOTIONAL_CAPTURES,
   ...FAITH_CAPTURES,

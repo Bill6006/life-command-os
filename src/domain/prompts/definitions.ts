@@ -466,16 +466,38 @@ export const SLEEP_PROMPTS: readonly CapturePrompt[] = [
  * connect eating to energy and digestion — and a checkbox wall would be abandoned
  * within a week, producing worse evidence than three taps.
  */
-export const FOOD_TAGS: readonly string[] = [
-  'Light',
-  'Substantial',
+export const FOOD_PROTEIN = ['No protein', 'Some protein', 'High protein'] as const;
+export const FOOD_CARBS = ['Refined carbs', 'Whole-grain carbs', 'Starchy carbs'] as const;
+export const FOOD_PRODUCE = ['Little produce', 'Some produce', 'Plenty of produce'] as const;
+export const FOOD_FLAGS = [
+  'Dairy',
+  'Greasy',
+  'Spicy',
   'Heavy',
-  'Late',
-  'Skipped a meal',
-  'Mostly carbohydrate',
-  'Mostly protein',
-  'Caffeine',
-  'Alcohol',
+  'Sugar or dessert',
+  'High-sodium or processed',
+] as const;
+export const FOOD_PATTERN = ['Skipped a meal', 'Balanced meal'] as const;
+
+/**
+ * The whole permitted food vocabulary (`V33-046`, section J2).
+ *
+ * Three graded dimensions, six flags, and two meal patterns. Nothing here is a quantity,
+ * and there is deliberately nowhere to put one: the answers are words, the input is a
+ * choice, and a gram or a calorie has no representation anywhere in the type.
+ *
+ * The previous list mixed graded amounts with unrelated flags in one flat set and offered
+ * `Caffeine` and `Alcohol`, neither of which is in the governing vocabulary. Both are
+ * plausible things to track and that is precisely the problem — J1 forbids collecting food
+ * data speculatively, and a vocabulary that grows by plausibility is how a decision aid
+ * becomes a food diary.
+ */
+export const FOOD_TAGS: readonly string[] = [
+  ...FOOD_PROTEIN,
+  ...FOOD_CARBS,
+  ...FOOD_PRODUCE,
+  ...FOOD_FLAGS,
+  ...FOOD_PATTERN,
 ];
 
 export const FOOD_PROMPTS: readonly CapturePrompt[] = [

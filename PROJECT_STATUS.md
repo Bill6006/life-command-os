@@ -7,9 +7,9 @@
   clarifications that supersede it where they conflict
 - Current phase: **Phase 8 closed.** Phases 0–7 remain GREEN.
 - Current prompt: **PROMPT 9C v3.3 — partially delivered. YELLOW.** Sections **A, B, C, D,
-  E, F, G, H** and **I** are complete, as are all eleven owner clarifications. Sections
-  **J** and **K** and the AT33 acceptance scenarios are not started. See "Prompt 9C v3.3"
-  below for the exact line.
+  E, F, G, H, I, J** and **K** are complete, as are all eleven owner clarifications. The
+  AT33 acceptance scenarios in section M are not started. See "Prompt 9C v3.3" below for the
+  exact line.
 
 ## Prompt 9C v3.3 status
 
@@ -189,10 +189,36 @@ change lowers confidence, and confidence is a field the ranking compares, so old
 loses influence over a real decision without one observation being deleted or one weight
 being invented. `sustainability` also joined the comparison order, last, as a tie-break.
 
-Still untouched: **J** (qualitative food capture and routine/boundary learning), **K**
-(health and career contextual-capture metadata), and the **AT33** acceptance scenarios in
-section M. Three of the fifty-five AT33 ids are referenced by existing tests; the rest are
-not written. None of this is started, and nothing in the codebase pretends otherwise.
+**Section J** is delivered. The food vocabulary now matches the governing list exactly —
+three graded dimensions, six flags, two meal patterns — replacing a flat set that mixed
+amounts with flags and offered `Caffeine` and `Alcohol`, neither of which is in the
+vocabulary. Both are plausible things to track, which is the problem: a vocabulary that
+grows by plausibility is how a decision aid becomes a food diary. There is no representation
+for a quantity anywhere in the model, so a calorie cannot reach the screen.
+
+Routines are intentions and stay separate from observations. `routine:usual-bedtime` is what
+the owner is aiming at; `sleep:bedtime` is what happened; `bedtimeDrift` reports the gap and
+returns nothing unless both exist, because a target with no observation is not a missed
+bedtime and an observation with no target is not a failure. The routine list is closed —
+bedtime, wake, phone cutoff — since an open-ended list of repeatable things is a chore
+manager.
+
+**Bedtime now reaches the real engine.** `shouldAbstain` and `BEDTIME_GUARD_MINUTES` existed
+and were called by nothing; `selectOutput` now consults them after ranking and before the
+interruption threshold, so inside the guard the engine emits `Stop for tonight. Protect
+sleep.` and names how many candidates it turned down. Where no bedtime has been recorded the
+answer is `undefined` and the branch is skipped — inventing a default bedtime to have an
+opinion about somebody's evening is the kind of fabrication the rest of the engine refuses.
+The offset is the owner's own, read from their records rather than the host clock.
+
+**Section K** is delivered. Health and career declared no contextual-capture metadata, so
+they were invisible to `planCoverage`, which walks `ALL_CONTEXTUAL_CAPTURES`. Both now
+declare, and both participate in planning, suppression, freshness expiry and the check-in
+budget. Every triggered question names the decision it moves and goes stale; nothing was
+added to look thorough.
+
+Still untouched: the **AT33** acceptance scenarios in section M. Three of the fifty-five ids
+are referenced by existing tests; the remaining fifty-two are not written.
 
 ## Gate status
 

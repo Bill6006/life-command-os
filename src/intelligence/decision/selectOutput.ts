@@ -4,7 +4,8 @@ import { fits } from '../../domain/domains/capacity';
 import { supportingWins } from './supportingWins';
 import { assessConfidence, northStar, openCommitments } from '../support';
 import { episodeContext, episodeFacts } from '../../command-core/arbitration/episodeFacts';
-import { opportunityCost, weigh } from '../../command-core/arbitration/weigh';
+import { opportunityCost, shouldAbstain, weigh } from '../../command-core/arbitration/weigh';
+import { minutesToUsualBedtime } from '../../domain/routines/routines';
 import type {
   CandidateAction,
   DecisionOutput,
@@ -397,6 +398,77 @@ export function selectOutput(
         ? `Beaten by ${best.candidate.id}: ${ranking.whyItWon.slice('Chosen because '.length)}`
         : `Beaten by ${best.candidate.id}`,
     });
+  }
+
+  /* --- Bedtime, and knowing when to stop (`V33-033`, `V33-036`, J9) ------- */
+  /*
+   * Asked after ranking and before the threshold, because it is a different question
+   * again: not which move is best, nor whether the best is worth an interruption, but
+   * whether *anything at all* should be started now.
+   *
+   * `shouldAbstain` deliberately cannot see the candidate list. A hundred eligible moves
+   * is not a reason to pick one, and an engine that only stops when it has run out of
+   * ideas will fill every evening with the best available thing rather than the right one.
+   *
+   * The bedtime it reads is the owner's own — set, never assumed. Where none is recorded
+   * the answer is `undefined` and this whole branch is skipped, because inventing a
+   * default bedtime in order to have an opinion about somebody's evening is exactly the
+   * kind of confident fabrication the rest of this engine refuses.
+   */
+  /*
+   * The owner's own offset, taken from the most recent record rather than from the host
+   * machine. `A1` established that human-facing time must never be read off the runtime
+   * clock's zone, and a bedtime judged in UTC would be wrong by hours for most of the
+   * world.
+   */
+  const newest = [...records].sort((a, b) => b.recordedAt.localeCompare(a.recordedAt))[0];
+  /*
+   * Read defensively rather than through the declared type. `localTime` is required by the
+   * schema and genuinely absent from some older records and fixtures, so the type is
+   * optimistic — trusting it here crashed the whole episode on a record set that had never
+   * carried one. Zero means UTC, which is the honest fallback for "no offset was recorded".
+   */
+  const offsetMinutes = (newest as { localTime?: { utcOffsetMinutes?: number } } | undefined)
+    ?.localTime?.utcOffsetMinutes;
+  const untilBed = minutesToUsualBedtime(records, now, offsetMinutes ?? 0);
+  const abstention = shouldAbstain({
+    actionsToday: shared.load,
+    capacity,
+    minutesToBedtime: untilBed,
+    somethingInProgress: false,
+  });
+
+  if (abstention.kind !== 'act') {
+    for (const loser of scored) {
+      rejected.push({
+        candidateId: loser.candidate.id,
+        stage: 'comparison',
+        reason: `Not started: ${abstention.because}`,
+      });
+    }
+
+    return {
+      output: {
+        kind: 'silence',
+        statement:
+          abstention.kind === 'stop-for-tonight'
+            ? 'Stop for tonight. Protect sleep.'
+            : 'Nothing more is worth starting right now',
+        rationale: abstention.because,
+        confidence: state.confidence,
+        reasonTrace: [
+          abstention.because,
+          /* Named so the owner can see this was a decision rather than an empty list. */
+          `${String(scored.length)} things were available and none of them beat stopping`,
+        ],
+        nextCheck:
+          abstention.kind === 'stop-for-tonight'
+            ? 'Next look in the morning'
+            : 'Next look when something material changes',
+        secondaryActions: ['Something changed', 'Show details'],
+      },
+      rejected,
+    };
   }
 
   /* --- Interruption is not automatic ------------------------------------- */
