@@ -7,6 +7,7 @@ import type {
 } from '../../intelligence/types';
 import type { CommandCoreInput } from '../boundary';
 import { modificationFor, suppressedMoveIds } from './stances';
+import { resolveContradictions } from './contradictions';
 import { activeDeclines } from './declined';
 import { dedupeCandidates } from './dedupe';
 import { applyNorthStarGate, type NorthStarGateResult } from './northStar';
@@ -116,10 +117,20 @@ export function arbitrate(input: CommandCoreInput): ArbitrationResult {
   const deduped = dedupeCandidates(offered);
   const northStar = applyNorthStarGate(input.records, deduped.merged);
 
+  /*
+   * Contradictions, after the North Star gate and before ranking (`V33-045`, D4).
+   *
+   * Here because both survivors have to have passed everything else first — resolving a
+   * conflict between two candidates one of which was about to be removed for safety would
+   * be answering the wrong question. And before `selectOutput`, so the loser is recorded
+   * as beaten by a specific alternative rather than disappearing into the ranking.
+   */
+  const resolved = resolveContradictions(northStar.eligible);
+
   const selection = selectOutput(
     input.records,
     input.state,
-    northStar.eligible,
+    resolved.kept,
     input.predictions,
     input.forecast,
   );
@@ -157,6 +168,7 @@ export function arbitrate(input: CommandCoreInput): ArbitrationResult {
       ...declinedRejections,
       ...deduped.rejected,
       ...northStar.rejected,
+      ...resolved.rejected,
       ...selection.rejected,
     ],
     considered: northStar.eligible,

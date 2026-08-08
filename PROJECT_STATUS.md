@@ -38,6 +38,7 @@ the app behaves differently but incompletely.
 | **B8** Review (`V33-017`) | Freshness and quiet are badges — word plus border style, never colour alone — instead of a grey run-together sentence. Rows stack on a phone and split into text/controls when there is room. |
 | **B9** Learning (`V33-018`) | Leads with what has been learned, how confident, and what changed. Findings are one sentence with the chart one tap away, and a finding whose graph has no evidence renders **nothing at all** — a chart of nothing implies a finding was looked for and found. |
 | **D1/D2** move families and catalogue (`V33-040`–`V33-042`) | A family model — stable `patternId` independent of wording, `familyId`, purpose, safety class, lifecycle state, observation window, capacity shape, one-hop prerequisites, declared contradictions and a rule version — and **102 authored patterns across 20 families**, up from 40. Every pattern declares `distinctBecause`, and `moveCatalogue.test.ts` (22 tests) fails the build on a reused statement, a duplicated reason within a family, two siblings sharing shape/size/effect, a family holding more than a third of the catalogue, a family of one, a dangling contradiction, a two-hop prerequisite, or any calorie, macro, dose or treatment word. |
+| **D3/D4/D5** registry, contradictions, personalisation (`V33-043`–`V33-046`) | `registry.ts` is the one door into the catalogue, with `LEGACY_ALIASES` mapping 30 pre-catalogue candidate ids onto canonical patterns so evidence recorded since Phase 7 stays attached. **D4** is operational, not documentation: `resolveContradictions` runs in `arbitrate` after the North Star gate and before ranking, supporting wins refuse to contradict the primary or each other, and `ruledOutByRecentAction` stops a move that would undo something completed in the last four hours. Symmetric, contextual, and writes nothing — a conflict tonight is not a ban tomorrow. **D5** `personalise()` returns a statement, never a pattern, so substitution structurally cannot mint a new identity; unfilled slots are stripped so braces never reach the owner. |
 | **Section I** owner sovereignty (`V33-032`) | A 28th record family, `move-preference`, carrying the owner's standing say over a move: `paused` (must name an end — a pause without one is a prohibition in softer wording), `blocked-here` (must name the context, and never matches an unknown one), `modified` (changes the words, never the eligibility), `forbidden`, `restored`. Resolved in `stances.ts`, applied in `arbitrate`, written only by explicit commands in `moveSovereignty.ts`. |
 
 ### The eleven clarifications
@@ -58,12 +59,13 @@ the app behaves differently but incompletely.
 ### Not started
 
 Sections **C, E, F, G, H, J, K** and the **AT33 acceptance scenarios (M)**. Section **D** is
-partly done: D1 (the family model) and D2 (breadth, 102 patterns) are complete, D3 semantic
-dedupe is enforced at build time, and **D4 contradictions and D5 local personalisation are
-not wired into generation yet** — the catalogue exists and is validated, but the domain
-generators still emit their own smaller action sets rather than reading from it. That
-wiring is the next step and is what makes the 102 patterns reachable by the owner rather
-than only present in the repository. Sections **A, B** and **I** are complete. Section **I** is complete —
+partly done: D1 (the family model) and D2 (breadth, 102 patterns) are complete, D3, D4 and D5 are
+complete. **The generator migration itself is not**: the seven domain slices still build
+candidates from their own authored lists rather than selecting catalogue patterns, so the
+102 patterns remain reachable in principle — via the registry, with aliases and
+contradictions live — rather than in practice. `moveReachability.test.ts` states that
+boundary rather than hiding it, and fails the build if a legacy list ever leaks into
+shared decision code. Sections **A, B** and **I** are complete. Section **I** is complete —
 three-way distinction, prerequisite actions, the full owner-control lifecycle, and the
 interface to reach all of it.
 
@@ -353,6 +355,15 @@ edits is the one that matters.
 - **The recovery pause is deliberately shapeless and must stay that way.** It is the move of
   last resort; if `you cannot step away` could remove it, the app would fall silent in exactly
   the situation most needing an answer. There is a test that fails if it gains a shape.
+- **The e2e preview server drops one navigation per full run, on this machine.** Two
+  consecutive 703-test runs each failed exactly one test with `net::ERR_ABORTED` on
+  `page.goto` against `localhost:4173` — a different test each time, never an assertion,
+  and each passing on its own immediately afterwards. Ruled out: competing servers (node
+  killed before each run, one Playwright process), ambiguous locators (the failure is
+  before any locator), stale artifacts (fresh build per run), shared state (fresh context
+  per test), and product regression (isolation passes). It is `vite preview` dropping a
+  connection under sustained load. Not masked with a retry, because a retry would also
+  hide a real navigation failure; recorded here so the next reader knows the signature.
 - **A situation report expires after three hours.** Where the owner was this morning is not
   where they are now. That window is a judgement, not a measurement, and it is the number to
   revisit first if the app starts asking where you are too often.

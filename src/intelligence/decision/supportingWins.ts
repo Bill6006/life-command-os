@@ -1,3 +1,4 @@
+import { contradicts } from '../../domain/moves/registry';
 import type { CandidateAction, StateAssessment } from '../types';
 
 /**
@@ -69,6 +70,15 @@ export function supportingWins(
     ) {
       continue;
     }
+
+    /*
+     * Never alongside something it contradicts (`V33-044`, section D4). "Stop for
+     * tonight" and "take twenty minutes on it" are each defensible and cannot both be
+     * offered in the same breath — showing both makes the primary look negotiable and
+     * tells the owner the app has not decided.
+     */
+    if (contradicts(primary.id, candidate.id)) continue;
+    if (wins.some((win) => contradicts(win.id, candidate.id))) continue;
 
     if (candidate.minimumMinutes > SUPPORTING_MAX_MINUTES) continue;
     if (candidate.friction !== 'low') continue;
